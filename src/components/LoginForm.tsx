@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, User, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Outfit } from 'next/font/google';
+import React, { useState, useEffect } from "react";
+import { X, User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Outfit } from "next/font/google";
+import { useRouter } from "next/navigation";
 
 const outfit = Outfit({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-outfit',
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-outfit",
 });
 
 interface LoginFormProps {
@@ -21,9 +22,13 @@ const ModalBackgroundPattern = () => {
 
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden bg-blue-950">
-      <div 
+      <div
         className="absolute inset-0 w-full h-full opacity-40"
-        style={{ backgroundImage: `url("${topoSVG}")`, backgroundSize: '60px 60px', backgroundRepeat: 'repeat' }}
+        style={{
+          backgroundImage: `url("${topoSVG}")`,
+          backgroundSize: "60px 60px",
+          backgroundRepeat: "repeat",
+        }}
       />
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-blue-950/40 to-blue-950/95"></div>
     </div>
@@ -31,18 +36,56 @@ const ModalBackgroundPattern = () => {
 };
 
 export const LoginForm = ({ isOpen, onClose }: LoginFormProps) => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        onClose();
+        // Arahkan sesuai role dari API
+        if (data.user.role === "BBWS") {
+          router.push("/dashboard/bbws");
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        setError(data.message);
+      }
+    } catch {
+      setError("Gagal menghubungi server API");
+    }
+  };
 
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className={`fixed inset-0 z-100 flex items-center justify-center px-4 ${outfit.className}`}>
+        <div
+          className={`fixed inset-0 z-100 flex items-center justify-center px-4 ${outfit.className}`}
+        >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -56,84 +99,97 @@ export const LoginForm = ({ isOpen, onClose }: LoginFormProps) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-            className="relative w-full max-w-100 overflow-hidden bg-blue-950 border border-amber-500/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm" 
+            className="relative w-full max-w-100 overflow-hidden bg-blue-950 border border-amber-500/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm"
           >
             <ModalBackgroundPattern />
 
             <div className="relative z-10 p-8">
               <div className="flex justify-between items-start mb-8">
-                 <div className="flex flex-col gap-1">
-                    <h2 className="text-md font-bold text-white uppercase tracking-widest">
-                      Selamat <span className="text-amber-400">Datang</span>
-                    </h2>
-                    <p className="text-[8px] text-blue-200 uppercase tracking-widest opacity-70">
-                       BBWS Citarum Access
-                    </p>
-                 </div>
-                 <button 
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-md font-bold text-white uppercase tracking-widest">
+                    Selamat <span className="text-amber-400">Datang</span>
+                  </h2>
+                  <p className="text-[8px] text-blue-200 uppercase tracking-widest opacity-70">
+                    Citra Banjir Access
+                  </p>
+                </div>
+                <button
                   onClick={onClose}
                   className="text-blue-300 hover:text-white transition-colors hover:rotate-90 duration-300"
                 >
-                   <X size={20} />
-                 </button>
+                  <X size={20} />
+                </button>
               </div>
 
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                
-                {/* Username Input */}
+              {error && (
+                <div className="mb-4 p-2 bg-red-500/20 border border-red-500 text-red-200 text-[10px] text-center uppercase tracking-wider rounded-sm">
+                  {error}
+                </div>
+              )}
+
+              <form className="space-y-6" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">Username</label>
-                   <div className="relative group">
-                      {/* Icon Container */}
-                      <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
-                        <User size={18} strokeWidth={2} />
-                      </div>
-                      <input 
-                        type="text" 
-                        placeholder="Masukan Username"
-                        className="w-full h-11 pl-10 pr-4 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
-                      />
-                   </div>
+                  <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">
+                    Username
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
+                      <User size={18} strokeWidth={2} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Masukan Username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full h-11 pl-10 pr-4 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
+                      required
+                    />
+                  </div>
                 </div>
 
-                {/* Password Input */}
                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">Password</label>
-                   <div className="relative group">
-                      {/* Icon Container */}
-                      <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
-                        <Lock size={18} strokeWidth={2} />
-                      </div>
-                      <input 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="Masukan Password"
-                        className="w-full h-11 pl-10 pr-10 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400 hover:text-blue-600 transition-colors cursor-pointer"
-                      >
-                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                   </div>
+                  <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
+                      <Lock size={18} strokeWidth={2} />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Masukan Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full h-11 pl-10 pr-10 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400 hover:text-blue-600 transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-2">
-                  <button className="relative w-full overflow-hidden h-11 bg-amber-400 rounded-sm group shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all duration-300">
+                  <button
+                    type="submit"
+                    className="relative w-full overflow-hidden h-11 bg-amber-400 rounded-sm group shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all duration-300"
+                  >
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                     <span className="relative flex items-center justify-center gap-2 text-blue-950 font-bold uppercase text-xs tracking-[0.2em]">
                       Masuk <LogIn size={14} strokeWidth={3} />
                     </span>
                   </button>
                 </div>
-
               </form>
 
               <div className="mt-8 text-center border-t border-white/5 pt-4">
-                 <p className="text-[9px] text-blue-400 uppercase tracking-widest">
-                   © 2026 Citra Banjir
-                 </p>
+                <p className="text-[9px] text-blue-400 uppercase tracking-widest">
+                  © 2026 Citra Banjir
+                </p>
               </div>
             </div>
           </motion.div>
