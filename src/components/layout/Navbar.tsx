@@ -107,7 +107,7 @@ export const Navbar = () => {
                     <div className="w-10 h-10 relative">
                       <Image 
                         src="/images/epics.png" 
-                        alt="Logo"
+                        alt=""
                         fill
                         className="object-contain drop-shadow-lg" 
                       />
@@ -118,8 +118,8 @@ export const Navbar = () => {
                     <div className="relative group/logo hover:scale-105 transition-transform duration-300">
                       <div className="w-10 h-10 relative flex items-center justify-center">
                         <Image 
-                            src="/images/citrabanjir.png" 
-                            alt="Logo"
+                            src="/images/citra-banjir.png" 
+                            alt=""
                             fill
                             className="object-contain drop-shadow-xl" 
                         />
