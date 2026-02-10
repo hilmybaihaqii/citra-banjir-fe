@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import 'leaflet/dist/leaflet.css'; 
-import { Navbar } from "@/components/layout/Navbar";
+import "leaflet/dist/leaflet.css";
+import { Navbar } from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <body className={`${inter.className} bg-slate-50 flex flex-col h-dvh`}>
         <Navbar />
         <main className="flex-1 relative w-full overflow-hidden">
