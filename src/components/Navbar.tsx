@@ -112,7 +112,7 @@ export const Navbar = () => {
                 <div className="relative hover:scale-110 transition-transform duration-300">
                   <div className="w-10 h-10 relative">
                     <Image
-                      src="/images/bbws-logo.jpg"
+                      src="/images/bbws.png"
                       alt="Logo BBWS Citarum"
                       fill
                       className="object-contain drop-shadow-lg"

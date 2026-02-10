@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  Droplets,
-  Waves,
+  MapPinned, // Icon untuk Update Daerah
+  Users, // Icon untuk Pengungsi
+  AlertTriangle, // Icon untuk Status Bencana
   UserPlus,
   History,
   LogOut,
   ChevronRight,
+  Siren, // Icon identitas BPBD
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -20,7 +22,7 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function BBWSDashboard() {
+export default function BPBDDashboard() {
   const router = useRouter();
   const [userData, setUserData] = useState<{
     username: string;
@@ -30,7 +32,7 @@ export default function BBWSDashboard() {
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
-    // 1. Load Data User (Dinamis dari Login)
+    // 1. Load Data User
     const loadData = () => {
       const savedUser = localStorage.getItem("user");
       if (!savedUser) {
@@ -72,7 +74,8 @@ export default function BBWSDashboard() {
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-400 rounded-lg">
-              <Waves className="text-blue-950" size={24} />
+              {/* Menggunakan Siren untuk identitas Tanggap Bencana */}
+              <Siren className="text-blue-950" size={24} />
             </div>
             <span className="font-black tracking-tighter text-xl italic uppercase">
               Citra <span className="text-amber-400">Banjir</span>
@@ -93,16 +96,10 @@ export default function BBWSDashboard() {
             <ChevronRight size={14} />
           </button>
 
-          {/* PERUBAHAN: Membungkus button dengan Link ke halaman update-tma */}
-          <Link href="/dashboard/bbws/update-tinggiair">
+          {/* PERUBAHAN: Menu Update Kondisi Banjir */}
+          <Link href="/dashboard/bpbd/update-kondisi">
             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
-              <Droplets size={18} /> Update Tinggi Air
-            </button>
-          </Link>
-
-          <Link href="/dashboard/bbws/update-sungai">
-            <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
-              <Waves size={18} /> Update Sungai
+              <MapPinned size={18} /> Update Wilayah
             </button>
           </Link>
 
@@ -110,12 +107,12 @@ export default function BBWSDashboard() {
             <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-4">
               Sistem & User
             </p>
-            <Link href="/dashboard/bbws/tambah-user">
+            <Link href="/dashboard/bpbd/tambah-user">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
                 <UserPlus size={18} /> Tambah User
               </button>
             </Link>
-            <Link href="/dashboard/bbws/log-aktivitas">
+            <Link href="/dashboard/bpbd/log-aktivitas">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all">
                 <History size={18} />
                 <span>Log Aktivitas</span>
@@ -141,31 +138,31 @@ export default function BBWSDashboard() {
           <div className="flex items-center gap-6">
             <div className="text-right">
               <p className="text-sm font-black text-blue-950 uppercase tracking-wider leading-none">
-                {userData?.username || "Admin"}
+                {userData?.username || "Petugas Piket"}
               </p>
               <p className="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-1.5">
-                Admin Kabupaten Bandung
+                Pusdalops PB Jabar
               </p>
             </div>
 
             <div className="h-10 w-px bg-slate-200" />
 
-            {/* Logo Pojok Kanan Atas */}
+            {/* Logo Pojok Kanan Atas - Diubah menjadi BPBD */}
             <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-amber-400 transition-colors">
               <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
                 <Image
-                  src="/images/bbws.png"
-                  alt="Logo BBWS"
+                  src="/images/BPBD.png" // Pastikan file logo ada
+                  alt="Logo BPBD"
                   fill
                   className="object-contain p-1"
                 />
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-blue-950 leading-tight">
-                  BBWS
+                  BPBD
                 </span>
                 <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">
-                  Kab. Bandung
+                  Prov. Jawa Barat
                 </span>
               </div>
             </div>
@@ -177,10 +174,10 @@ export default function BBWSDashboard() {
           <div className="mb-10 flex justify-between items-end">
             <div>
               <h1 className="text-2xl font-black text-blue-950 uppercase tracking-tight">
-                Ringkasan Data
+                Situasi Terkini
               </h1>
               <p className="text-slate-500 text-sm mt-1 tracking-wide">
-                Wilayah Kerja Kabupaten Bandung
+                Laporan Kebencanaan Wilayah Jawa Barat
               </p>
             </div>
             <div className="text-[10px] bg-white text-blue-700 px-4 py-2 rounded-md font-bold uppercase tracking-widest border border-slate-200 shadow-sm">
@@ -190,45 +187,59 @@ export default function BBWSDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* CARD 1: Daerah Terdampak */}
             <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-amber-400">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Titik Pantau
-              </p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Area Terdampak
+                </p>
+                <MapPinned size={16} className="text-amber-400" />
+              </div>
               <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                24{" "}
-                <span className="text-sm font-normal text-slate-400">
-                  Lokasi
+                3{" "}
+                <span className="text-sm font-normal text-slate-400 ml-1">
+                  Kecamatan
                 </span>
               </h3>
             </div>
+
+            {/* CARD 2: Jumlah Pengungsi */}
             <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-blue-950">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Curah Hujan
-              </p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Total Pengungsi
+                </p>
+                <Users size={16} className="text-blue-950" />
+              </div>
               <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                12{" "}
-                <span className="text-sm font-normal text-slate-400">
-                  mm/hr
+                128{" "}
+                <span className="text-sm font-normal text-slate-400 ml-1">
+                  Jiwa
                 </span>
               </h3>
             </div>
-            <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-green-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Status Umum
-              </p>
-              <h3 className="text-3xl font-black text-green-600 tracking-tighter">
-                AMAN
+
+            {/* CARD 3: Status Bencana */}
+            <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-red-500">
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Status Siaga
+                </p>
+                <AlertTriangle size={16} className="text-red-500" />
+              </div>
+              <h3 className="text-3xl font-black text-red-600 tracking-tighter">
+                WASPADA
               </h3>
             </div>
           </div>
 
           <div className="mt-10 bg-white border border-slate-200 rounded-sm p-20 flex flex-col items-center justify-center border-dashed">
             <div className="p-4 bg-slate-50 rounded-full mb-4">
-              <LayoutDashboard size={40} className="text-slate-200" />
+              <Siren size={40} className="text-slate-200" />
             </div>
             <p className="text-slate-400 italic text-sm text-center">
-              Pilih menu di samping kiri untuk mulai mengelola data <br /> atau
-              memantau log aktivitas sistem.
+              Pilih menu <b>Update Wilayah</b> di samping kiri untuk melaporkan kondisi banjir baru <br />
+              atau pantau log penanganan bencana.
             </p>
           </div>
         </div>

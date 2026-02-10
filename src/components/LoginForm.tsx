@@ -1,196 +1,209 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { X, User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import React from "react";
+import Image from "next/image";
+import { X, User, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Outfit } from "next/font/google";
-import { useRouter } from "next/navigation";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-outfit",
-});
+import { useLoginForm } from "@/hooks/use-login-form";
+import { AGENCIES } from "@/lib/data";
+import { ModalBackgroundPattern } from "@/components/ui/background";
+
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 interface LoginFormProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ModalBackgroundPattern = () => {
-  const topoSVG = `data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E`;
-
-  return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden bg-blue-950">
-      <div
-        className="absolute inset-0 w-full h-full opacity-40"
-        style={{
-          backgroundImage: `url("${topoSVG}")`,
-          backgroundSize: "60px 60px",
-          backgroundRepeat: "repeat",
-        }}
-      />
-      <div className="absolute inset-0 bg-linear-to-b from-transparent via-blue-950/40 to-blue-950/95"></div>
-    </div>
-  );
-};
-
-export const LoginForm = ({ isOpen, onClose }: LoginFormProps) => {
-  const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        onClose();
-        // Arahkan sesuai role dari API
-        if (data.user.role === "BBWS") {
-          router.push("/dashboard/bbws");
-        } else {
-          router.push("/dashboard");
-        }
-      } else {
-        setError(data.message);
-      }
-    } catch {
-      setError("Gagal menghubungi server API");
-    }
-  };
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
+export const LoginForm: React.FC<LoginFormProps> = ({ isOpen, onClose }) => {
+  const logic = useLoginForm(isOpen, onClose);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className={`fixed inset-0 z-100 flex items-center justify-center px-4 ${outfit.className}`}
-        >
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${outfit.variable} font-sans`}>
+          
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-all"
+            className="absolute inset-0 bg-blue-950/80 backdrop-blur-md transition-all"
           />
 
+          {/* Modal Card */}
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            layout
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-            className="relative w-full max-w-100 overflow-hidden bg-blue-950 border border-amber-500/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm"
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl border border-amber-500/30"
           >
             <ModalBackgroundPattern />
 
-            <div className="relative z-10 p-8">
-              <div className="flex justify-between items-start mb-8">
+            <div className="relative z-10 p-6 sm:p-8">
+              
+              {/* HEADER */}
+              <div className="flex justify-between items-start mb-6">
                 <div className="flex flex-col gap-1">
-                  <h2 className="text-md font-bold text-white uppercase tracking-widest">
-                    Selamat <span className="text-amber-400">Datang</span>
-                  </h2>
-                  <p className="text-[8px] text-blue-200 uppercase tracking-widest opacity-70">
-                    Citra Banjir Access
+                  <motion.h2 
+                    key={logic.step}
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-lg font-bold text-white uppercase tracking-widest"
+                  >
+                    {logic.step === "agency" ? "Pilih Instansi" : "Login Portal"}
+                  </motion.h2>
+                  <p className="text-[10px] text-blue-200 uppercase tracking-widest opacity-70">
+                    {logic.step === "agency" ? "Sistem Keamanan Terpadu" : logic.selectedAgency?.label}
                   </p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="text-blue-300 hover:text-white transition-colors hover:rotate-90 duration-300"
-                >
+                <button onClick={onClose} className="p-1 rounded-full text-blue-300 hover:text-amber-400 hover:bg-white/10 transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
-              {error && (
-                <div className="mb-4 p-2 bg-red-500/20 border border-red-500 text-red-200 text-[10px] text-center uppercase tracking-wider rounded-sm">
-                  {error}
-                </div>
-              )}
-
-              <form className="space-y-6" onSubmit={handleLogin}>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">
-                    Username
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
-                      <User size={18} strokeWidth={2} />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Masukan Username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest text-blue-200 font-medium ml-1">
-                    Password
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-900/60 group-focus-within:text-amber-600 transition-colors pointer-events-none">
-                      <Lock size={18} strokeWidth={2} />
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Masukan Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full h-11 pl-10 pr-10 bg-white border border-blue-100 rounded-sm text-sm text-black placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all shadow-inner"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400 hover:text-blue-600 transition-colors cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="relative w-full overflow-hidden h-11 bg-amber-400 rounded-sm group shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all duration-300"
+              {/* ERROR MESSAGE */}
+              <AnimatePresence>
+                {logic.error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    className="px-3 py-2 bg-red-500/20 border border-red-500/40 rounded text-red-200 text-[10px] text-center uppercase tracking-wider overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                    <span className="relative flex items-center justify-center gap-2 text-blue-950 font-bold uppercase text-xs tracking-[0.2em]">
-                      Masuk <LogIn size={14} strokeWidth={3} />
-                    </span>
-                  </button>
-                </div>
-              </form>
+                    {logic.error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="mt-8 text-center border-t border-white/5 pt-4">
-                <p className="text-[9px] text-blue-400 uppercase tracking-widest">
-                  © 2026 Citra Banjir
-                </p>
+              {/* CONTENT AREA */}
+              <div className="min-h-64">
+                <AnimatePresence mode="wait">
+                  
+                  {/* STEP 1: AGENCY SELECTION */}
+                  {logic.step === "agency" ? (
+                    <motion.div
+                      key="agency-grid"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      {AGENCIES.map((agency) => (
+                        <button
+                          key={agency.id}
+                          onClick={() => logic.selectAgency(agency)}
+                          className="group relative flex flex-col items-center justify-center gap-3 p-4 bg-black/20 hover:bg-black/40 border border-white/5 hover:border-amber-500/50 rounded-lg transition-all duration-300"
+                        >
+                          <div className="relative w-12 h-12 flex items-center justify-center">
+                            <Image 
+                              src={agency.logo} 
+                              alt={agency.label}
+                              width={48} 
+                              height={48} 
+                              className="object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-blue-100 uppercase tracking-wider group-hover:text-white transition-colors text-center">
+                            {agency.label}
+                          </span>
+                          <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${agency.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
+                        </button>
+                      ))}
+                    </motion.div>
+                  ) : (
+                    
+                    /* STEP 2: LOGIN FORM */
+                    <motion.form
+                      key="login-form"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      onSubmit={logic.handleSubmit}
+                      className="flex flex-col gap-4"
+                    >
+                      {/* Username */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-blue-300 font-semibold ml-1">Username</label>
+                        <div className="relative group">
+                          <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400/70 group-focus-within:text-amber-400 transition-colors">
+                            <User size={16} />
+                          </div>
+                          <input
+                            type="text"
+                            required
+                            className="w-full h-10 pl-10 pr-4 bg-black/20 border border-blue-500/20 rounded text-sm text-white placeholder:text-blue-500/40 focus:outline-none focus:border-amber-400 focus:bg-black/30 transition-all"
+                            placeholder="ID Pengguna"
+                            value={logic.username}
+                            onChange={(e) => logic.setUsername(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Password */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-blue-300 font-semibold ml-1">Password</label>
+                        <div className="relative group">
+                          <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400/70 group-focus-within:text-amber-400 transition-colors">
+                            <Lock size={16} />
+                          </div>
+                          <input
+                            type={logic.showPassword ? "text" : "password"}
+                            required
+                            className="w-full h-10 pl-10 pr-10 bg-black/20 border border-blue-500/20 rounded text-sm text-white placeholder:text-blue-500/40 focus:outline-none focus:border-amber-400 focus:bg-black/30 transition-all"
+                            placeholder="Kata Sandi"
+                            value={logic.password}
+                            onChange={(e) => logic.setPassword(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => logic.setShowPassword(!logic.showPassword)}
+                            className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center text-blue-400/50 hover:text-white transition-colors"
+                          >
+                            {logic.showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Buttons */}
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          type="button"
+                          onClick={logic.goBack}
+                          className="w-10 h-10 flex items-center justify-center rounded border border-blue-500/30 text-blue-300 hover:text-white hover:border-amber-400 hover:bg-white/5 transition-all"
+                        >
+                          <ArrowLeft size={18} />
+                        </button>
+                        
+                        <button
+                          type="submit"
+                          disabled={logic.isLoading}
+                          className="flex-1 relative overflow-hidden h-10 bg-amber-400 text-blue-950 font-bold uppercase text-[10px] tracking-[0.2em] rounded shadow-[0_0_15px_rgba(251,191,36,0.2)] hover:bg-amber-300 hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                        >
+                          {logic.isLoading ? "Memproses..." : "Masuk"}
+                          {!logic.isLoading && <ChevronRight size={14} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />}
+                        </button>
+                      </div>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
               </div>
+
+              {/* FOOTER */}
+              <div className="mt-6 text-center pt-4 border-t border-white/10">
+                <div className="flex items-center justify-center gap-2 text-blue-400/60">
+                  <ShieldCheck size={12} />
+                  <span className="text-[9px] uppercase tracking-[0.2em]">
+                    Portal Resmi 2026
+                  </span>
+                </div>
+              </div>
+
             </div>
           </motion.div>
         </div>
