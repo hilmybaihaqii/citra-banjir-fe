@@ -108,10 +108,11 @@ export const Navbar = () => {
           <div className="flex justify-between items-center h-14">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-3 group">
+                {/* Logo 1: BBWS */}
                 <div className="relative hover:scale-110 transition-transform duration-300">
                   <div className="w-10 h-10 relative">
                     <Image
-                      src="/images/bbws-logo.jpg"
+                      src="/images/bbws.png"
                       alt="Logo BBWS Citarum"
                       fill
                       className="object-contain drop-shadow-lg"
@@ -119,23 +120,25 @@ export const Navbar = () => {
                   </div>
                 </div>
 
+                {/* Logo 2: EPICS */}
                 <div className="relative hover:scale-110 transition-transform duration-300">
                   <div className="w-10 h-10 relative">
                     <Image
-                      src="/images/Untitled.png"
-                      alt="Logo"
+                      src="/images/epics.png"
+                      alt="Logo Epics"
                       fill
                       className="object-contain drop-shadow-lg"
                     />
                   </div>
                 </div>
 
+                {/* Logo 3: Citra Banjir */}
                 <div className="flex items-center gap-3 pl-1">
                   <div className="relative group/logo hover:scale-105 transition-transform duration-300">
                     <div className="w-10 h-10 relative flex items-center justify-center">
                       <Image
-                        src="/images/citrabanjir.png"
-                        alt="Logo"
+                        src="/images/citra-banjir.png"
+                        alt="Logo Citra Banjir"
                         fill
                         className="object-contain drop-shadow-xl"
                       />
@@ -288,7 +291,9 @@ export const Navbar = () => {
 const DesktopNavLink = ({ href, children, active }: NavLinkProps) => (
   <Link href={href} className="relative px-3 py-2 group">
     <span
-      className={`relative z-10 text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors duration-200 ${active ? "text-white" : "text-blue-100 group-hover:text-white"}`}
+      className={`relative z-10 text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors duration-200 ${
+        active ? "text-white" : "text-blue-100 group-hover:text-white"
+      }`}
     >
       {children}
     </span>
@@ -318,7 +323,11 @@ const MobileNavLink = ({
   return (
     <Link href={href} onClick={onClick}>
       <div
-        className={`flex items-center justify-between p-3 rounded-lg transition-all border ${isActive ? "bg-white/10 text-white border-white/30 shadow-inner" : "text-blue-100 border-transparent hover:bg-white/5 hover:border-white/10"}`}
+        className={`flex items-center justify-between p-3 rounded-lg transition-all border ${
+          isActive
+            ? "bg-white/10 text-white border-white/30 shadow-inner"
+            : "text-blue-100 border-transparent hover:bg-white/5 hover:border-white/10"
+        }`}
       >
         <div className="flex items-center gap-3">
           {icon && (

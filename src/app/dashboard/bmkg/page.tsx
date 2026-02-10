@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  Droplets,
-  Waves,
+  CloudSun, // Icon untuk Update Cuaca
+  Wind, // Icon tambahan untuk data angin
+  Thermometer, // Icon tambahan untuk suhu
   UserPlus,
   History,
   LogOut,
   ChevronRight,
+  CloudRain, // Icon untuk hujan
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -20,7 +22,7 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function BBWSDashboard() {
+export default function BMKGDashboard() {
   const router = useRouter();
   const [userData, setUserData] = useState<{
     username: string;
@@ -72,7 +74,8 @@ export default function BBWSDashboard() {
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-400 rounded-lg">
-              <Waves className="text-blue-950" size={24} />
+              {/* Menggunakan icon awan/hujan agar relevan dengan cuaca */}
+              <CloudRain className="text-blue-950" size={24} />
             </div>
             <span className="font-black tracking-tighter text-xl italic uppercase">
               Citra <span className="text-amber-400">Banjir</span>
@@ -93,16 +96,10 @@ export default function BBWSDashboard() {
             <ChevronRight size={14} />
           </button>
 
-          {/* PERUBAHAN: Membungkus button dengan Link ke halaman update-tma */}
-          <Link href="/dashboard/bbws/update-tinggiair">
+          {/* PERUBAHAN: Menu Update Cuaca */}
+          <Link href="/dashboard/bmkg/update-cuaca">
             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
-              <Droplets size={18} /> Update Tinggi Air
-            </button>
-          </Link>
-
-          <Link href="/dashboard/bbws/update-sungai">
-            <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
-              <Waves size={18} /> Update Sungai
+              <CloudSun size={18} /> Update Cuaca
             </button>
           </Link>
 
@@ -110,12 +107,12 @@ export default function BBWSDashboard() {
             <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-4">
               Sistem & User
             </p>
-            <Link href="/dashboard/bbws/tambah-user">
+            <Link href="/dashboard/bmkg/tambah-user">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
                 <UserPlus size={18} /> Tambah User
               </button>
             </Link>
-            <Link href="/dashboard/bbws/log-aktivitas">
+            <Link href="/dashboard/bmkg/log-aktivitas">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all">
                 <History size={18} />
                 <span>Log Aktivitas</span>
@@ -144,28 +141,29 @@ export default function BBWSDashboard() {
                 {userData?.username || "Admin"}
               </p>
               <p className="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-1.5">
-                Admin Kabupaten Bandung
+                Stasiun Meteorologi
               </p>
             </div>
 
             <div className="h-10 w-px bg-slate-200" />
 
-            {/* Logo Pojok Kanan Atas */}
+            {/* Logo Pojok Kanan Atas - Diubah menjadi BMKG */}
             <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-amber-400 transition-colors">
               <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
+                {/* Pastikan file logo bmkg ada di public/images/ */}
                 <Image
-                  src="/images/bbws.png"
-                  alt="Logo BBWS"
+                  src="/images/BMKG.png" 
+                  alt="Logo BMKG"
                   fill
                   className="object-contain p-1"
                 />
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-blue-950 leading-tight">
-                  BBWS
+                  BMKG
                 </span>
                 <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">
-                  Kab. Bandung
+                  Jawa Barat
                 </span>
               </div>
             </div>
@@ -177,10 +175,10 @@ export default function BBWSDashboard() {
           <div className="mb-10 flex justify-between items-end">
             <div>
               <h1 className="text-2xl font-black text-blue-950 uppercase tracking-tight">
-                Ringkasan Data
+                Ringkasan Cuaca
               </h1>
               <p className="text-slate-500 text-sm mt-1 tracking-wide">
-                Wilayah Kerja Kabupaten Bandung
+                Wilayah Monitoring Bandung Raya
               </p>
             </div>
             <div className="text-[10px] bg-white text-blue-700 px-4 py-2 rounded-md font-bold uppercase tracking-widest border border-slate-200 shadow-sm">
@@ -190,45 +188,59 @@ export default function BBWSDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* CARD 1: Suhu Udara */}
             <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-amber-400">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Titik Pantau
-              </p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Suhu Rata-rata
+                </p>
+                <Thermometer size={16} className="text-amber-400" />
+              </div>
               <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                24{" "}
-                <span className="text-sm font-normal text-slate-400">
-                  Lokasi
+                26°C
+                <span className="text-sm font-normal text-slate-400 ml-2">
+                  Siang
                 </span>
               </h3>
             </div>
+
+            {/* CARD 2: Kecepatan Angin */}
             <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-blue-950">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Curah Hujan
-              </p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Kecepatan Angin
+                </p>
+                <Wind size={16} className="text-blue-950" />
+              </div>
               <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                12{" "}
-                <span className="text-sm font-normal text-slate-400">
-                  mm/hr
+                15
+                <span className="text-sm font-normal text-slate-400 ml-1">
+                  km/jam
                 </span>
               </h3>
             </div>
+
+            {/* CARD 3: Status Prakiraan */}
             <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-green-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Status Umum
-              </p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Prakiraan Hari Ini
+                </p>
+                <CloudSun size={16} className="text-green-500" />
+              </div>
               <h3 className="text-3xl font-black text-green-600 tracking-tighter">
-                AMAN
+                BERAWAN
               </h3>
             </div>
           </div>
 
           <div className="mt-10 bg-white border border-slate-200 rounded-sm p-20 flex flex-col items-center justify-center border-dashed">
             <div className="p-4 bg-slate-50 rounded-full mb-4">
-              <LayoutDashboard size={40} className="text-slate-200" />
+              <CloudSun size={40} className="text-slate-200" />
             </div>
             <p className="text-slate-400 italic text-sm text-center">
-              Pilih menu di samping kiri untuk mulai mengelola data <br /> atau
-              memantau log aktivitas sistem.
+              Pilih menu <b>Update Cuaca</b> di samping kiri untuk memasukkan data prakiraan terbaru <br /> 
+              atau pantau log aktivitas sistem.
             </p>
           </div>
         </div>
