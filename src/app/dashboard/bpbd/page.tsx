@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  MapPinned, // Icon untuk Update Daerah
-  Users, // Icon untuk Pengungsi
-  AlertTriangle, // Icon untuk Status Bencana
+  MapPinned, 
+  Users, 
+  AlertTriangle, 
   UserPlus,
   History,
   LogOut,
   ChevronRight,
-  Siren, // Icon identitas BPBD
+  Siren, 
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -27,23 +27,32 @@ export default function BPBDDashboard() {
   const [userData, setUserData] = useState<{
     username: string;
     role: string;
+    agency_id?: string;
   } | null>(null);
 
   const [currentDate, setCurrentDate] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false); // State agar tidak flicker saat loading
 
   useEffect(() => {
     // 1. Load Data User
     const loadData = () => {
-      const savedUser = localStorage.getItem("user");
+      // PERBAIKAN UTAMA: Gunakan key "user_session" (sesuai login form)
+      const savedUser = localStorage.getItem("user_session");
+      
       if (!savedUser) {
+        // Jika tidak ada data login, kembalikan ke landing page
         router.push("/");
         return;
       }
+
       try {
         const parsed = JSON.parse(savedUser);
         setUserData(parsed);
+        setIsLoaded(true); // Data berhasil dimuat
       } catch (e) {
         console.error("Gagal parsing data user", e);
+        localStorage.removeItem("user_session");
+        router.push("/");
       }
     };
 
@@ -63,9 +72,16 @@ export default function BPBDDashboard() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    // Hapus session yang benar
+    localStorage.removeItem("user_session");
+    localStorage.removeItem("auth_token");
     router.push("/");
   };
+
+  // Mencegah konten flash sebelum pengecekan login selesai
+  if (!isLoaded) {
+    return null; // Atau bisa return <div className="p-10">Loading...</div>
+  }
 
   return (
     <div className={`min-h-screen bg-slate-50 flex ${outfit.className}`}>
@@ -74,7 +90,6 @@ export default function BPBDDashboard() {
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-400 rounded-lg">
-              {/* Menggunakan Siren untuk identitas Tanggap Bencana */}
               <Siren className="text-blue-950" size={24} />
             </div>
             <span className="font-black tracking-tighter text-xl italic uppercase">
@@ -96,7 +111,6 @@ export default function BPBDDashboard() {
             <ChevronRight size={14} />
           </button>
 
-          {/* PERUBAHAN: Menu Update Kondisi Banjir */}
           <Link href="/dashboard/bpbd/update-kondisi">
             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
               <MapPinned size={18} /> Update Wilayah
@@ -141,17 +155,16 @@ export default function BPBDDashboard() {
                 {userData?.username || "Petugas Piket"}
               </p>
               <p className="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-1.5">
-                Pusdalops PB Jabar
+                {userData?.role || "Pusdalops PB Jabar"}
               </p>
             </div>
 
             <div className="h-10 w-px bg-slate-200" />
 
-            {/* Logo Pojok Kanan Atas - Diubah menjadi BPBD */}
             <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-amber-400 transition-colors">
               <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
                 <Image
-                  src="/images/BPBD.png" // Pastikan file logo ada
+                  src="/images/BPBD.png"
                   alt="Logo BPBD"
                   fill
                   className="object-contain p-1"
