@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  CloudSun, // Icon untuk Update Cuaca
-  Wind, // Icon tambahan untuk data angin
-  Thermometer, // Icon tambahan untuk suhu
+  CloudSun, 
+  Wind, 
+  Thermometer, 
   UserPlus,
   History,
   LogOut,
   ChevronRight,
-  CloudRain, // Icon untuk hujan
+  CloudRain, 
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -27,23 +27,31 @@ export default function BMKGDashboard() {
   const [userData, setUserData] = useState<{
     username: string;
     role: string;
+    agency_id?: string;
   } | null>(null);
 
   const [currentDate, setCurrentDate] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false); // State loading agar tidak flicker
 
   useEffect(() => {
-    // 1. Load Data User (Dinamis dari Login)
+    // 1. Load Data User
     const loadData = () => {
-      const savedUser = localStorage.getItem("user");
+      // PERBAIKAN: Gunakan key "user_session" (sesuai login form)
+      const savedUser = localStorage.getItem("user_session");
+      
       if (!savedUser) {
         router.push("/");
         return;
       }
+      
       try {
         const parsed = JSON.parse(savedUser);
         setUserData(parsed);
+        setIsLoaded(true); // Data berhasil dimuat
       } catch (e) {
         console.error("Gagal parsing data user", e);
+        localStorage.removeItem("user_session");
+        router.push("/");
       }
     };
 
@@ -63,9 +71,16 @@ export default function BMKGDashboard() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    // Hapus session yang benar
+    localStorage.removeItem("user_session");
+    localStorage.removeItem("auth_token");
     router.push("/");
   };
+
+  // Mencegah konten flash sebelum pengecekan login selesai
+  if (!isLoaded) {
+    return null; 
+  }
 
   return (
     <div className={`min-h-screen bg-slate-50 flex ${outfit.className}`}>
@@ -74,7 +89,6 @@ export default function BMKGDashboard() {
         <div className="p-8 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-400 rounded-lg">
-              {/* Menggunakan icon awan/hujan agar relevan dengan cuaca */}
               <CloudRain className="text-blue-950" size={24} />
             </div>
             <span className="font-black tracking-tighter text-xl italic uppercase">
@@ -88,7 +102,6 @@ export default function BMKGDashboard() {
             Panel Kendali
           </p>
 
-          {/* Button Dashboard (Halaman Aktif Saat Ini) */}
           <button className="w-full flex items-center justify-between p-4 bg-amber-400 text-blue-950 rounded-sm font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-400/10">
             <div className="flex items-center gap-3">
               <LayoutDashboard size={18} /> Dashboard
@@ -96,7 +109,6 @@ export default function BMKGDashboard() {
             <ChevronRight size={14} />
           </button>
 
-          {/* PERUBAHAN: Menu Update Cuaca */}
           <Link href="/dashboard/bmkg/update-cuaca">
             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
               <CloudSun size={18} /> Update Cuaca
@@ -141,16 +153,14 @@ export default function BMKGDashboard() {
                 {userData?.username || "Admin"}
               </p>
               <p className="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-1.5">
-                Stasiun Meteorologi
+                {userData?.role || "Stasiun Meteorologi"}
               </p>
             </div>
 
             <div className="h-10 w-px bg-slate-200" />
 
-            {/* Logo Pojok Kanan Atas - Diubah menjadi BMKG */}
             <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-amber-400 transition-colors">
               <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
-                {/* Pastikan file logo bmkg ada di public/images/ */}
                 <Image
                   src="/images/BMKG.png" 
                   alt="Logo BMKG"

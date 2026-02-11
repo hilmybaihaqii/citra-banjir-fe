@@ -33,7 +33,7 @@ export const AGENCIES: Agency[] = [
 
 // Database User Dummy
 export const MOCK_USERS: User[] = [
-  // --- BBWS USERS ---
+  // --- 1. BBWS USERS ---
   {
     username: "super_bbws",
     password: "123",
@@ -49,7 +49,7 @@ export const MOCK_USERS: User[] = [
     role: "admin"
   },
 
-  // --- BPBD USERS ---
+  // --- 2. BPBD USERS ---
   {
     username: "super_bpbd",
     password: "123",
@@ -57,8 +57,14 @@ export const MOCK_USERS: User[] = [
     agencyId: "bpbd",
     role: "superadmin"
   },
+  {
+    username: "staff_bpbd",
+    password: "123",
+    name: "Petugas Lapangan BPBD",
+    agencyId: "bpbd",
+    role: "admin"
+  },
 
-  // --- BMKG USERS ---
   {
     username: "super_bmkg",
     password: "123",
@@ -66,13 +72,27 @@ export const MOCK_USERS: User[] = [
     agencyId: "bmkg",
     role: "superadmin"
   },
+  {
+    username: "staff_bmkg",
+    password: "123",
+    name: "Staff Analis BMKG",
+    agencyId: "bmkg",
+    role: "admin"
+  },
 
-  // --- GLOBAL ADMIN ---
+  // --- 4. ADMIN (Citra Banjir Pusat) ---
   {
     username: "root",
     password: "123",
     name: "Developer Pusat",
     agencyId: "admin",
     role: "superadmin"
+  },
+  {
+    username: "staff_admin",
+    password: "123",
+    name: "Admin Moderator",
+    agencyId: "admin",
+    role: "admin"
   }
 ];
