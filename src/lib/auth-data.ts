@@ -1,6 +1,4 @@
-// lib/auth-data.ts
-
-export type UserRole = "BBWS" | "BPBD" | "BMKG" | "SUPERADMIN";
+export type UserRole = "BBWS" | "BPBD" | "BPBD_KAB" | "BMKG" | "SUPERADMIN";
 
 export interface User {
   username: string;
@@ -14,7 +12,7 @@ export const USERS: User[] = [
   // 1. Pihak BBWS Citarum
   {
     username: "adminbbws",
-    password: "bbws123", 
+    password: "bbws123",
     role: "BBWS",
     name: "Admin BBWS Citarum",
     agency_id: "bbws",
@@ -27,7 +25,15 @@ export const USERS: User[] = [
     name: "Operator BPBD Jawa Barat",
     agency_id: "bpbd",
   },
-  // 3. BMKG Jabar
+  // 3. Pihak BPBD Kab. Bandung (TAMBAHAN BARU)
+  {
+    username: "adminbpbdkab",
+    password: "bpbdkab123",
+    role: "BPBD_KAB",
+    name: "Operator BPBD Kab. Bandung",
+    agency_id: "bpbd_kab",
+  },
+  // 4. BMKG Jabar
   {
     username: "adminbmkg",
     password: "bmkg123",
@@ -35,7 +41,7 @@ export const USERS: User[] = [
     name: "Petugas BMKG Jabar",
     agency_id: "bmkg",
   },
-  // 4. Pihak Citra Banjir
+  // 5. Pihak Citra Banjir
   {
     username: "superadmin",
     password: "admin123",
