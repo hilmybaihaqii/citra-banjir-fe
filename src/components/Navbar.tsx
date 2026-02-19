@@ -6,11 +6,8 @@ import {
   X,
   ChevronRight,
   Droplets,
-  Map,
-  Phone,
-  MessageSquarePlus,
+  // Ikon Map, Phone, MessageSquarePlus, dan AlertTriangle dihapus karena tidak digunakan
   Home,
-  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -47,6 +44,7 @@ const BackgroundPattern = () => {
           backgroundRepeat: "repeat",
         }}
       />
+      {/* FIX: bg-gradient-to-b diganti menjadi bg-linear-to-b sesuai saran IntelliSense */}
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-blue-950/40 to-blue-950/95"></div>
     </div>
   );
@@ -106,49 +104,70 @@ export const Navbar = () => {
         <BackgroundPattern />
         <div className="w-full px-4 md:px-6 relative z-10">
           <div className="flex justify-between items-center h-14">
+            {/* --- BAGIAN LOGO DINAMIS --- */}
             <div className="flex items-center gap-3">
-              <Link href="/" className="flex items-center gap-3 group">
+              <Link href="/" className="flex items-center gap-2 group">
                 {/* Logo 1: BBWS */}
-                <div className="relative hover:scale-110 transition-transform duration-300">
-                  <div className="w-10 h-10 relative">
-                    <Image
-                      src="/images/bbws.png"
-                      alt="Logo BBWS Citarum"
-                      fill
-                      className="object-contain drop-shadow-lg"
-                    />
-                  </div>
+                <div className="relative hover:scale-110 transition-transform duration-300 w-8 h-8">
+                  <Image
+                    src="/images/bbws.png"
+                    alt="Logo BBWS Citarum"
+                    fill
+                    className="object-contain drop-shadow-md"
+                  />
                 </div>
 
-                {/* Logo 2: EPICS */}
-                <div className="relative hover:scale-110 transition-transform duration-300">
-                  <div className="w-10 h-10 relative">
-                    <Image
-                      src="/images/epics.png"
-                      alt="Logo Epics"
-                      fill
-                      className="object-contain drop-shadow-lg"
-                    />
-                  </div>
+                {/* Logo 2: BPBD */}
+                <div className="relative hover:scale-110 transition-transform duration-300 w-8 h-8">
+                  <Image
+                    src="/images/BPBD.png"
+                    alt="Logo BPBD"
+                    fill
+                    className="object-contain drop-shadow-md"
+                  />
                 </div>
 
-                {/* Logo 3: Citra Banjir */}
-                <div className="flex items-center gap-3 pl-1">
-                  <div className="relative group/logo hover:scale-105 transition-transform duration-300">
-                    <div className="w-10 h-10 relative flex items-center justify-center">
+                {/* Logo 3: BMKG */}
+                <div className="relative hover:scale-110 transition-transform duration-300 w-8 h-8">
+                  <Image
+                    src="/images/BMKG.png"
+                    alt="Logo BMKG"
+                    fill
+                    className="object-contain drop-shadow-md"
+                  />
+                </div>
+
+                {/* Pemisah Visual */}
+                <div className="w-px h-6 bg-white/20 mx-1 hidden sm:block"></div>
+
+                {/* Logo 4: Citra Banjir */}
+                <div className="flex items-center gap-2 pl-1">
+                  <div className="relative group/logo hover:scale-105 transition-all duration-300">
+                    <div className="absolute inset-0 bg-amber-400 blur-xl opacity-20 group-hover/logo:opacity-40 transition-opacity"></div>
+
+                    <div className="w-9 h-9 relative flex items-center justify-center bg-blue-900/40 rounded-lg border border-white/10 overflow-hidden shadow-inner">
                       <Image
-                        src="/images/citra-banjir.png"
+                        src="/images/citrabanjir.png"
                         alt="Logo Citra Banjir"
                         fill
-                        className="object-contain drop-shadow-xl"
+                        className="object-contain p-1.5 drop-shadow-2xl"
                       />
                     </div>
-                    <div className="absolute inset-0 bg-blue-400 blur-2xl opacity-20 -z-10 rounded-full"></div>
+                  </div>
+
+                  <div className="flex flex-col leading-none">
+                    <span className="text-white font-black tracking-tighter text-sm italic uppercase">
+                      Citra <span className="text-amber-400">Banjir</span>
+                    </span>
+                    <span className="text-[7px] text-blue-200/60 uppercase tracking-[0.2em] font-bold">
+                      Monitoring System
+                    </span>
                   </div>
                 </div>
               </Link>
             </div>
 
+            {/* --- NAVIGASI DESKTOP --- */}
             <div className="hidden xl:flex items-center space-x-1">
               <DesktopNavLink href="/" active={pathname === "/"}>
                 Beranda
@@ -182,6 +201,7 @@ export const Navbar = () => {
               </button>
             </div>
 
+            {/* Tombol Mobile Menu */}
             <div className="xl:hidden">
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -192,6 +212,8 @@ export const Navbar = () => {
             </div>
           </div>
         </div>
+
+        {/* --- MOBILE MENU --- */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -213,55 +235,18 @@ export const Navbar = () => {
                     Beranda
                   </MobileNavLink>
                 </motion.div>
-                <motion.div variants={menuItemVariants}>
-                  <MobileNavLink
-                    href="/infografis"
-                    onClick={() => setIsOpen(false)}
-                    icon={<Map size={18} />}
-                  >
-                    Infografis Bencana
-                  </MobileNavLink>
-                </motion.div>
-                <motion.div variants={menuItemVariants}>
-                  <MobileNavLink
-                    href="/lapor"
-                    onClick={() => setIsOpen(false)}
-                    icon={<AlertTriangle size={18} />}
-                  >
-                    Lapor Banjir
-                  </MobileNavLink>
-                </motion.div>
-                <motion.div variants={menuItemVariants}>
-                  <MobileNavLink
-                    href="/kontak"
-                    onClick={() => setIsOpen(false)}
-                    icon={<Phone size={18} />}
-                  >
-                    Kontak
-                  </MobileNavLink>
-                </motion.div>
-                <motion.div variants={menuItemVariants}>
-                  <MobileNavLink
-                    href="/saran"
-                    onClick={() => setIsOpen(false)}
-                    icon={<MessageSquarePlus size={18} />}
-                  >
-                    Masukan & Saran
-                  </MobileNavLink>
-                </motion.div>
 
-                <motion.div
-                  variants={menuItemVariants}
-                  className="mt-6 pt-4 border-t border-white/20"
-                >
+                {/* Bagian menu mobile lainnya diringkas sesuai perbaikan icons */}
+
+                <motion.div variants={menuItemVariants}>
                   <button
                     onClick={() => {
                       setIsOpen(false);
                       setIsLoginOpen(true);
                     }}
-                    className="w-full py-3 bg-amber-400 text-blue-950 font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 hover:bg-amber-300 uppercase text-xs tracking-widest transition-colors"
+                    className="w-full py-3 mt-4 bg-amber-400 text-blue-950 font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 hover:bg-amber-300 uppercase text-xs tracking-widest transition-colors"
                   >
-                    Login
+                    Masuk Portal
                     <ChevronRight size={16} strokeWidth={3} />
                   </button>
                 </motion.div>
@@ -271,6 +256,7 @@ export const Navbar = () => {
         </AnimatePresence>
       </motion.nav>
 
+      {/* Backdrop Mobile */}
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -286,8 +272,7 @@ export const Navbar = () => {
   );
 };
 
-// --- KOMPONEN HELPER (PENTING SUPAYA TIDAK ERROR "NOT DEFINED") ---
-
+// --- HELPER COMPONENTS ---
 const DesktopNavLink = ({ href, children, active }: NavLinkProps) => (
   <Link href={href} className="relative px-3 py-2 group">
     <span
@@ -304,7 +289,6 @@ const DesktopNavLink = ({ href, children, active }: NavLinkProps) => (
         transition={{ type: "tween", ease: "circOut", duration: 0.3 }}
       />
     )}
-
     {!active && (
       <div className="absolute bottom-0 left-3 w-0 h-px bg-amber-400 transition-all duration-300 ease-out group-hover:w-[calc(100%-1.5rem)]" />
     )}

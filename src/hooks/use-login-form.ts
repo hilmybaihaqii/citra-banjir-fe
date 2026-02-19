@@ -10,10 +10,10 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
   // --- STATE ---
   const [step, setStep] = useState<"agency" | "form">("agency");
   const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null);
-  
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -76,8 +76,8 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
 
       // 3. Tentukan Tujuan (Logic Routing)
       // Kita ambil dari response server biar akurat
-      const roleOrAgency = data.user.agency_id || data.user.agencyId; 
-      
+      const roleOrAgency = data.user.agency_id || data.user.agencyId;
+
       let targetPath = "/dashboard/admin"; // Default
 
       switch (roleOrAgency) {
@@ -85,7 +85,10 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
           targetPath = "/dashboard/bbws";
           break;
         case "bpbd":
-          targetPath = "/dashboard/bpbd";
+          targetPath = "/dashboard/bpbd-jabar";
+          break;
+        case "bpbd_kab":
+          targetPath = "/dashboard/bpbd-kab";
           break;
         case "bmkg":
           targetPath = "/dashboard/bmkg";
@@ -102,24 +105,28 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
 
       // 4. PINDAH HALAMAN (Tanpa mikirin cookie)
       onClose(); // Tutup modal biar bersih
-      router.push(targetPath); 
-
-    } catch (err: any) {
+      router.push(targetPath);
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan sistem.");
-      setIsLoading(false); // Stop loading kalau error
-    } 
+      const errorMessage =
+        err instanceof Error ? err.message : "Terjadi kesalahan sistem.";
+      setError(errorMessage);
+      setIsLoading(false);
+    }
     // Note: Kalau sukses, biarkan loading true sampai halaman berpindah agar user gak klik 2x
   };
 
   return {
     step,
     selectedAgency,
-    username, setUsername,
-    password, setPassword,
+    username,
+    setUsername,
+    password,
+    setPassword,
     isLoading,
     error,
-    showPassword, setShowPassword,
+    showPassword,
+    setShowPassword,
     selectAgency,
     handleSubmit,
     goBack,

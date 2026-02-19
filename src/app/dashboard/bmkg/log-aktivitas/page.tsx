@@ -11,8 +11,8 @@ import {
   AlertTriangle,
   ChevronRight,
   CloudRain,
-  Waves,
   ShieldCheck,
+  CloudSun,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { motion } from "framer-motion";
@@ -35,47 +35,47 @@ const initialLogs = [
   },
   {
     id: 2,
-    admin: "Admin_BBWS_Pusat",
-    aksi: "Update Tinggi Air",
-    detail: "Dayeuhkolot: 120cm -> 155cm",
-    waktu: "25 Menit yang lalu",
-    tipe: "update",
+    admin: "Prakirawan_Jabar",
+    aksi: "Update Prakiraan Cuaca",
+    detail: "Bandung Raya: Berawan -> Hujan Ringan",
+    waktu: "45 Menit yang lalu",
+    tipe: "weather",
   },
   {
     id: 3,
-    admin: "Superuser_Citra",
+    admin: "Admin_BMKG_Pusat",
     aksi: "Tambah User Baru",
-    detail: "Menambahkan akses untuk instansi BPBD",
-    waktu: "2 Jam yang lalu",
+    detail: "Menambahkan akses petugas_lapangan_02",
+    waktu: "3 Jam yang lalu",
     tipe: "user",
   },
   {
     id: 4,
-    admin: "Petugas_BBWS_Field",
-    aksi: "Update Debit Sungai",
-    detail: "Cisangkuy: 120 m³/s -> 145 m³/s",
-    waktu: "4 Jam yang lalu",
-    tipe: "update",
+    admin: "System_Security",
+    aksi: "Login Sukses",
+    detail: "Sesi dimulai dari perangkat Desktop (Chrome)",
+    waktu: "5 Jam yang lalu",
+    tipe: "system",
   },
   {
     id: 5,
-    admin: "System_Security",
+    admin: "Admin_BMKG_Pusat",
     aksi: "Login Gagal",
-    detail: "Upaya login tidak sah dari IP 182.1.22.9",
+    detail: "Upaya login tidak sah dari IP 112.12.99.1",
     waktu: "Kemarin",
     tipe: "danger",
   },
 ];
 
-export default function LogAktivitasPage() {
+export default function LogAktivitasBMKGPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const getLogIcon = (tipe: string) => {
     switch (tipe) {
       case "presipitasi":
         return <CloudRain size={18} />;
-      case "update":
-        return <Waves size={18} />;
+      case "weather":
+        return <CloudSun size={18} />;
       case "user":
         return <User size={18} />;
       case "danger":
@@ -89,7 +89,7 @@ export default function LogAktivitasPage() {
     switch (tipe) {
       case "presipitasi":
         return "bg-blue-50 text-blue-600 border-blue-200";
-      case "update":
+      case "weather":
         return "bg-emerald-50 text-emerald-600 border-emerald-200";
       case "user":
         return "bg-amber-50 text-amber-600 border-amber-200";
@@ -108,7 +108,7 @@ export default function LogAktivitasPage() {
       <header className="h-20 bg-blue-950 text-white flex items-center justify-between px-10 shadow-lg sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard/bbws"
+            href="/dashboard/bmkg"
             className="p-2 hover:bg-white/10 rounded-full transition-colors text-amber-400"
           >
             <ArrowLeft size={24} />
@@ -123,11 +123,11 @@ export default function LogAktivitasPage() {
               />
             </div>
             <div>
-              <h1 className="text-lg font-black uppercase tracking-tight leading-none text-white">
+              <h1 className="text-lg font-black uppercase tracking-tight leading-none">
                 Log Aktivitas
               </h1>
               <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">
-                Audit Trail • BBWS Citarum
+                BMKG • Riwayat Transaksi Data
               </p>
             </div>
           </div>
@@ -150,11 +150,12 @@ export default function LogAktivitasPage() {
             />
             <input
               type="text"
-              placeholder="Cari aktivitas, nama petugas, atau lokasi..."
+              placeholder="Cari aktivitas atau nama petugas BMKG..."
               className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-blue-950 shadow-sm focus:ring-2 focus:ring-blue-950 outline-none transition-all"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          {/* Hanya tombol Export yang tersisa */}
           <button className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-blue-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-lg">
             <FileText size={16} /> Export Log
           </button>
@@ -166,8 +167,7 @@ export default function LogAktivitasPage() {
             .filter(
               (log) =>
                 log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.aksi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.detail.toLowerCase().includes(searchTerm.toLowerCase()),
+                log.aksi.toLowerCase().includes(searchTerm.toLowerCase()),
             )
             .map((log) => (
               <motion.div

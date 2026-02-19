@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  MapPinned, 
-  Users, 
-  AlertTriangle, 
+  MapPinned,
+  Users,
+  AlertTriangle,
   UserPlus,
   History,
   LogOut,
   ChevronRight,
-  Siren, 
+  Siren,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -38,7 +38,7 @@ export default function BPBDDashboard() {
     const loadData = () => {
       // PERBAIKAN UTAMA: Gunakan key "user_session" (sesuai login form)
       const savedUser = localStorage.getItem("user_session");
-      
+
       if (!savedUser) {
         // Jika tidak ada data login, kembalikan ke landing page
         router.push("/");
@@ -111,7 +111,7 @@ export default function BPBDDashboard() {
             <ChevronRight size={14} />
           </button>
 
-          <Link href="/dashboard/bpbd/update-kondisi">
+          <Link href="/dashboard/bpbd-jabar/update-kondisi">
             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
               <MapPinned size={18} /> Update Wilayah
             </button>
@@ -121,12 +121,12 @@ export default function BPBDDashboard() {
             <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-4">
               Sistem & User
             </p>
-            <Link href="/dashboard/bpbd/tambah-user">
+            <Link href="/dashboard/bpbd-jabar/tambah-user">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
                 <UserPlus size={18} /> Tambah User
               </button>
             </Link>
-            <Link href="/dashboard/bpbd/log-aktivitas">
+            <Link href="/dashboard/bpbd-jabar/log-aktivitas">
               <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all">
                 <History size={18} />
                 <span>Log Aktivitas</span>
@@ -251,7 +251,8 @@ export default function BPBDDashboard() {
               <Siren size={40} className="text-slate-200" />
             </div>
             <p className="text-slate-400 italic text-sm text-center">
-              Pilih menu <b>Update Wilayah</b> di samping kiri untuk melaporkan kondisi banjir baru <br />
+              Pilih menu <b>Update Wilayah</b> di samping kiri untuk melaporkan
+              kondisi banjir baru <br />
               atau pantau log penanganan bencana.
             </p>
           </div>
