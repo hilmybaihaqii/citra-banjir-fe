@@ -31,7 +31,7 @@ export const AGENCIES: Agency[] = [
   },
   {
     id: "admin",
-    label: "Super Admin",
+    label: "Citra Banjir",
     color: "bg-indigo-500",
     logo: "/images/citrabanjir.png",
     path: "/dashboard/admin",
