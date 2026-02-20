@@ -164,7 +164,7 @@ export default function BPBDDashboard() {
             <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-amber-400 transition-colors">
               <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
                 <Image
-                  src="/images/BPBD.png"
+                  src="/images/LOGOBPBD.png"
                   alt="Logo BPBD"
                   fill
                   className="object-contain p-1"

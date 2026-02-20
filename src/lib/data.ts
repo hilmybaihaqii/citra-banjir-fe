@@ -12,14 +12,14 @@ export const AGENCIES: Agency[] = [
     id: "bpbd",
     label: "BPBD Jawa Barat",
     color: "bg-orange-500",
-    logo: "/images/BPBD.png",
+    logo: "/images/LOGOBPBD.png",
     path: "/dashboard/bpbd-jabar",
   },
   {
     id: "bpbd_kab",
     label: "BPBD Kab. Bandung",
     color: "bg-red-600",
-    logo: "/images/BPBD.png",
+    logo: "/images/LOGOBPBD.png",
     path: "/dashboard/bpbd-kab",
   },
   {
@@ -33,7 +33,7 @@ export const AGENCIES: Agency[] = [
     id: "admin",
     label: "Citra Banjir",
     color: "bg-indigo-500",
-    logo: "/images/citrabanjir.png",
+    logo: "/images/logo-citra-banjir2.png",
     path: "/dashboard/admin",
   },
 ];

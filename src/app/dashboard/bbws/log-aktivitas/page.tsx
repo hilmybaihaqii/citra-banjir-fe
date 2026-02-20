@@ -9,13 +9,11 @@ import {
   Database,
   FileText,
   AlertTriangle,
-  ChevronRight,
   CloudRain,
   Waves,
-  ShieldCheck,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -69,6 +67,8 @@ const initialLogs = [
 
 export default function LogAktivitasPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [logs] = useState(initialLogs);
+  const [isExporting, setIsExporting] = useState(false);
 
   const getLogIcon = (tipe: string) => {
     switch (tipe) {
@@ -100,126 +100,152 @@ export default function LogAktivitasPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    setIsExporting(true);
+    // Simulasi proses export
+    setTimeout(() => {
+      setIsExporting(false);
+      alert("Log Aktivitas berhasil di-export ke format .xlsx (Excel)");
+    }, 1500);
+  };
+
   return (
     <div
-      className={`h-screen overflow-y-auto bg-slate-50 ${outfit.className} scroll-smooth`}
+      className={`h-screen flex flex-col bg-slate-50 ${outfit.className} overflow-hidden`}
     >
-      {/* HEADER */}
-      <header className="h-20 bg-blue-950 text-white flex items-center justify-between px-10 shadow-lg sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+      {/* HEADER - Navbar Full ke Atas */}
+      <header className="h-16 md:h-20 bg-blue-950 text-white flex items-center justify-between px-4 md:px-10 shadow-lg shrink-0 z-50">
+        <div className="flex items-center gap-2 md:gap-4">
           <Link
             href="/dashboard/bbws"
             className="p-2 hover:bg-white/10 rounded-full transition-colors text-amber-400"
           >
             <ArrowLeft size={24} />
           </Link>
-          <div className="flex items-center gap-3 border-l pl-4 border-white/10">
-            <div className="relative w-8 h-8">
+          <div className="flex items-center gap-3 border-l pl-3 md:pl-4 border-white/10">
+            <div className="relative w-10 h-10 md:w-12 md:h-12">
               <Image
-                src="/images/citrabanjir.png"
+                src="/images/logo-citra-banjir2.png"
                 alt="Logo"
                 fill
                 className="object-contain"
               />
             </div>
             <div>
-              <h1 className="text-lg font-black uppercase tracking-tight leading-none text-white">
+              <h1 className="text-xs md:text-lg font-black uppercase tracking-tight leading-none text-white">
                 Log Aktivitas
               </h1>
-              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">
-                Audit Trail • BBWS Citarum
+              <p className="text-[8px] md:text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">
+                BBWS Citarum
               </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 bg-blue-900/50 px-4 py-2 rounded-lg border border-white/5">
-          <ShieldCheck className="text-amber-400" size={18} />
-          <span className="text-[10px] font-black uppercase tracking-widest">
-            Sistem Terverifikasi
-          </span>
+
+        <div className="w-10 h-10 relative rounded-full overflow-hidden border-2 border-amber-400 bg-white shadow-md shrink-0">
+          <Image
+            src="/images/bbws.png"
+            alt="Logo BBWS"
+            fill
+            className="object-contain p-1"
+          />
         </div>
       </header>
 
-      <main className="p-10 max-w-6xl mx-auto pb-24">
-        {/* ACTION BAR (Tanpa Filter) */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10">
-          <div className="relative flex-1 w-full">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Cari aktivitas, nama petugas, atau lokasi..."
-              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-blue-950 shadow-sm focus:ring-2 focus:ring-blue-950 outline-none transition-all"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {/* MAIN AREA - Scrollable */}
+      <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
+        <div className="p-4 md:p-10 max-w-6xl mx-auto pb-24 text-blue-950">
+          {/* ACTION BAR */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div className="relative flex-1 w-full text-blue-950">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Cari aktivitas, petugas, atau detail..."
+                className="w-full pl-12 pr-4 py-3 md:py-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold shadow-sm focus:ring-2 focus:ring-blue-950 outline-none transition-all"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 md:py-4 bg-blue-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+              <FileText size={16} />{" "}
+              {isExporting ? "Processing..." : "Export Log (.xlsx)"}
+            </button>
           </div>
-          <button className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-blue-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-lg">
-            <FileText size={16} /> Export Log
-          </button>
-        </div>
 
-        {/* LOG LIST */}
-        <div className="space-y-4">
-          {initialLogs
-            .filter(
-              (log) =>
-                log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.aksi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.detail.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-            .map((log) => (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                key={log.id}
-                className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="flex items-start gap-5">
-                  <div
-                    className={`p-4 rounded-xl border shrink-0 ${getLogColor(log.tipe)}`}
+          {/* LOG LIST */}
+          <div className="space-y-3 md:space-y-4">
+            <AnimatePresence initial={false}>
+              {logs
+                .filter(
+                  (log) =>
+                    log.admin
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase()) ||
+                    log.aksi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    log.detail.toLowerCase().includes(searchTerm.toLowerCase()),
+                )
+                .map((log) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
-                    {getLogIcon(log.tipe)}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-black text-blue-950 text-sm uppercase tracking-tight">
-                        {log.aksi}
-                      </h3>
-                      <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full flex items-center gap-1">
-                        <Clock size={10} /> {log.waktu}
-                      </span>
-                    </div>
-                    <p className="text-blue-950/70 text-sm font-medium">
-                      {log.detail}
-                    </p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <div className="w-5 h-5 rounded-full bg-blue-950 flex items-center justify-center text-[8px] text-white font-bold uppercase">
-                        {log.admin.charAt(0)}
+                    <div className="flex items-start gap-4 md:gap-5">
+                      <div
+                        className={`p-3 md:p-4 rounded-xl border shrink-0 ${getLogColor(log.tipe)}`}
+                      >
+                        {getLogIcon(log.tipe)}
                       </div>
-                      <span className="text-[10px] font-black text-blue-950/40 uppercase tracking-tighter">
-                        Oleh: <span className="text-blue-600">{log.admin}</span>
-                      </span>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-black text-blue-950 text-xs md:text-sm uppercase tracking-tight">
+                            {log.aksi}
+                          </h3>
+                          <span className="text-[8px] md:text-[9px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full flex items-center gap-1">
+                            <Clock size={10} /> {log.waktu}
+                          </span>
+                        </div>
+                        <p className="text-blue-950/70 text-xs md:text-sm font-medium">
+                          {log.detail}
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <div className="w-5 h-5 rounded-full bg-blue-950 flex items-center justify-center text-[8px] text-white font-bold uppercase">
+                            {log.admin.charAt(0)}
+                          </div>
+                          <span className="text-[9px] md:text-[10px] font-black text-blue-950/40 uppercase tracking-tighter">
+                            Oleh:{" "}
+                            <span className="text-blue-600">{log.admin}</span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-950 border border-transparent hover:border-slate-200 rounded-lg transition-all">
-                  Detail <ChevronRight size={14} />
-                </button>
-              </motion.div>
-            ))}
-        </div>
+                    {/* Tombol Detail Dihapus Sesuai Permintaan */}
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+          </div>
 
-        {/* FOOTER NOTICE */}
-        <div className="mt-12 p-6 bg-blue-950 rounded-2xl border-l-8 border-amber-400 flex items-center gap-4 shadow-xl">
-          <Database className="text-amber-400 shrink-0" size={24} />
-          <p className="text-white text-[10px] font-bold uppercase tracking-widest leading-loose opacity-80">
-            Seluruh aktivitas dicatat otomatis oleh sistem sebagai bagian dari
-            protokol{" "}
-            <span className="text-amber-400">Keamanan Data Nasional</span>.
-            Riwayat ini tidak dapat dimanipulasi oleh pihak manapun.
-          </p>
+          {/* FOOTER NOTICE */}
+          <div className="mt-10 p-5 md:p-6 bg-blue-950 rounded-2xl border-l-8 border-amber-400 flex items-start md:items-center gap-4 shadow-xl">
+            <Database
+              className="text-amber-400 shrink-0 mt-1 md:mt-0"
+              size={24}
+            />
+            <p className="text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-loose opacity-80">
+              Seluruh aktivitas dicatat otomatis sebagai protokol{" "}
+              <span className="text-amber-400">Keamanan Data Nasional</span>.
+              Riwayat ini bersifat permanen dan tidak dapat dimanipulasi.
+            </p>
+          </div>
         </div>
       </main>
     </div>

@@ -72,26 +72,40 @@ const BackgroundPattern = () => {
   );
 };
 
-// --- 3. KOMPONEN NAVIGASI DESKTOP ---
-const DesktopNavItem = ({ item, pathname }: { item: NavLinkItem; pathname: string }) => {
+const DesktopNavItem = ({
+  item,
+  pathname,
+}: {
+  item: NavLinkItem;
+  pathname: string;
+}) => {
   const [isHovered, setIsHovered] = useState(false);
-  const isActive = item.href 
-    ? pathname === item.href 
-    : item.subLinks?.some(link => pathname === link.href);
+  const isActive = item.href
+    ? pathname === item.href
+    : item.subLinks?.some((link) => pathname === link.href);
 
   return (
-    <div 
+    <div
       className="relative group h-full flex items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {item.href ? (
-        <Link href={item.href} className="relative px-3 py-2 flex items-center gap-1 group/link">
-          <span className={`relative z-10 text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-300 ${isActive ? "text-white" : "text-blue-100 group-hover/link:text-white"}`}>
+        <Link
+          href={item.href}
+          className="relative px-3 py-2 flex items-center gap-1 group/link"
+        >
+          <span
+            className={`relative z-10 text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-300 ${isActive ? "text-white" : "text-blue-100 group-hover/link:text-white"}`}
+          >
             {item.label}
           </span>
           {isActive && (
-            <motion.div layoutId="navbar-indicator" className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400" transition={{ type: "spring", stiffness: 300, damping: 30 }} />
+            <motion.div
+              layoutId="navbar-indicator"
+              className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
           )}
           {!isActive && (
             <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400 origin-left scale-x-0 transition-transform duration-300 ease-out group-hover/link:scale-x-100" />
@@ -99,12 +113,21 @@ const DesktopNavItem = ({ item, pathname }: { item: NavLinkItem; pathname: strin
         </Link>
       ) : (
         <div className="relative px-3 py-2 flex items-center gap-1 cursor-pointer group/link">
-          <span className={`relative z-10 text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-300 ${isActive ? "text-white" : "text-blue-100 group-hover/link:text-white"}`}>
+          <span
+            className={`relative z-10 text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-300 ${isActive ? "text-white" : "text-blue-100 group-hover/link:text-white"}`}
+          >
             {item.label}
           </span>
-          <ChevronDown size={14} className={`text-blue-100 transition-transform duration-300 ${isHovered ? "rotate-180" : ""}`} />
+          <ChevronDown
+            size={14}
+            className={`text-blue-100 transition-transform duration-300 ${isHovered ? "rotate-180" : ""}`}
+          />
           {isActive && (
-            <motion.div layoutId="navbar-indicator" className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400" transition={{ type: "spring", stiffness: 300, damping: 30 }} />
+            <motion.div
+              layoutId="navbar-indicator"
+              className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
           )}
           {!isActive && (
             <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-amber-400 origin-left scale-x-0 transition-transform duration-300 ease-out group-hover/link:scale-x-100" />
@@ -129,14 +152,20 @@ const DesktopNavItem = ({ item, pathname }: { item: NavLinkItem; pathname: strin
                     href={subLink.href}
                     className="group/sub relative px-5 py-3.5 flex items-center overflow-hidden transition-colors duration-200"
                   >
-                    <div className={`absolute inset-0 transition-colors duration-200 ${pathname === subLink.href ? "bg-white/10" : "group-hover/sub:bg-white/5"}`} />
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 bg-amber-400 transition-transform duration-300 origin-bottom ${pathname === subLink.href ? "scale-y-100" : "scale-y-0 group-hover/sub:scale-y-100"}`} />
-                    
-                    <span className={`relative z-10 text-[11.5px] font-semibold tracking-widest uppercase transition-all duration-300 ${
-                      pathname === subLink.href
-                        ? "text-amber-400 translate-x-2"
-                        : "text-blue-100 group-hover/sub:text-white group-hover/sub:translate-x-2"
-                    }`}>
+                    <div
+                      className={`absolute inset-0 transition-colors duration-200 ${pathname === subLink.href ? "bg-white/10" : "group-hover/sub:bg-white/5"}`}
+                    />
+                    <div
+                      className={`absolute left-0 top-0 bottom-0 w-1 bg-amber-400 transition-transform duration-300 origin-bottom ${pathname === subLink.href ? "scale-y-100" : "scale-y-0 group-hover/sub:scale-y-100"}`}
+                    />
+
+                    <span
+                      className={`relative z-10 text-[11.5px] font-semibold tracking-widest uppercase transition-all duration-300 ${
+                        pathname === subLink.href
+                          ? "text-amber-400 translate-x-2"
+                          : "text-blue-100 group-hover/sub:text-white group-hover/sub:translate-x-2"
+                      }`}
+                    >
                       {subLink.label}
                     </span>
                   </Link>
@@ -150,35 +179,62 @@ const DesktopNavItem = ({ item, pathname }: { item: NavLinkItem; pathname: strin
   );
 };
 
-// --- KOMPONEN NAVIGASI MOBILE ---
-const MobileNavItem = ({ item, pathname, onClick }: { item: NavLinkItem; pathname: string; onClick: () => void }) => {
+const MobileNavItem = ({
+  item,
+  pathname,
+  onClick,
+}: {
+  item: NavLinkItem;
+  pathname: string;
+  onClick: () => void;
+}) => {
   const [isSubOpen, setIsSubOpen] = useState(false);
-  const isActive = item.href ? pathname === item.href : item.subLinks?.some(link => pathname === link.href);
+  const isActive = item.href
+    ? pathname === item.href
+    : item.subLinks?.some((link) => pathname === link.href);
 
   return (
     <div className="w-full">
       {item.href ? (
         <Link href={item.href} onClick={onClick} className="block w-full">
-          <div className={`flex items-center justify-between p-3.5 rounded-md transition-colors border ${isActive ? "bg-blue-900 text-white border-blue-800" : "text-blue-100 border-transparent hover:bg-blue-900/50"}`}>
+          <div
+            className={`flex items-center justify-between p-3.5 rounded-md transition-colors border ${isActive ? "bg-blue-900 text-white border-blue-800" : "text-blue-100 border-transparent hover:bg-blue-900/50"}`}
+          >
             <div className="flex items-center gap-3">
-              <item.icon size={18} className={isActive ? "text-amber-400" : "text-blue-300"} />
-              <span className="font-medium text-xs uppercase tracking-widest">{item.label}</span>
+              <item.icon
+                size={18}
+                className={isActive ? "text-amber-400" : "text-blue-300"}
+              />
+              <span className="font-medium text-xs uppercase tracking-widest">
+                {item.label}
+              </span>
             </div>
             {isActive && <Droplets size={16} className="text-amber-400" />}
           </div>
         </Link>
       ) : (
         <div className="flex flex-col">
-          <button onClick={() => setIsSubOpen(!isSubOpen)} className={`flex items-center justify-between p-3.5 rounded-md transition-colors border w-full text-left ${isActive ? "bg-blue-900 text-white border-blue-800" : "text-blue-100 border-transparent hover:bg-blue-900/50"}`}>
+          <button
+            onClick={() => setIsSubOpen(!isSubOpen)}
+            className={`flex items-center justify-between p-3.5 rounded-md transition-colors border w-full text-left ${isActive ? "bg-blue-900 text-white border-blue-800" : "text-blue-100 border-transparent hover:bg-blue-900/50"}`}
+          >
             <div className="flex items-center gap-3">
-              <item.icon size={18} className={isActive ? "text-amber-400" : "text-blue-300"} />
-              <span className="font-medium text-xs uppercase tracking-widest">{item.label}</span>
+              <item.icon
+                size={18}
+                className={isActive ? "text-amber-400" : "text-blue-300"}
+              />
+              <span className="font-medium text-xs uppercase tracking-widest">
+                {item.label}
+              </span>
             </div>
-            <motion.div animate={{ rotate: isSubOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <motion.div
+              animate={{ rotate: isSubOpen ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <ChevronDown size={16} className="text-blue-300" />
             </motion.div>
           </button>
-          
+
           <AnimatePresence>
             {isSubOpen && (
               <motion.div
@@ -222,8 +278,16 @@ export const Navbar = () => {
   if (pathname.startsWith("/dashboard")) return null;
 
   const mobileMenuVariants: Variants = {
-    closed: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeInOut" } },
-    open: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
+    closed: {
+      opacity: 0,
+      y: -20,
+      transition: { duration: 0.3, ease: "easeInOut" },
+    },
+    open: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+    },
   };
 
   return (
@@ -237,35 +301,56 @@ export const Navbar = () => {
         }`}
       >
         <BackgroundPattern />
-        
+
         <div className="w-full px-4 md:px-6 relative z-10 max-w-7xl mx-auto">
           <div className="flex justify-between items-center h-18">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-3 group">
-                <div className="hidden sm:flex items-center gap-3">
-                  <div className="relative w-9 h-9"><Image src="/images/bbws.png" alt="Logo BBWS Citarum" fill className="object-contain" /></div>
-                  <div className="relative w-9 h-9"><Image src="/images/BPBD.png" alt="Logo BPBD" fill className="object-contain" /></div>
-                  <div className="relative w-9 h-9"><Image src="/images/BMKG.png" alt="Logo BMKG" fill className="object-contain" /></div>
-                </div>
-                <div className="w-px h-8 bg-white/20 mx-1 hidden sm:block"></div>
-                
-                <div className="flex items-center gap-2 pl-1">
-                  <div className="w-10 h-10 relative flex items-center justify-center bg-blue-900 rounded-md border border-white/10 overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                    <Image src="/images/citrabanjir.png" alt="Logo Citra Banjir" fill className="object-contain p-1.5" />
+                {/* 1. Logo Citra Banjir */}
+                <div className="flex items-center gap-2">
+                  <div className="w-50 h-50 md:w-50 md:h-40 relative flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                    <Image
+                      src="/images/logo-citra-banjir.png"
+                      alt="Logo Citra Banjir"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
-                  <div className="flex flex-col leading-none">
-                    <span className="text-white font-black tracking-tighter text-base italic uppercase">
-                      Citra <span className="text-amber-400">Banjir</span>
-                    </span>
-                    <span className="text-[8px] mt-0.5 text-blue-200/80 uppercase tracking-[0.2em] font-bold">
-                      Monitoring System
-                    </span>
+                </div>
+
+                {/* 2. Garis Pembatas */}
+                <div className="w-px h-8 bg-white/20 mx-1 hidden sm:block"></div>
+
+                {/* 3. Logo-logo Instansi */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="relative w-12 h-12 transition-transform duration-300 group-hover:scale-110">
+                    <Image
+                      src="/images/bbws.png"
+                      alt="Logo BBWS Citarum"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110 delay-75">
+                    <Image
+                      src="/images/LOGOBPBD.png"
+                      alt="Logo BPBD"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="relative w-12 h-12 transition-transform duration-300 group-hover:scale-110 delay-150">
+                    <Image
+                      src="/images/BMKG.png"
+                      alt="Logo BMKG"
+                      fill
+                      className="object-contain"
+                    />
                   </div>
                 </div>
               </Link>
             </div>
 
-            {/* --- NAVIGASI DESKTOP --- */}
             <div className="hidden xl:flex items-center space-x-1 h-full">
               {NAV_LINKS.map((item, idx) => (
                 <DesktopNavItem key={idx} item={item} pathname={pathname} />
@@ -291,7 +376,6 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* --- MOBILE MENU --- */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -304,11 +388,19 @@ export const Navbar = () => {
               <BackgroundPattern />
               <div className="relative px-4 pt-4 pb-8 space-y-2 z-10 max-h-[85vh] overflow-y-auto">
                 {NAV_LINKS.map((item, idx) => (
-                  <MobileNavItem key={idx} item={item} pathname={pathname} onClick={() => !item.subLinks && setIsOpen(false)} />
+                  <MobileNavItem
+                    key={idx}
+                    item={item}
+                    pathname={pathname}
+                    onClick={() => !item.subLinks && setIsOpen(false)}
+                  />
                 ))}
 
                 <button
-                  onClick={() => { setIsOpen(false); setIsLoginOpen(true); }}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsLoginOpen(true);
+                  }}
                   className="w-full py-3.5 mt-4 bg-amber-400 text-blue-950 font-bold rounded-md flex items-center justify-center gap-2 hover:bg-amber-300 uppercase text-xs tracking-widest transition-colors active:scale-95"
                 >
                   Login
