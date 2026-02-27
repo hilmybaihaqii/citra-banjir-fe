@@ -2,267 +2,126 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  LayoutDashboard,
-  ShieldCheck, // Icon Admin
-  Users, // Icon Manajemen User
-  Activity, // Icon Status Sistem
-  Database, // Icon Log Data
-  Settings,
-  LogOut,
-  ChevronRight,
-  Server, // Icon Server
+  Users,
+  MessageSquare,
+  Building2,
+  AlertTriangle,
+  ShieldCheck
 } from "lucide-react";
-import { Outfit } from "next/font/google";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-});
-
-export default function AdminDashboard() {
-  const router = useRouter();
-  const [userData, setUserData] = useState<{
-    username: string;
-    role: string;
-    agency_id?: string;
-  } | null>(null);
-
-  const [currentDate, setCurrentDate] = useState("");
+export default function AdminMainDashboard() {
+  const [userData, setUserData] = useState<{ name: string; role: string; } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. Load Data User (Menggunakan key 'user_session' agar sinkron)
     const loadData = () => {
       const savedUser = localStorage.getItem("user_session");
-      
-      if (!savedUser) {
-        router.push("/");
-        return;
-      }
-      
-      try {
-        const parsed = JSON.parse(savedUser);
-        setUserData(parsed);
-        setIsLoaded(true);
-      } catch (e) {
-        console.error("Gagal parsing data user", e);
-        localStorage.removeItem("user_session");
-        router.push("/");
-      }
-    };
 
-    // 2. Set Tanggal Real-time
-    const formatDate = () => {
-      const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      };
-      setCurrentDate(now.toLocaleDateString("id-ID", options));
+      if (!savedUser) {
+        // Mode Simulasi
+        setUserData({ name: "Developer Pusat", role: "superadmin" }); 
+      } else {
+        try {
+          const parsed = JSON.parse(savedUser);
+          setUserData(parsed);
+        } catch (e) {
+          console.error("Gagal parsing data user", e);
+        }
+      }
+      setIsLoaded(true);
     };
 
     loadData();
-    formatDate();
-  }, [router]);
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user_session");
-    localStorage.removeItem("auth_token");
-    router.push("/");
-  };
+  const isSuperAdmin = userData?.role === "superadmin";
 
-  if (!isLoaded) {
-    return null; 
-  }
+  if (!isLoaded) return null;
+
+  // PERHATIKAN: Kita tidak perlu lagi menulis tag <html>, <body>, <Sidebar>, atau <Header> di sini.
+  // Semua itu sudah diurus oleh `src/app/dashboard/admin/layout.tsx`.
+  // Kita hanya me-return isi kontennya saja.
 
   return (
-    <div className={`min-h-screen bg-slate-50 flex ${outfit.className}`}>
-      {/* SIDEBAR KIRI */}
-      <aside className="w-72 bg-blue-950 text-white flex flex-col shadow-2xl z-20">
-        <div className="p-8 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-400 rounded-lg">
-              {/* Icon Shield untuk Super Admin */}
-              <ShieldCheck className="text-blue-950" size={24} />
-            </div>
-            <span className="font-black tracking-tighter text-xl italic uppercase">
-              Citra <span className="text-amber-400">Banjir</span>
-            </span>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-6 space-y-3">
-          <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-4">
-            Pusat Komando
+    <div className="p-6 lg:p-10">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* WELCOME SECTION */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-black text-blue-950 uppercase tracking-tight">
+            Halo, {userData?.name || "Administrator"}
+          </h1>
+          <p className="text-slate-600 font-medium mt-2 tracking-wide">
+            Selamat datang di Pusat Kendali Citra Banjir. Berikut adalah ringkasan status sistem hari ini.
           </p>
-
-          {/* Menu Dashboard Aktif */}
-          <button className="w-full flex items-center justify-between p-4 bg-amber-400 text-blue-950 rounded-sm font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-400/10">
-            <div className="flex items-center gap-3">
-              <LayoutDashboard size={18} /> Dashboard
-            </div>
-            <ChevronRight size={14} />
-          </button>
-
-          {/* Menu Khusus Admin */}
-          <Link href="/dashboard/admin/users">
-            <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-3">
-              <Users size={18} /> Manajemen User
-            </button>
-          </Link>
-
-          <Link href="/dashboard/admin/monitoring">
-             <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
-              <Activity size={18} /> Monitoring Sistem
-            </button>
-          </Link>
-
-          <div className="pt-6 border-t border-white/5 mt-4">
-            <p className="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-4">
-              Database & Log
-            </p>
-            <Link href="/dashboard/admin/logs">
-              <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all mt-1">
-                <Database size={18} /> Log Data Masuk
-              </button>
-            </Link>
-            <Link href="/dashboard/admin/settings">
-              <button className="w-full flex items-center gap-3 p-4 text-blue-200 hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest transition-all">
-                <Settings size={18} />
-                <span>Pengaturan</span>
-              </button>
-            </Link>
-          </div>
-        </nav>
-
-        <div className="p-6 border-t border-white/5">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 w-full rounded-sm text-xs font-bold uppercase tracking-widest transition-all"
-          >
-            <LogOut size={18} /> Keluar
-          </button>
         </div>
-      </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* HEADER ATAS */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-end px-10 shadow-sm z-10">
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <p className="text-sm font-black text-blue-950 uppercase tracking-wider leading-none">
-                {userData?.username || "Super Admin"}
-              </p>
-              <p className="text-[9px] text-indigo-600 font-bold uppercase tracking-widest mt-1.5">
-                {userData?.role || "Administrator Pusat"}
-              </p>
+        {/* SUMMARY CARDS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          
+          {/* Card 1: Total Instansi */}
+          <div className="bg-white p-6 rounded-sm shadow-sm border border-slate-300 border-l-4 border-l-blue-950 hover:shadow-md transition-all group">
+            <div className="flex justify-between items-start mb-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Instansi</p>
+              <Building2 size={20} className="text-blue-950 opacity-50 group-hover:opacity-100 transition-opacity" />
             </div>
-
-            <div className="h-10 w-px bg-slate-200" />
-
-            {/* Logo Admin Pusat */}
-            <div className="flex items-center gap-3 bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 hover:border-indigo-400 transition-colors">
-              <div className="w-11 h-11 relative rounded-full overflow-hidden border-2 border-white shadow-sm bg-white">
-                <Image
-                  src="/images/citra-banjir.png" // Sesuaikan nama file logo utama
-                  alt="Logo Citra Banjir"
-                  fill
-                  className="object-contain p-1"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-blue-950 leading-tight">
-                  PUSAT
-                </span>
-                <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">
-                  Control Center
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* CONTENT */}
-        <div className="p-10 overflow-y-auto bg-slate-50/50 flex-1">
-          <div className="mb-10 flex justify-between items-end">
-            <div>
-              <h1 className="text-2xl font-black text-blue-950 uppercase tracking-tight">
-                Panel Administrator
-              </h1>
-              <p className="text-slate-500 text-sm mt-1 tracking-wide">
-                Monitoring status sistem dan manajemen pengguna
-              </p>
-            </div>
-            <div className="text-[10px] bg-white text-indigo-700 px-4 py-2 rounded-md font-bold uppercase tracking-widest border border-slate-200 shadow-sm">
-              <span className="text-slate-400 mr-2">Server Time:</span>{" "}
-              {currentDate}
-            </div>
+            <h3 className="text-4xl font-black text-blue-950 tracking-tighter">
+              4 <span className="text-sm font-bold text-slate-400 ml-1 tracking-widest uppercase">Mitra</span>
+            </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* CARD 1: Total Users */}
-            <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-indigo-500">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Total Pengguna
-                </p>
-                <Users size={16} className="text-indigo-500" />
-              </div>
-              <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                8{" "}
-                <span className="text-sm font-normal text-slate-400 ml-1">
-                  Akun Aktif
-                </span>
-              </h3>
+          {/* Card 2: Pengguna Aktif */}
+          <div className="bg-white p-6 rounded-sm shadow-sm border border-slate-300 border-l-4 border-l-emerald-600 hover:shadow-md transition-all group">
+            <div className="flex justify-between items-start mb-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pengguna Sistem</p>
+              <Users size={20} className="text-emerald-600 opacity-50 group-hover:opacity-100 transition-opacity" />
             </div>
-
-            {/* CARD 2: Status Server */}
-            <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Status Sistem
-                </p>
-                <Server size={16} className="text-emerald-500" />
-              </div>
-              <h3 className="text-3xl font-black text-emerald-600 tracking-tighter">
-                ONLINE
-              </h3>
-            </div>
-
-            {/* CARD 3: Log Aktivitas Hari Ini */}
-            <div className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 border-l-4 border-l-amber-400">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Aktivitas Hari Ini
-                </p>
-                <Activity size={16} className="text-amber-400" />
-              </div>
-              <h3 className="text-3xl font-black text-blue-950 tracking-tighter">
-                24{" "}
-                <span className="text-sm font-normal text-slate-400 ml-1">
-                  Log Masuk
-                </span>
-              </h3>
-            </div>
+            <h3 className="text-4xl font-black text-emerald-800 tracking-tighter">
+              12 <span className="text-sm font-bold text-slate-400 ml-1 tracking-widest uppercase">Akun</span>
+            </h3>
           </div>
 
-          {/* Area Kosong / Placeholder */}
-          <div className="mt-10 bg-white border border-slate-200 rounded-sm p-20 flex flex-col items-center justify-center border-dashed">
-            <div className="p-4 bg-slate-50 rounded-full mb-4">
-              <ShieldCheck size={40} className="text-slate-200" />
+          {/* Card 3: Laporan Masuk */}
+          <div className="bg-white p-6 rounded-sm shadow-sm border border-slate-300 border-l-4 border-l-amber-500 hover:shadow-md transition-all group">
+            <div className="flex justify-between items-start mb-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Laporan Warga</p>
+              <MessageSquare size={20} className="text-amber-500 opacity-50 group-hover:opacity-100 transition-opacity" />
             </div>
-            <p className="text-slate-400 italic text-sm text-center">
-              Pilih menu <b>Manajemen User</b> untuk menambah atau menghapus akun instansi, <br />
-              atau cek <b>Log Data</b> untuk melihat riwayat update dari BPBD/BMKG.
-            </p>
+            <h3 className="text-4xl font-black text-blue-950 tracking-tighter">
+              24 <span className="text-sm font-bold text-slate-400 ml-1 tracking-widest uppercase">Pesan</span>
+            </h3>
           </div>
         </div>
-      </main>
+
+        {/* QUICK ACTIONS ATAU INFO TAMBAHAN */}
+        <div className="bg-white border border-slate-300 rounded-sm p-8 lg:p-12 flex flex-col items-center justify-center text-center shadow-sm relative overflow-hidden">
+          {/* Background aksen */}
+          <div className="absolute -right-10 -bottom-10 opacity-5 text-blue-950">
+            <ShieldCheck size={200} />
+          </div>
+
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6 relative z-10 border border-slate-200">
+            <AlertTriangle size={32} className="text-slate-400" />
+          </div>
+          <h2 className="text-lg font-black text-blue-950 uppercase tracking-widest mb-3 relative z-10">
+            Pusat Integrasi Data Banjir
+          </h2>
+          <p className="text-sm text-slate-600 font-medium max-w-xl leading-relaxed relative z-10">
+            Anda berada di halaman utama kendali. Gunakan menu navigasi di sebelah kiri untuk mengelola hak akses instansi, memantau riwayat aktivitas, dan meninjau laporan dari masyarakat.
+          </p>
+          
+          {isSuperAdmin && (
+            <Link href="/dashboard/admin/users">
+              <button className="mt-8 px-8 py-3 bg-blue-950 hover:bg-blue-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-sm transition-all shadow-md relative z-10">
+                Kelola Pengguna Sekarang
+              </button>
+            </Link>
+          )}
+        </div>
+
+        <div className="h-10" />
+      </div>
     </div>
   );
 }
