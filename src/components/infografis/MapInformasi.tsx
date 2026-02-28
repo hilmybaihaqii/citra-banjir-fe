@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
-import { AlertTriangle } from 'lucide-react';
+import { renderToString } from 'react-dom/server';
+import { Waves } from 'lucide-react';
 import "leaflet/dist/leaflet.css";
 
-// Import komponen-komponen terpisah
-import { KECAMATAN_DATA } from '@/lib/mapData';
+// Import Komponen Modular
+import { KECAMATAN_DATA, KecamatanDetail } from '@/lib/mapData';
 import { MapController } from './MapController';
 import { MapActionButtons } from './MapActionButtons';
 import { MapModals } from './MapModals';
+import { RegionalDetailModal } from './RegionalDetailModal';
 
 interface ZoomMethods {
   zoomIn: () => void;
@@ -30,47 +32,73 @@ const FloodMap = () => {
   const centerPosition: [number, number] = [-6.9900, 107.6300]; 
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
+  
+  // State untuk Modal Keseluruhan & Detail Per Wilayah
   const [activeModal, setActiveModal] = useState<"data" | "dampak" | null>(null);
+  const [selectedKecamatan, setSelectedKecamatan] = useState<KecamatanDetail | null>(null);
 
-  const getCustomIcon = (status: string) => {
-    const isDanger = status === "Siaga 1" || status === "Siaga 2";
-    const colorClass = isDanger ? "bg-red-600" : status === "Waspada" ? "bg-amber-500" : "bg-green-500";
+  // Marker Profesional & Clean (Solid Color, White Border)
+  const getCustomIcon = useCallback((status: string) => {
+    const isDanger = status.includes("Siaga");
+    const isWarning = status === "Waspada";
     
+    // Warna solid murni, tanpa gradasi
+    const bgColor = isDanger ? "bg-red-600" : isWarning ? "bg-amber-500" : "bg-blue-600";
+    
+    // Render ikon SVG
+    const iconHtml = renderToString(<Waves size={16} className="text-white" strokeWidth={2.5} />);
+
     return L.divIcon({
       className: "custom-marker",
       html: `
-        <div class="relative flex items-center justify-center w-8 h-8">
-          <span class="absolute inline-flex w-full h-full rounded-full ${colorClass} opacity-30 animate-ping"></span>
-          <div class="relative w-3.5 h-3.5 ${colorClass} border-2 border-white rounded-full shadow-md"></div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full ${bgColor} border-[2.5px] border-white shadow-sm hover:scale-110 transition-transform duration-200 cursor-pointer">
+          ${iconHtml}
         </div>
       `,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
+      popupAnchor: [0, -20],
     });
-  };
+  }, []);
 
   return (
-    <div className="w-full h-full relative font-sans overflow-hidden">
+    <div className="w-full h-full relative font-sans overflow-hidden bg-slate-50">
       <MapContainer 
-        center={centerPosition} zoom={12} scrollWheelZoom={true} zoomControl={false} attributionControl={false}
-        className="w-full h-full bg-slate-100 outline-none z-0"
+        center={centerPosition} 
+        zoom={12} 
+        scrollWheelZoom={true} 
+        zoomControl={false} 
+        attributionControl={false}
+        className="w-full h-full z-0 outline-none grayscale-[0.1]"
       >
         <ZoomHandler setZoomMethods={setZoomHandlers} />
         <AttributionControl position="bottomleft" prefix={false} />
 
+        {/* Tile Layers */}
         {activeLayer === 'osm' && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />}
         {activeLayer === 'topo' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" maxZoom={18} />}
         {activeLayer === 'satellite' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" maxZoom={19} />}
 
+        {/* Pemetaan Data Wilayah Statis */}
         {KECAMATAN_DATA.map((kec) => (
-          <Marker key={kec.id} position={kec.coords as [number, number]} icon={getCustomIcon(kec.status)}>
-             <Popup>
-              <div className="p-1 min-w-37.5">
-                <h3 className="font-bold text-slate-800 text-sm mb-1 uppercase tracking-wider">{kec.name}</h3>
-                <div className="w-full h-px bg-slate-200 mb-2"></div>
-                <div className="flex items-center gap-2 text-xs text-slate-600 mb-1">
-                  <AlertTriangle size={14} className={kec.status === "Aman" ? "text-green-500" : kec.status.includes("Siaga") ? "text-red-500" : "text-amber-500"} />
-                  <span>Status: <strong className={kec.status === "Aman" ? "text-green-600" : kec.status.includes("Siaga") ? "text-red-600" : "text-amber-600"}>{kec.status}</strong></span>
+          <Marker 
+            key={kec.id} 
+            position={kec.coords as [number, number]} 
+            icon={getCustomIcon(kec.status)}
+            eventHandlers={{
+              click: () => setSelectedKecamatan(kec),
+            }}
+          >
+            <Popup closeButton={false} className="custom-leaflet-popup">
+              <div className="p-1 min-w-35">
+                <h3 className="font-bold text-slate-800 text-[11px] mb-1.5 uppercase tracking-widest">{kec.name}</h3>
+                <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                  <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold text-white ${kec.status.includes("Siaga") ? 'bg-red-600' : kec.status === "Waspada" ? 'bg-amber-500' : 'bg-blue-600'}`}>
+                    {kec.status}
+                  </span>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                  Klik titik untuk detail →
                 </div>
               </div>
             </Popup>
@@ -78,18 +106,32 @@ const FloodMap = () => {
         ))}
       </MapContainer>
 
-      {/* Komponen Modular UI yang sudah diekstrak */}
+      {/* --- UI OVERLAY --- */}
+
       <MapActionButtons setActiveModal={setActiveModal} />
       <MapModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
+      <RegionalDetailModal 
+        data={selectedKecamatan} 
+        onClose={() => setSelectedKecamatan(null)} 
+      />
+
       <MapController 
-        onZoomIn={() => zoomHandlers?.zoomIn()} onZoomOut={() => zoomHandlers?.zoomOut()}
-        currentLayer={activeLayer} setLayer={setActiveLayer}
+        onZoomIn={() => zoomHandlers?.zoomIn()} 
+        onZoomOut={() => zoomHandlers?.zoomOut()}
+        currentLayer={activeLayer} 
+        setLayer={setActiveLayer}
       />
       
-      {/* CSS Kustom Popup bawaan Leaflet */}
       <style dangerouslySetInnerHTML={{__html: `
-        .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; }
-        .leaflet-popup-tip { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .leaflet-popup-content-wrapper { 
+          border-radius: 8px; 
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); 
+          border: 1px solid #e2e8f0;
+          padding: 0;
+        }
+        .leaflet-popup-content { margin: 12px; }
+        .leaflet-popup-tip { display: none; } /* Menyembunyikan segitiga tip bawaan agar lebih clean */
+        .custom-marker { background: none; border: none; outline: none; }
       `}} />
     </div>
   );

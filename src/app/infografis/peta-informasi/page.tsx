@@ -9,7 +9,6 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-// Import dinamis untuk menghindari SSR Error pada Leaflet
 const MapInformasiFull = dynamic(() => import("@/components/infografis/MapInformasi"), {
   ssr: false,
   loading: () => (
@@ -22,9 +21,8 @@ const MapInformasiFull = dynamic(() => import("@/components/infografis/MapInform
 
 export default function PetaInformasiPage() {
   return (
-    // Memastikan wrapper memenuhi 100% viewport. 
-    // pt-[72px] ditambahkan untuk memberi ruang pada Navbar agar peta tidak terpotong di atas.
-    <main className={`${outfit.variable} font-sans w-full h-screen pt-18 bg-slate-100 overflow-hidden`}>
+    // PERBAIKAN: Gunakan h-[100dvh] sebagai ganti h-screen agar aman di Safari Mobile
+    <main className={`${outfit.variable} font-sans pt-28 w-full h-dvh bg-slate-100 overflow-hidden`}>
       <MapInformasiFull />
     </main>
   );
