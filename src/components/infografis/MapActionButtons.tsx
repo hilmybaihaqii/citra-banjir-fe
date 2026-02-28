@@ -1,7 +1,37 @@
 "use client";
 
 import React from "react";
-import { BarChart3, ShieldAlert } from "lucide-react";
+import { PieChart, AlertTriangle, LucideIcon, ArrowRight } from "lucide-react";
+
+interface MapButtonProps {
+  onClick: () => void;
+  icon: LucideIcon;
+  label: string;
+  sublabel: string;
+}
+
+const MapButton = ({ onClick, icon: Icon, label, sublabel }: MapButtonProps) => (
+  <button 
+    onClick={onClick}
+    className="group flex items-center gap-3.5 bg-white border border-slate-50 p-2.5 pr-6 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.12)] hover:border-slate-100 transition-all duration-300 active:scale-95 pointer-events-auto"
+  >
+    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white">
+      <Icon className="w-4.5 h-4.5" strokeWidth={2} />
+    </div>
+    
+    <div className="flex flex-col items-start leading-none gap-1.5">
+      <span className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase transition-colors group-hover:text-slate-500">
+        {sublabel}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[13px] font-semibold text-slate-800 tracking-tight group-hover:text-slate-900 transition-colors">
+          {label}
+        </span>
+        <ArrowRight size={12} className="text-slate-300 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all duration-300" />
+      </div>
+    </div>
+  </button>
+);
 
 interface ActionButtonsProps {
   setActiveModal: (modal: "data" | "dampak") => void;
@@ -9,39 +39,19 @@ interface ActionButtonsProps {
 
 export const MapActionButtons = ({ setActiveModal }: ActionButtonsProps) => {
   return (
-    // Penambahan safe-area untuk Safari/iOS, pointer-events-auto, dan jarak dinamis
-    <div 
-      className="absolute z-[400] flex flex-col gap-2 sm:gap-3 pointer-events-auto"
-      style={{
-        top: 'max(1rem, env(safe-area-inset-top) + 1rem)',
-        left: 'max(1rem, env(safe-area-inset-left) + 1rem)'
-      }}
-    >
-      <button 
+    <div className="absolute z-40 flex flex-col gap-3 top-5 left-4 md:left-6 pointer-events-none">
+      <MapButton 
         onClick={() => setActiveModal("data")}
-        className="group flex items-center gap-2 sm:gap-3 bg-white/95 backdrop-blur-md border border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl shadow-lg hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
-      >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-          <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2.5} />
-        </div>
-        <div className="flex flex-col items-start">
-          <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-widest leading-none">Ringkasan</span>
-          <span className="text-xs sm:text-sm font-black text-blue-950 tracking-tight whitespace-nowrap">Data Kejadian</span>
-        </div>
-      </button>
-
-      <button 
+        icon={PieChart}
+        sublabel="Info Center"
+        label="Data Kejadian"
+      />
+      <MapButton 
         onClick={() => setActiveModal("dampak")}
-        className="group flex items-center gap-2 sm:gap-3 bg-white/95 backdrop-blur-md border border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl shadow-lg hover:shadow-xl hover:border-amber-300 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
-      >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
-          <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={2.5} />
-        </div>
-        <div className="flex flex-col items-start">
-          <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-widest leading-none">Analisis</span>
-          <span className="text-xs sm:text-sm font-black text-blue-950 tracking-tight whitespace-nowrap">Dampak Kejadian</span>
-        </div>
-      </button>
+        icon={AlertTriangle}
+        sublabel="Impact"
+        label="Dampak Bencana"
+      />
     </div>
   );
 };

@@ -308,7 +308,7 @@ export const Navbar = () => {
               <Link href="/" className="flex items-center gap-3 group">
                 {/* 1. Logo Citra Banjir */}
                 <div className="flex items-center gap-2">
-                  <div className="w-50 h-50 md:w-50 md:h-40 relative flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                  <div className="w-40 h-40 md:w-50 md:h-40 relative flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
                     <Image
                       src="/images/logo-citra-banjir.png"
                       alt="Logo Citra Banjir"
@@ -318,10 +318,7 @@ export const Navbar = () => {
                   </div>
                 </div>
 
-                {/* 2. Garis Pembatas */}
                 <div className="w-px h-8 bg-white/20 mx-1 hidden sm:block"></div>
-
-                {/* 3. Logo-logo Instansi */}
                 <div className="hidden sm:flex items-center gap-3">
                   <div className="relative w-12 h-12 transition-transform duration-300 group-hover:scale-110">
                     <Image
