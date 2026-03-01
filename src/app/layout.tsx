@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { Navbar } from "@/components/Navbar";
+import { WarningTicker } from "@/components/WarningTicker"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body className={`${inter.className} bg-slate-50 flex flex-col h-dvh`}>
         <Navbar />
+        <WarningTicker />
         <main className="flex-1 relative w-full overflow-hidden">
           {children}
         </main>

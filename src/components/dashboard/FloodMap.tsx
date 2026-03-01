@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, AttributionControl } from 'react-leaflet';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
-import { Layers, Plus, Minus, Check } from 'lucide-react';
+import { renderToString } from 'react-dom/server';
+import { Layers, Plus, Minus, Check, CloudRain, Droplets, AlertTriangle, ShieldCheck } from 'lucide-react';
+import "leaflet/dist/leaflet.css";
 
+// --- Interfaces ---
 interface ZoomMethods {
   zoomIn: () => void;
   zoomOut: () => void;
@@ -17,162 +20,169 @@ interface LayerOptionProps {
   label: string;
 }
 
+// --- Data Prediksi Terintegrasi (Sinkron dengan KECAMATAN_DATA) ---
+const PREDICTION_DATA = [
+  { id: 1, name: "Dayeuhkolot", coords: [-6.9881, 107.6284], isFloodPredicted: true, curahHujan: "85 mm/jam", ketinggianAir: "120 cm" },
+  { id: 2, name: "Baleendah", coords: [-6.9946, 107.6306], isFloodPredicted: true, curahHujan: "60 mm/jam", ketinggianAir: "90 cm" },
+  { id: 3, name: "Bojongsoang", coords: [-6.9806, 107.6432], isFloodPredicted: true, curahHujan: "45 mm/jam", ketinggianAir: "70 cm" },
+  { id: 4, name: "Margahayu", coords: [-6.9631, 107.5752], isFloodPredicted: true, curahHujan: "30 mm/jam", ketinggianAir: "50 cm" },
+  { id: 5, name: "Margaasih", coords: [-6.9467, 107.5564], isFloodPredicted: false, curahHujan: "15 mm/jam", ketinggianAir: "20 cm" },
+  { id: 6, name: "Majalaya", coords: [-7.0450, 107.7547], isFloodPredicted: true, curahHujan: "75 mm/jam", ketinggianAir: "100 cm" },
+];
+
+// --- Sub Komponen: Kontrol Layer & Zoom ---
+const LayerOption = ({ active, onClick, image, label }: LayerOptionProps) => (
+  <button 
+    onClick={onClick}
+    className={`flex items-center gap-3 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-200 ${active ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
+  >
+    <div className={`w-8 h-8 rounded-lg overflow-hidden border ${active ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-slate-200 opacity-80 group-hover:opacity-100'}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={image} alt={label} className="w-full h-full object-cover" />
+    </div>
+    <span className={`text-[12px] font-semibold flex-1 ${active ? 'text-slate-900' : 'text-slate-500'}`}>
+      {label}
+    </span>
+    {active && <Check size={16} className="text-slate-900" strokeWidth={2.5} />}
+  </button>
+);
+
 const MapController = ({ 
-  onZoomIn, 
-  onZoomOut, 
-  currentLayer, 
-  setLayer 
+  onZoomIn, onZoomOut, currentLayer, setLayer 
 }: { 
-  onZoomIn: () => void; 
-  onZoomOut: () => void;
-  currentLayer: string;
-  setLayer: (l: string) => void;
+  onZoomIn: () => void; onZoomOut: () => void; currentLayer: string; setLayer: (l: string) => void;
 }) => {
   const [showLayerMenu, setShowLayerMenu] = useState(false);
 
   return (
-    <div className="absolute bottom-24 right-4 md:bottom-8 md:right-6 z-400 flex flex-col gap-4 items-end font-sans pointer-events-none">
-
+    <div className="absolute bottom-6 md:bottom-8 right-4 md:right-6 z-400 flex flex-col gap-3 items-end font-sans pointer-events-none">
       <div className="relative pointer-events-auto">
         {showLayerMenu && (
-          <div className="absolute bottom-0 right-14 mb-0 bg-white rounded-lg shadow-[0_2px_15px_rgba(0,0,0,0.15)] border border-slate-200 p-2 min-w-48 animate-in fade-in slide-in-from-right-2 duration-200">
+          <div className="absolute bottom-0 right-14 mb-0 bg-white rounded-2xl shadow-[0_15px_35px_-10px_rgba(0,0,0,0.12)] border border-slate-100 p-2 min-w-45 animate-in fade-in slide-in-from-right-2 duration-200">
             <div className="flex flex-col gap-1">
-              <LayerOption 
-                active={currentLayer === 'osm'} 
-                onClick={() => setLayer('osm')}
-                label="Street"
-                image="https://a.tile.openstreetmap.org/14/13215/8488.png"
-              />
-              <LayerOption 
-                active={currentLayer === 'topo'} 
-                onClick={() => setLayer('topo')}
-                label="Topografi"
-                image="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/14/9053/13215"
-              />
-              <LayerOption 
-                active={currentLayer === 'satellite'} 
-                onClick={() => setLayer('satellite')}
-                label="Satelit"
-                image="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/9053/13215"
-              />
+              <LayerOption active={currentLayer === 'osm'} onClick={() => { setLayer('osm'); setShowLayerMenu(false); }} label="Peta Jalan" image="https://a.tile.openstreetmap.org/14/13215/8488.png" />
+              <LayerOption active={currentLayer === 'topo'} onClick={() => { setLayer('topo'); setShowLayerMenu(false); }} label="Topografi" image="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/14/9053/13215" />
+              <LayerOption active={currentLayer === 'satellite'} onClick={() => { setLayer('satellite'); setShowLayerMenu(false); }} label="Satelit" image="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/9053/13215" />
             </div>
           </div>
         )}
-        
         <button 
           onClick={() => setShowLayerMenu(!showLayerMenu)}
-          className={`w-10 h-10 rounded-lg shadow-md border flex items-center justify-center transition-all duration-200 ${showLayerMenu ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-          title="Layer"
+          className={`w-11 h-11 rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.12)] border flex items-center justify-center transition-all duration-300 active:scale-95 ${showLayerMenu ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-50 hover:border-slate-100 hover:text-slate-900'}`}
+          title="Ubah Tampilan Peta"
         >
-          <Layers size={18} />
+          <Layers size={20} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Container Zoom (Pointer Auto) */}
-      <div className="flex flex-col bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden pointer-events-auto">
-        <button 
-          onClick={onZoomIn}
-          className="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:bg-slate-100 transition-colors border-b border-slate-100"
-        >
-          <Plus size={18} />
+      <div className="flex flex-col w-11 bg-white rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] border border-slate-50 overflow-hidden pointer-events-auto">
+        <button onClick={onZoomIn} className="h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors border-b border-slate-100" title="Perbesar">
+          <Plus size={20} strokeWidth={2.5} />
         </button>
-        <button 
-          onClick={onZoomOut}
-          className="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:bg-slate-100 transition-colors"
-        >
-          <Minus size={18} />
+        <button onClick={onZoomOut} className="h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors" title="Perkecil">
+          <Minus size={20} strokeWidth={2.5} />
         </button>
       </div>
     </div>
   );
 };
 
-const LayerOption = ({ active, onClick, image, label }: LayerOptionProps) => (
-  <button 
-    onClick={onClick}
-    className={`flex items-center gap-3 px-2 py-2 rounded-md w-full text-left transition-all ${active ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
-  >
-    <div className={`w-8 h-8 rounded-md overflow-hidden border ${active ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 opacity-80'}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt={label} className="w-full h-full object-cover" />
-    </div>
-    
-    {/* Label */}
-    <span className={`text-xs font-semibold flex-1 ${active ? 'text-slate-900' : 'text-slate-500'}`}>
-      {label}
-    </span>
-    {active && <Check size={14} className="text-blue-600" />}
-  </button>
-);
-
 const ZoomHandler = ({ setZoomMethods }: { setZoomMethods: (methods: ZoomMethods) => void }) => {
   const map = useMap();
   useEffect(() => {
-    setZoomMethods({
-      zoomIn: () => map.zoomIn(),
-      zoomOut: () => map.zoomOut()
-    });
+    setZoomMethods({ zoomIn: () => map.zoomIn(), zoomOut: () => map.zoomOut() });
+    setTimeout(() => { map.invalidateSize(); }, 250);
   }, [map, setZoomMethods]);
   return null;
 };
 
+// --- Komponen Utama: Peta Prediksi ---
 const FloodMap = () => {
-  const position: [number, number] = [-6.9757, 107.6191]; // Dayeuhkolot
+  const centerPosition: [number, number] = [-6.9800, 107.6200]; 
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
 
-  const customIcon = useMemo(() => {
+  // Marker Minimalis dengan Ikon Hujan/Cuaca
+  const getCustomIcon = useCallback((isFloodPredicted: boolean) => {
+    const bgColor = isFloodPredicted ? "bg-red-600" : "bg-emerald-500";
+    const iconHtml = renderToString(<CloudRain size={18} className="text-white" strokeWidth={2} />);
+
     return L.divIcon({
       className: "custom-marker",
       html: `
-        <div class="relative flex items-center justify-center w-8 h-8">
-          <span class="absolute inline-flex w-full h-full rounded-full bg-red-600 opacity-30 animate-ping"></span>
-          <div class="relative w-3.5 h-3.5 bg-red-600 border-2 border-white rounded-full shadow-md"></div>
+        <div class="flex items-center justify-center w-9 h-9 rounded-full ${bgColor} border-4 border-white shadow-md hover:scale-110 transition-transform duration-200 cursor-pointer">
+          ${iconHtml}
         </div>
       `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -22],
     });
   }, []);
 
   return (
-    <div className="w-full h-full relative group">
+    <div className="w-full h-full relative font-sans overflow-hidden bg-slate-100">
       <MapContainer 
-        center={position} 
-        zoom={14} 
+        center={centerPosition} 
+        zoom={12} // Mundurkan sedikit zoom agar semua 6 wilayah masuk frame awal
         scrollWheelZoom={true}
         zoomControl={false}
         attributionControl={false}
-        className="w-full h-full bg-slate-100 outline-none"
+        className="w-full h-full outline-none z-0 grayscale-[0.05]"
       >
         <ZoomHandler setZoomMethods={setZoomHandlers} />
         <AttributionControl position="bottomleft" prefix={false} />
 
-        {activeLayer === 'osm' && (
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
-          />
-        )}
+        {/* Tile Layers */}
+        {activeLayer === 'osm' && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />}
+        {activeLayer === 'topo' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" maxZoom={18} />}
+        {activeLayer === 'satellite' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" maxZoom={19} />}
 
-        {activeLayer === 'topo' && (
-          <TileLayer
-            attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={18}
-          />
-        )}
+        {/* Mapping Data Prediksi Baru */}
+        {PREDICTION_DATA.map((loc) => (
+          <Marker key={loc.id} position={loc.coords as [number, number]} icon={getCustomIcon(loc.isFloodPredicted)}>
+            
+            {/* Popup Universal Design */}
+            <Popup closeButton={false} autoPan={false} className="custom-leaflet-popup">
+              <div className="flex flex-col w-55 bg-white rounded-xl p-4 gap-4">
+                
+                {/* Header: Nama dan Badge Status */}
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-bold text-slate-900 text-lg leading-tight">{loc.name}</h3>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md self-start ${loc.isFloodPredicted ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                    {loc.isFloodPredicted ? <AlertTriangle size={14} strokeWidth={2.5}/> : <ShieldCheck size={14} strokeWidth={2.5}/>}
+                    <span className="text-[11px] font-bold uppercase tracking-wide">
+                      {loc.isFloodPredicted ? "Waspada Banjir" : "Terpantau Aman"}
+                    </span>
+                  </div>
+                </div>
 
-        {activeLayer === 'satellite' && (
-          <TileLayer
-            attribution='Tiles &copy; Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-        )}
+                <div className="w-full h-px bg-slate-100"></div>
+                
+                {/* Body: Data List */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <CloudRain size={16} strokeWidth={2} />
+                      <span className="text-xs font-semibold">Curah Hujan</span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900">{loc.curahHujan}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Droplets size={16} strokeWidth={2} />
+                      <span className="text-xs font-semibold">Tinggi Air</span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-900">{loc.ketinggianAir}</span>
+                  </div>
+                </div>
 
-        <Marker position={position} icon={customIcon} />
+              </div>
+            </Popup>
+            
+          </Marker>
+        ))}
 
       </MapContainer>
 
@@ -182,6 +192,18 @@ const FloodMap = () => {
         currentLayer={activeLayer}
         setLayer={setActiveLayer}
       />
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .leaflet-popup-content-wrapper { 
+          border-radius: 16px; 
+          box-shadow: 0 12px 40px -10px rgba(0,0,0,0.15); 
+          padding: 0;
+          background: transparent;
+        }
+        .leaflet-popup-content { margin: 0; width: 220px !important; }
+        .leaflet-popup-tip { display: none; }
+        .custom-marker { background: none; border: none; outline: none; }
+      `}} />
     </div>
   );
 };

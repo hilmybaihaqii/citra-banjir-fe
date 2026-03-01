@@ -4,15 +4,16 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Search,
-  Filter,
   User,
   Clock,
   Database,
   FileText,
   AlertTriangle,
-  ChevronRight,
+  CloudRain,
+  Waves,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -24,198 +25,227 @@ const outfit = Outfit({
 const initialLogs = [
   {
     id: 1,
-    admin: "Admin Dinas",
-    aksi: "Update Tinggi Air",
-    detail: "Dayeuhkolot: 120cm -> 155cm",
-    waktu: "10 Menit yang lalu",
-    tipe: "update",
+    admin: "Petugas_BMKG_01",
+    aksi: "Update Curah Hujan",
+    detail: "Pos Nanjung: 12mm/hr (Status: Waspada)",
+    waktu: "5 Menit yang lalu",
+    tipe: "presipitasi",
   },
   {
     id: 2,
-    admin: "Superuser_BBWS",
+    admin: "Admin_BBWS_Pusat",
+    aksi: "Update Tinggi Air",
+    detail: "Dayeuhkolot: 120cm -> 155cm",
+    waktu: "25 Menit yang lalu",
+    tipe: "update",
+  },
+  {
+    id: 3,
+    admin: "Superuser_Citra",
     aksi: "Tambah User Baru",
-    detail: "Menambahkan petugas_rancaekek",
+    detail: "Menambahkan akses untuk instansi BPBD",
     waktu: "2 Jam yang lalu",
     tipe: "user",
   },
   {
-    id: 3,
-    admin: "Petugas Lapangan",
-    aksi: "Login Sistem",
-    detail: "Login sukses dari IP 110.12.33.1",
-    waktu: "3 Jam yang lalu",
-    tipe: "system",
-  },
-  {
     id: 4,
-    admin: "Petugas Lapangan",
-    aksi: "Update Tinggi Air",
-    detail: "Baleendah: 150cm -> 140cm",
-    waktu: "5 Jam yang lalu",
+    admin: "Petugas_BBWS_Field",
+    aksi: "Update Debit Sungai",
+    detail: "Cisangkuy: 120 m³/s -> 145 m³/s",
+    waktu: "4 Jam yang lalu",
     tipe: "update",
   },
   {
     id: 5,
-    admin: "Admin Dinas",
-    aksi: "Hapus Titik Sungai",
-    detail: "Menghapus titik pantau Sungai Cikijing",
+    admin: "System_Security",
+    aksi: "Login Gagal",
+    detail: "Upaya login tidak sah dari IP 182.1.22.9",
     waktu: "Kemarin",
     tipe: "danger",
-  },
-  // Data tambahan untuk mengetes scroll
-  {
-    id: 6,
-    admin: "Admin Dinas",
-    aksi: "Update Bendungan",
-    detail: "Cipanunjang: Kapasitas Normal",
-    waktu: "Kemarin",
-    tipe: "update",
   },
 ];
 
 export default function LogAktivitasPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [logs] = useState(initialLogs);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const getLogIcon = (tipe: string) => {
+    switch (tipe) {
+      case "presipitasi":
+        return <CloudRain size={18} />;
+      case "update":
+        return <Waves size={18} />;
+      case "user":
+        return <User size={18} />;
+      case "danger":
+        return <AlertTriangle size={18} />;
+      default:
+        return <Database size={18} />;
+    }
+  };
+
+  const getLogColor = (tipe: string) => {
+    switch (tipe) {
+      case "presipitasi":
+        return "bg-blue-50 text-blue-600 border-blue-200";
+      case "update":
+        return "bg-emerald-50 text-emerald-600 border-emerald-200";
+      case "user":
+        return "bg-amber-50 text-amber-600 border-amber-200";
+      case "danger":
+        return "bg-red-50 text-red-600 border-red-200";
+      default:
+        return "bg-slate-50 text-slate-600 border-slate-200";
+    }
+  };
+
+  const handleExportExcel = () => {
+    setIsExporting(true);
+    // Simulasi proses export
+    setTimeout(() => {
+      setIsExporting(false);
+      alert("Log Aktivitas berhasil di-export ke format .xlsx (Excel)");
+    }, 1500);
+  };
 
   return (
-    /* PERBAIKAN: Mengaktifkan scroll pada layar penuh */
     <div
-      className={`h-screen overflow-y-auto bg-slate-50 ${outfit.className} scroll-smooth`}
+      className={`h-screen flex flex-col bg-slate-50 ${outfit.className} overflow-hidden`}
     >
-      {/* HEADER: Sticky agar tidak ikut tergulung */}
-      <header className="h-20 bg-blue-950 text-white flex items-center justify-between px-10 shadow-lg sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+      {/* HEADER - Navbar Full ke Atas */}
+      <header className="h-16 md:h-20 bg-blue-950 text-white flex items-center justify-between px-4 md:px-10 shadow-lg shrink-0 z-50">
+        <div className="flex items-center gap-2 md:gap-4">
           <Link
             href="/dashboard/bbws"
             className="p-2 hover:bg-white/10 rounded-full transition-colors text-amber-400"
           >
             <ArrowLeft size={24} />
           </Link>
-          <div>
-            <h1 className="text-xl font-black uppercase tracking-tight leading-none text-white">
-              Log Aktivitas
-            </h1>
-            <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">
-              Audit Trail & Riwayat Operasi Sistem
-            </p>
+          <div className="flex items-center gap-3 border-l pl-3 md:pl-4 border-white/10">
+            <div className="relative w-10 h-10 md:w-12 md:h-12">
+              <Image
+                src="/images/logo-citra-banjir2.png"
+                alt="Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-xs md:text-lg font-black uppercase tracking-tight leading-none text-white">
+                Log Aktivitas
+              </h1>
+              <p className="text-[8px] md:text-[10px] text-blue-300 font-bold uppercase tracking-widest mt-1">
+                BBWS Citarum
+              </p>
+            </div>
           </div>
         </div>
-        <div className="w-10 h-10 relative rounded-full overflow-hidden border-2 border-amber-400 bg-white">
+
+        <div className="w-10 h-10 relative rounded-full overflow-hidden border-2 border-amber-400 bg-white shadow-md shrink-0">
           <Image
-            src="/images/bbws-logo.jpg"
-            alt="Logo"
+            src="/images/bbws.png"
+            alt="Logo BBWS"
             fill
             className="object-contain p-1"
           />
         </div>
       </header>
 
-      <main className="p-10 max-w-5xl mx-auto pb-20">
-        {/* ACTION BAR */}
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-24 z-40 bg-slate-50/90 backdrop-blur-sm py-2">
-          <div className="relative w-full md:w-96">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Cari aktivitas atau nama petugas..."
-              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-sm text-sm text-blue-950 focus:ring-2 focus:ring-blue-950 outline-none transition-all font-medium shadow-sm"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-3 w-full md:w-auto">
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white border border-slate-300 rounded-sm text-[10px] font-black text-blue-950 uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-              <Filter size={16} /> Filter Tipe
+      {/* MAIN AREA - Scrollable */}
+      <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
+        <div className="p-4 md:p-10 max-w-6xl mx-auto pb-24 text-blue-950">
+          {/* ACTION BAR */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div className="relative flex-1 w-full text-blue-950">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Cari aktivitas, petugas, atau detail..."
+                className="w-full pl-12 pr-4 py-3 md:py-4 bg-white border border-slate-200 rounded-xl text-sm font-semibold shadow-sm focus:ring-2 focus:ring-blue-950 outline-none transition-all"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 md:py-4 bg-blue-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+              <FileText size={16} />{" "}
+              {isExporting ? "Processing..." : "Export Log (.xlsx)"}
             </button>
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-blue-950 text-white rounded-sm text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-md">
-              <FileText size={16} /> Export Log
-            </button>
           </div>
-        </div>
 
-        {/* LIST LOGS */}
-        <div className="space-y-3">
-          {initialLogs
-            .filter(
-              (log) =>
-                log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.aksi.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-            .map((log) => (
-              <div
-                key={log.id}
-                className="bg-white border border-slate-200 p-5 rounded-sm shadow-sm hover:shadow-md transition-all border-l-4 group"
-                style={{
-                  borderLeftColor:
-                    log.tipe === "update"
-                      ? "#1d4ed8"
-                      : log.tipe === "user"
-                        ? "#f59e0b"
-                        : log.tipe === "danger"
-                          ? "#dc2626"
-                          : "#475569",
-                }}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`p-3 rounded-sm ${
-                        log.tipe === "update"
-                          ? "bg-blue-50 text-blue-700"
-                          : log.tipe === "user"
-                            ? "bg-amber-50 text-amber-600"
-                            : log.tipe === "danger"
-                              ? "bg-red-50 text-red-600"
-                              : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {log.tipe === "update" ? (
-                        <Database size={20} />
-                      ) : log.tipe === "user" ? (
-                        <User size={20} />
-                      ) : (
-                        <Clock size={20} />
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-black text-blue-950 text-sm uppercase tracking-tight">
-                          {log.aksi}
-                        </h3>
-                        <span className="text-[9px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 rounded-sm uppercase tracking-wider">
-                          {log.waktu}
-                        </span>
+          {/* LOG LIST */}
+          <div className="space-y-3 md:space-y-4">
+            <AnimatePresence initial={false}>
+              {logs
+                .filter(
+                  (log) =>
+                    log.admin
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase()) ||
+                    log.aksi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    log.detail.toLowerCase().includes(searchTerm.toLowerCase()),
+                )
+                .map((log) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-4 md:gap-5">
+                      <div
+                        className={`p-3 md:p-4 rounded-xl border shrink-0 ${getLogColor(log.tipe)}`}
+                      >
+                        {getLogIcon(log.tipe)}
                       </div>
-                      <p className="text-slate-600 text-sm mt-1 font-medium italic">
-                        &quot;{log.detail}&quot;
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <div className="w-4 h-4 rounded-full bg-blue-950 flex items-center justify-center text-[8px] text-white font-bold">
-                          {log.admin.charAt(0)}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-black text-blue-950 text-xs md:text-sm uppercase tracking-tight">
+                            {log.aksi}
+                          </h3>
+                          <span className="text-[8px] md:text-[9px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full flex items-center gap-1">
+                            <Clock size={10} /> {log.waktu}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-black text-blue-950 uppercase tracking-tighter">
-                          Petugas: {log.admin}
-                        </span>
+                        <p className="text-blue-950/70 text-xs md:text-sm font-medium">
+                          {log.detail}
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <div className="w-5 h-5 rounded-full bg-blue-950 flex items-center justify-center text-[8px] text-white font-bold uppercase">
+                            {log.admin.charAt(0)}
+                          </div>
+                          <span className="text-[9px] md:text-[10px] font-black text-blue-950/40 uppercase tracking-tighter">
+                            Oleh:{" "}
+                            <span className="text-blue-600">{log.admin}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    {/* Tombol Detail Dihapus Sesuai Permintaan */}
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+          </div>
 
-                  <button className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-950 transition-colors">
-                    Detail <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-        </div>
-
-        {/* INFO FOOTER */}
-        <div className="mt-10 p-4 bg-blue-50 border border-blue-200 rounded-sm flex items-center gap-3 shadow-sm text-blue-900">
-          <AlertTriangle className="text-blue-700 shrink-0" size={20} />
-          <p className="text-[10px] font-bold uppercase tracking-wide">
-            Data riwayat aktivitas ini bersifat permanen dan tidak dapat dihapus
-            untuk keperluan audit internal BBWS.
-          </p>
+          {/* FOOTER NOTICE */}
+          <div className="mt-10 p-5 md:p-6 bg-blue-950 rounded-2xl border-l-8 border-amber-400 flex items-start md:items-center gap-4 shadow-xl">
+            <Database
+              className="text-amber-400 shrink-0 mt-1 md:mt-0"
+              size={24}
+            />
+            <p className="text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-loose opacity-80">
+              Seluruh aktivitas dicatat otomatis sebagai protokol{" "}
+              <span className="text-amber-400">Keamanan Data Nasional</span>.
+              Riwayat ini bersifat permanen dan tidak dapat dimanipulasi.
+            </p>
+          </div>
         </div>
       </main>
     </div>
