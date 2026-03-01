@@ -43,13 +43,13 @@ export const MapActionButtons = ({ setActiveModal }: ActionButtonsProps) => {
       <MapButton 
         onClick={() => setActiveModal("data")}
         icon={PieChart}
-        sublabel="Info Center"
+        sublabel="Statistik"
         label="Data Kejadian"
       />
       <MapButton 
         onClick={() => setActiveModal("dampak")}
         icon={AlertTriangle}
-        sublabel="Impact"
+        sublabel="Ringkasan"
         label="Dampak Bencana"
       />
     </div>
