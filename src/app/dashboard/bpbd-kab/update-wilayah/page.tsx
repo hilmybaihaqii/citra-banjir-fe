@@ -18,7 +18,7 @@ const MapPicker = dynamic(() => import("@/components/ui/MapPicker"), {
   )
 });
 
-export default function BPBDJabarUpdateWilayahPage() {
+export default function BPBDKabUpdateWilayahPage() {
   const [locations, setLocations] = useState<KecamatanDetail[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -34,11 +34,10 @@ export default function BPBDJabarUpdateWilayahPage() {
   
   const [formData, setFormData] = useState(initialFormState);
 
-  // Kunci penyimpanan utama (Single Source of Truth)
+  // Kunci penyimpanan harus SAMA dengan Jabar agar tersinkronisasi
   const STORAGE_KEY = "simulasi_database_banjir";
 
   useEffect(() => {
-    // 1. Muat data awal
     const loadLocations = () => {
       const savedData = localStorage.getItem(STORAGE_KEY);
       if (savedData) {
@@ -51,7 +50,6 @@ export default function BPBDJabarUpdateWilayahPage() {
 
     loadLocations();
 
-    // 2. Sinkronisasi Real-time dengan tab lain
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         setLocations(JSON.parse(e.newValue));
@@ -60,7 +58,6 @@ export default function BPBDJabarUpdateWilayahPage() {
 
     window.addEventListener("storage", handleStorageChange);
 
-    // 3. Cleanup
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
@@ -107,14 +104,7 @@ export default function BPBDJabarUpdateWilayahPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) { setErrorMessage("Nama Wilayah tidak boleh kosong!"); return; }
-    
-    // Validasi tambahan karena sekarang manual input diizinkan
-    const latNum = parseFloat(formData.lat);
-    const lngNum = parseFloat(formData.lng);
-    if (isNaN(latNum) || isNaN(lngNum)) { 
-      setErrorMessage("Koordinat tidak valid! Silakan masukkan angka atau klik pada Peta."); 
-      return; 
-    }
+    if (!formData.lat || !formData.lng) { setErrorMessage("Koordinat Latitude dan Longitude harus diisi!"); return; }
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -123,7 +113,7 @@ export default function BPBDJabarUpdateWilayahPage() {
       try {
         const regionData = {
           name: formData.name,
-          coords: [latNum, lngNum] as [number, number],
+          coords: [parseFloat(formData.lat), parseFloat(formData.lng)] as [number, number],
           status: formData.status,
           stats: {
             kepalaKeluarga: formData.kepalaKeluarga || "0", 
@@ -152,7 +142,6 @@ export default function BPBDJabarUpdateWilayahPage() {
         setLocations(updatedLocations);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLocations));
         
-        // Trigger sinkronisasi ke tab lain secara manual
         window.dispatchEvent(new Event("storage"));
 
         setTimeout(() => setSuccessMessage(null), 4000); 
@@ -161,7 +150,7 @@ export default function BPBDJabarUpdateWilayahPage() {
         setFormData(initialFormState);
       } catch (error) {
         console.error("Gagal menyimpan:", error);
-        setErrorMessage("Terjadi kesalahan sistem saat menyimpan data.");
+        setErrorMessage("Terjadi kesalahan sistem saat menyimpan data. Pastikan format angka benar.");
       } finally {
         setIsSubmitting(false);
       }
@@ -175,7 +164,7 @@ export default function BPBDJabarUpdateWilayahPage() {
       setLocations(updatedLocations);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLocations));
       
-      window.dispatchEvent(new Event("storage")); // Trigger sinkronisasi
+      window.dispatchEvent(new Event("storage")); 
       
       if (editingId === id) handleCancelEdit();
 
@@ -196,7 +185,7 @@ export default function BPBDJabarUpdateWilayahPage() {
         <div>
           <h1 className="text-xl md:text-2xl font-black text-blue-950 uppercase tracking-tight">Update Wilayah Bencana</h1>
           <p className="text-slate-600 font-medium text-xs md:text-sm mt-1 tracking-wide">
-            Pantau, tambahkan, atau perbarui data komprehensif daerah terdampak banjir (Tingkat Provinsi).
+            Pantau, tambahkan, atau perbarui data komprehensif daerah terdampak banjir di Kabupaten Bandung.
           </p>
         </div>
 
@@ -260,9 +249,14 @@ export default function BPBDJabarUpdateWilayahPage() {
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {/* READONLY DIHAPUS - Input bisa diketik manual */}
-                <input required type="text" name="lat" value={formData.lat} onChange={handleInputChange} placeholder="Latitude (Manual / Klik)" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-sm text-xs font-medium text-slate-700 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
-                <input required type="text" name="lng" value={formData.lng} onChange={handleInputChange} placeholder="Longitude (Manual / Klik)" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-sm text-xs font-medium text-slate-700 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Latitude <span className="text-red-500">*</span></label>
+                  <input required type="text" name="lat" value={formData.lat} onChange={handleInputChange} placeholder="-6.9147" className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-sm text-sm font-bold text-blue-950 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Longitude <span className="text-red-500">*</span></label>
+                  <input required type="text" name="lng" value={formData.lng} onChange={handleInputChange} placeholder="107.6098" className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-sm text-sm font-bold text-blue-950 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all" />
+                </div>
               </div>
             </div>
 
@@ -328,6 +322,7 @@ export default function BPBDJabarUpdateWilayahPage() {
 
           </form>
 
+          {/* Tombol Submit */}
           <div className={`p-4 border-t shrink-0 ${editingId ? 'bg-amber-100 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
             <button 
               type="submit" 
