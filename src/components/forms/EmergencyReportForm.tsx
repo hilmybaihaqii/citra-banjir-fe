@@ -140,7 +140,7 @@ export const EmergencyReportForm = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-12 mb-8">
-              <FloatingInput label="Ketinggian Air (Contoh: 50 cm / Selutut)" name="waterLevel" value={form.waterLevel} onChange={handleChange} />
+              <FloatingInput label="Ketinggian Air (Contoh: 50 cm)" name="waterLevel" value={form.waterLevel} onChange={handleChange} />
             </div>
 
             <FloatingInput label="Lokasi Spesifik (RT/RW, Patokan)" name="location" isArea value={form.location} onChange={handleChange} error={errors.location} />
@@ -148,7 +148,7 @@ export const EmergencyReportForm = () => {
           </div>
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">3. Bukti Visual (Opsional)</h4>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">3. Bukti Visual</h4>
             <ImageUploader fileName={selectedFile ? selectedFile.name : ''} onFileSelect={setSelectedFile} />
           </div>
 

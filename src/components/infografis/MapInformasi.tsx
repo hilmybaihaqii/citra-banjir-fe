@@ -7,7 +7,6 @@ import { renderToString } from 'react-dom/server';
 import { Waves } from 'lucide-react';
 import "leaflet/dist/leaflet.css";
 
-// Komponen dan Tipe Data Pendukung
 import { KECAMATAN_DATA, KecamatanDetail } from '@/lib/mapData';
 import { MapController } from './MapController';
 import { MapActionButtons } from './MapActionButtons';
@@ -19,7 +18,6 @@ interface ZoomMethods {
   zoomOut: () => void;
 }
 
-// Komponen helper untuk mengontrol zoom peta dari luar struktur standar Leaflet
 const ZoomHandler = ({ setZoomMethods }: { setZoomMethods: (methods: ZoomMethods) => void }) => {
   const map = useMap();
   useEffect(() => {
@@ -34,15 +32,12 @@ const FloodMap = () => {
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
   
-  // State Utama Penyimpanan Data Lokasi
   const [mapLocations, setMapLocations] = useState<KecamatanDetail[]>([]);
   const [activeModal, setActiveModal] = useState<"data" | "dampak" | null>(null);
   const [selectedKecamatan, setSelectedKecamatan] = useState<KecamatanDetail | null>(null);
 
-  // Kunci Database Simulasi (Sama dengan form input Jabar & Kab)
   const STORAGE_KEY = "simulasi_database_banjir";
 
-  // --- SINKRONISASI REAL-TIME DENGAN LOCAL STORAGE ---
   useEffect(() => {
     const fetchMapData = () => {
       const savedData = localStorage.getItem(STORAGE_KEY);
@@ -53,19 +48,15 @@ const FloodMap = () => {
       }
     };
 
-    // Eksekusi muat data pertama kali
     fetchMapData();
 
-    // Event listener mendengarkan update dari halaman "Update Wilayah"
     window.addEventListener("storage", fetchMapData);
     
-    // Cleanup untuk cegah memory leak
     return () => {
       window.removeEventListener("storage", fetchMapData);
     };
   }, []);
 
-  // --- RENDER CUSTOM MARKER ICON ---
   const getCustomIcon = useCallback((status: string) => {
     const isDanger = status.includes("Siaga");
     const isWarning = status === "Waspada";
@@ -89,7 +80,6 @@ const FloodMap = () => {
   return (
     <div className="w-full h-full relative font-sans overflow-hidden bg-slate-50">
       
-      {/* CANVAS PETA UTAMA */}
       <MapContainer 
         center={centerPosition} 
         zoom={12} 
@@ -101,12 +91,10 @@ const FloodMap = () => {
         <ZoomHandler setZoomMethods={setZoomHandlers} />
         <AttributionControl position="bottomleft" prefix={false} />
 
-        {/* LAYER PETA (OSM, TOPO, SATELIT) */}
         {activeLayer === 'osm' && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />}
         {activeLayer === 'topo' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" maxZoom={18} />}
         {activeLayer === 'satellite' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" maxZoom={19} />}
 
-        {/* LOOPING MARKER DARI DATABASE LOKAL */}
         {mapLocations.map((kec) => (
           <Marker 
             key={kec.id} 
@@ -133,17 +121,14 @@ const FloodMap = () => {
         ))}
       </MapContainer>
 
-      {/* --- KONTROL & OVERLAY UI --- */}
       <MapActionButtons setActiveModal={setActiveModal} />
       <MapModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
       
-      {/* Modal Detail Wilayah (Ditampilkan saat marker diklik) */}
       <RegionalDetailModal 
         data={selectedKecamatan} 
         onClose={() => setSelectedKecamatan(null)} 
       />
 
-      {/* Kontrol Layer & Zoom */}
       <MapController 
         onZoomIn={() => zoomHandlers?.zoomIn()} 
         onZoomOut={() => zoomHandlers?.zoomOut()}
@@ -151,7 +136,6 @@ const FloodMap = () => {
         setLayer={setActiveLayer}
       />
       
-      {/* CSS KHUSUS PETA */}
       <style dangerouslySetInnerHTML={{__html: `
         .leaflet-popup-content-wrapper { 
           border-radius: 8px; 

@@ -103,7 +103,6 @@ export default function InfographicPage() {
     return () => window.removeEventListener("storage", fetchData);
   }, []);
 
-  // --- KALKULASI DATA DINAMIS ---
   const totalLokasi = locations.length;
 
   const aggregateStats = locations.reduce((acc, loc) => {
@@ -147,14 +146,14 @@ export default function InfographicPage() {
 
   const currentDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   return (
-    <div className="h-full w-full pt-18 bg-white text-slate-900 font-sans overflow-y-auto selection:bg-blue-100 selection:text-blue-900 custom-scrollbar relative">
+    <div className="h-full w-full pt-28 md:pt-32 bg-white text-slate-900 font-sans overflow-y-auto selection:bg-blue-100 selection:text-blue-900 custom-scrollbar relative">
       
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0 mix-blend-multiply" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pb-24 pt-10 md:pt-16">
-        <motion.div initial="hidden" animate="show" variants={containerVar} className="mb-16 border-b border-slate-200 pb-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pb-24 pt-4 md:pt-10">
+        <motion.div initial="hidden" animate="show" variants={containerVar} className="mb-12 md:mb-16 border-b border-slate-200 pb-8 md:pb-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="overflow-hidden">
               <motion.span variants={itemVar} className="block text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">
@@ -172,11 +171,11 @@ export default function InfographicPage() {
                  globalStatus === 'Waspada' ? 'border-amber-200 bg-amber-50 text-amber-700' :
                  'border-emerald-200 bg-emerald-50 text-emerald-700'
                }`}>
-                  <span className="relative flex h-2 w-2">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${globalStatus.includes('Siaga') ? 'bg-red-400' : globalStatus === 'Waspada' ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${globalStatus.includes('Siaga') ? 'bg-red-600' : globalStatus === 'Waspada' ? 'bg-amber-600' : 'bg-emerald-600'}`}></span>
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Status Keseluruhan: {globalStatus}</span>
+                 <span className="relative flex h-2 w-2">
+                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${globalStatus.includes('Siaga') ? 'bg-red-400' : globalStatus === 'Waspada' ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+                   <span className={`relative inline-flex rounded-full h-2 w-2 ${globalStatus.includes('Siaga') ? 'bg-red-600' : globalStatus === 'Waspada' ? 'bg-amber-600' : 'bg-emerald-600'}`}></span>
+                 </span>
+                 <span className="text-[10px] font-bold uppercase tracking-widest">Status Keseluruhan: {globalStatus}</span>
                </div>
                <p className="text-slate-500 max-w-sm text-xs md:text-sm leading-relaxed">
                 Data real-time disinkronisasi dari pantauan lapangan.<br/>
@@ -188,7 +187,7 @@ export default function InfographicPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }} className="lg:col-span-4 space-y-12">
-              <div className="bg-slate-900 text-white p-8 border border-slate-800 relative overflow-hidden group rounded-sm shadow-xl">
+              <div className="bg-slate-900 text-white p-6 md:p-8 border border-slate-800 relative overflow-hidden group rounded-sm shadow-xl">
                 <div className="absolute -right-6 -bottom-6 text-slate-800 opacity-20 pointer-events-none">
                     <Waves size={180} strokeWidth={1} />
                 </div>
@@ -196,7 +195,7 @@ export default function InfographicPage() {
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8 text-white/60">
                       <AlertTriangle size={16} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Ringkasan Eksekutif</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Ringkasan</span>
                   </div>
                   
                   <h2 className="text-2xl md:text-3xl font-light mb-6 leading-snug">
