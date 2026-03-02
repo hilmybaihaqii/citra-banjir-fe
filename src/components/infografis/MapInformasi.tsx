@@ -7,7 +7,7 @@ import { renderToString } from 'react-dom/server';
 import { Waves } from 'lucide-react';
 import "leaflet/dist/leaflet.css";
 
-// Import Komponen Modular
+// Pastikan path komponen ini sesuai
 import { KECAMATAN_DATA, KecamatanDetail } from '@/lib/mapData';
 import { MapController } from './MapController';
 import { MapActionButtons } from './MapActionButtons';
@@ -33,19 +33,42 @@ const FloodMap = () => {
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
   
-  // State untuk Modal Keseluruhan & Detail Per Wilayah
+  // STATE PENAMPUNG DATA PETA (Dinamis dari LocalStorage)
+  const [mapLocations, setMapLocations] = useState<KecamatanDetail[]>([]);
+
   const [activeModal, setActiveModal] = useState<"data" | "dampak" | null>(null);
   const [selectedKecamatan, setSelectedKecamatan] = useState<KecamatanDetail | null>(null);
 
-  // Marker Profesional & Clean (Solid Color, White Border)
+  // --- MEMBACA DATA DARI DATABASE SIMULASI ---
+  useEffect(() => {
+    const fetchMapData = () => {
+      const savedData = localStorage.getItem("simulasi_database_banjir");
+      if (savedData) {
+        setMapLocations(JSON.parse(savedData));
+      } else {
+        // Fallback jika localStorage kosong
+        setMapLocations(KECAMATAN_DATA);
+      }
+    };
+
+    // Ambil data saat komponen pertama kali dirender
+    fetchMapData();
+
+    // Event listener ini membuat peta User otomatis ter-update 
+    // JIKA ada perubahan localStorage dari tab lain (Tab Admin)
+    window.addEventListener("storage", fetchMapData);
+    
+    return () => {
+      window.removeEventListener("storage", fetchMapData);
+    };
+  }, []);
+
+  // --- PEMBUATAN ICON MARKER ---
   const getCustomIcon = useCallback((status: string) => {
     const isDanger = status.includes("Siaga");
     const isWarning = status === "Waspada";
     
-    // Warna solid murni, tanpa gradasi
-    const bgColor = isDanger ? "bg-red-600" : isWarning ? "bg-amber-500" : "bg-blue-600";
-    
-    // Render ikon SVG
+    const bgColor = isDanger ? "bg-red-600" : isWarning ? "bg-amber-500" : "bg-emerald-500";
     const iconHtml = renderToString(<Waves size={16} className="text-white" strokeWidth={2.5} />);
 
     return L.divIcon({
@@ -79,8 +102,8 @@ const FloodMap = () => {
         {activeLayer === 'topo' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" maxZoom={18} />}
         {activeLayer === 'satellite' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" maxZoom={19} />}
 
-        {/* Pemetaan Data Wilayah Statis */}
-        {KECAMATAN_DATA.map((kec) => (
+        {/* MENGGUNAKAN MAPLOCATIONS (DARI LOCAL STORAGE), BUKAN DATA STATIS */}
+        {mapLocations.map((kec) => (
           <Marker 
             key={kec.id} 
             position={kec.coords as [number, number]} 
@@ -93,7 +116,7 @@ const FloodMap = () => {
               <div className="p-1 min-w-35">
                 <h3 className="font-bold text-slate-800 text-[11px] mb-1.5 uppercase tracking-widest">{kec.name}</h3>
                 <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                  <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold text-white ${kec.status.includes("Siaga") ? 'bg-red-600' : kec.status === "Waspada" ? 'bg-amber-500' : 'bg-blue-600'}`}>
+                  <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold text-white ${kec.status.includes("Siaga") ? 'bg-red-600' : kec.status === "Waspada" ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                     {kec.status}
                   </span>
                 </div>
@@ -107,9 +130,10 @@ const FloodMap = () => {
       </MapContainer>
 
       {/* --- UI OVERLAY --- */}
-
       <MapActionButtons setActiveModal={setActiveModal} />
       <MapModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
+      
+      {/* Pastikan Modal Detail juga membaca data statistik baru dengan benar */}
       <RegionalDetailModal 
         data={selectedKecamatan} 
         onClose={() => setSelectedKecamatan(null)} 
@@ -130,7 +154,7 @@ const FloodMap = () => {
           padding: 0;
         }
         .leaflet-popup-content { margin: 12px; }
-        .leaflet-popup-tip { display: none; } /* Menyembunyikan segitiga tip bawaan agar lebih clean */
+        .leaflet-popup-tip { display: none; } 
         .custom-marker { background: none; border: none; outline: none; }
       `}} />
     </div>
