@@ -13,11 +13,11 @@ const AGENCIES: Record<string, string> = {
   admin: "Citra Banjir Pusat",
 };
 
-export default function BPBDJabarSettings() {
+export default function BPBDKabSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Lazy Initializer untuk data user agar terhindar dari hydration mismatch
+  // SOLUSI ERROR ESLint: Lazy Initializer untuk data user
   const [userData, setUserData] = useState<{
     username: string;
     name: string;
@@ -33,12 +33,12 @@ export default function BPBDJabarSettings() {
           console.error("Gagal parsing data user", e);
         }
       }
-      // Fallback khusus BPBD Provinsi Jabar jika session kosong
+      // Fallback khusus BPBD Kabupaten jika session kosong
       return {
-        username: "super_bpbd",
-        name: "Komandan BPBD Jabar",
+        username: "super_bpbdkab",
+        name: "Kepala BPBD Kab. Bandung",
         role: "superadmin",
-        agency_id: "bpbd",
+        agency_id: "bpbd_kab",
       };
     }
     return null;
@@ -65,7 +65,7 @@ export default function BPBDJabarSettings() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Mencegah hydration mismatch di Next.js (solusi linter)
+  // Mencegah hydration mismatch di Next.js
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMounted(true);
@@ -121,7 +121,7 @@ export default function BPBDJabarSettings() {
   const handleUploadPhoto = () => fileInputRef.current?.click();
 
   const getRoleLabel = (role: string) => {
-    return role === "superadmin" ? "Super Admin Provinsi" : "Admin Staff";
+    return role === "superadmin" ? "Super Admin Kabupaten" : "Admin Staff";
   };
 
   // Jangan render sebelum komponen terpasang untuk menghindari mismatch UI

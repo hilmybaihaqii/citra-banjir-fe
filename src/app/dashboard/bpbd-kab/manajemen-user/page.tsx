@@ -9,16 +9,14 @@ import {
   Users
 } from "lucide-react";
 
-// Import Modal & Data (Sesuaikan path ini dengan project Anda)
-import { AddUserModal } from '@/components/ui/AddUserbpbd';
+import { AddUserKabModal } from '@/components/ui/AddUserbpbdKab';
 import { DeleteUserModal } from '@/components/ui/DeleteUserModal';
 import { MOCK_USERS } from "@/lib/data"; 
 import { User } from "@/types";
 
-export default function BPBDUserManagement() {
+export default function BPBDKabUserManagement() {
   const [isMounted, setIsMounted] = useState(false);
 
-  // 1. State Session (Otoritas) - Menggunakan lazy initialization
   const [userData] = useState<{ username: string; role: string; agencyId: string } | null>(() => {
     if (typeof window !== "undefined") {
       const savedUser = localStorage.getItem("user_session");
@@ -29,29 +27,26 @@ export default function BPBDUserManagement() {
           console.error("Gagal parsing session", e);
         }
       }
-      // Fallback default untuk BPBD
-      return { username: "super_bpbd", role: "superadmin", agencyId: "bpbd" };
+      return { username: "super_bpbdkab", role: "superadmin", agencyId: "bpbd_kab" };
     }
     return null;
   });
 
-  // 2. Filter User khusus instansi BPBD (agencyId: "bpbd") - Menggunakan lazy initialization
+  // PERBAIKAN 3: Filter data langsung di dalam useState
   const [usersList, setUsersList] = useState<User[]>(() => 
-    MOCK_USERS.filter(user => user.agencyId === "bpbd")
+    MOCK_USERS.filter(user => user.agencyId === "bpbd_kab")
   );
   
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // 3. States untuk Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ name: string; username: string } | null>(null);
 
-  // Mencegah hydration mismatch
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMounted(true);
     }, 0);
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -60,7 +55,7 @@ export default function BPBDUserManagement() {
   const isSuperAdmin = userData?.role === "superadmin";
 
   const handleAddUser = (newUser: User) => { 
-    const formattedUser = { ...newUser, agencyId: "bpbd" };
+    const formattedUser = { ...newUser, agencyId: "bpbd_kab" };
     setUsersList(prev => [...prev, formattedUser]);
     setIsAddModalOpen(false);
   };
@@ -82,24 +77,23 @@ export default function BPBDUserManagement() {
     <div className="p-6 lg:p-10">
       <div className="max-w-7xl mx-auto">
         
-        {/* Banner Read-Only untuk Admin Biasa (Persis Desain Admin) */}
         {!isSuperAdmin && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-sm p-4 flex items-start gap-3">
             <ShieldAlert className="text-blue-600 shrink-0 mt-0.5" size={18} />
             <div>
               <h4 className="text-sm font-bold text-blue-900">Mode Akses Terbatas</h4>
               <p className="text-xs text-blue-800 mt-1 font-medium">
-                Anda login sebagai Petugas BPBD. Penambahan dan penghapusan akun dibatasi khusus untuk Komandan/Super Admin BPBD Jabar.
+                Anda login sebagai Petugas BPBD Kab. Penambahan dan penghapusan akun dibatasi khusus untuk Kepala/Super Admin BPBD Kabupaten Bandung.
               </p>
             </div>
           </div>
         )}
 
-        {/* Header Konten (Persis Desain Admin) */}
+        {/* Header Konten */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-blue-950 uppercase tracking-tight">User Management BPBD</h1>
-            <p className="text-slate-600 font-medium text-sm mt-1 tracking-wide">Daftar akses akun internal BPBD Provinsi Jawa Barat</p>
+            <h1 className="text-2xl font-black text-blue-950 uppercase tracking-tight">Manajemen User Kabupaten</h1>
+            <p className="text-slate-600 font-medium text-sm mt-1 tracking-wide">Daftar akses akun internal Pusdalops BPBD Kabupaten Bandung</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -125,7 +119,7 @@ export default function BPBDUserManagement() {
           </div>
         </div>
 
-        {/* TABEL USERS (Persis Desain Admin - Status Dihilangkan) */}
+        {/* TABEL USERS */}
         <div className="bg-white border border-slate-300 rounded-sm shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-175">
@@ -151,7 +145,7 @@ export default function BPBDUserManagement() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300">
-                          BPBD Jawa Barat
+                          BPBD Kab. Bandung
                         </span>
                       </td>
                       <td className="p-4 text-center">
@@ -172,7 +166,6 @@ export default function BPBDUserManagement() {
                               setIsDeleteModalOpen(true);
                             }}
                             className="p-2 text-slate-400 hover:text-rose-700 hover:bg-rose-100 rounded-sm transition-colors inline-flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-not-allowed"
-                            // LOGIKA BARU: Disable jika user target adalah superadmin ATAU user yang sedang login
                             disabled={user.role === 'superadmin' || user.username === userData?.username} 
                             title={user.role === 'superadmin' ? "Tidak dapat menghapus sesama Super Admin" : "Hapus User"}
                           >
@@ -187,7 +180,7 @@ export default function BPBDUserManagement() {
                     <td colSpan={isSuperAdmin ? 5 : 4} className="p-16 text-center">
                       <div className="flex flex-col items-center justify-center text-slate-600 font-medium italic">
                         <Users size={40} className="text-slate-400 mb-4 opacity-30" />
-                        <span>Tidak ada personil BPBD yang ditemukan.</span>
+                        <span>Tidak ada personil BPBD Kab. Bandung yang ditemukan.</span>
                       </div>
                     </td>
                   </tr>
@@ -196,10 +189,10 @@ export default function BPBDUserManagement() {
             </table>
           </div>
 
-          {/* Pagination (Persis Desain Admin) */}
+          {/* Pagination */}
           <div className="p-4 border-t border-slate-300 bg-slate-50 flex items-center justify-between">
             <p className="text-xs text-slate-700 font-medium italic">
-              Menampilkan <span className="font-bold text-blue-950">{filteredUsers.length}</span> personil BPBD
+              Menampilkan <span className="font-bold text-blue-950">{filteredUsers.length}</span> personil BPBD Kab.
             </p>
             <div className="flex gap-2">
               <button className="px-4 py-2 border border-slate-300 rounded-sm text-[10px] uppercase tracking-widest font-bold text-slate-500 bg-slate-100 cursor-not-allowed">Prev</button>
@@ -209,8 +202,8 @@ export default function BPBDUserManagement() {
         </div>
       </div>
 
-      {/* MODALS */}
-      <AddUserModal 
+      {/* MODALS: Penggunaan nama komponen telah disesuaikan */}
+      <AddUserKabModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onAdd={handleAddUser} 
