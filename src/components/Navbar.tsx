@@ -292,10 +292,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+      <nav
         className={`${outfit.className} fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-amber-500/80 bg-blue-950 ${
           scrolled || isOpen ? "shadow-lg" : ""
         }`}
@@ -306,7 +303,6 @@ export const Navbar = () => {
           <div className="flex justify-between items-center h-18">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-3 group">
-                {/* 1. Logo Citra Banjir */}
                 <div className="flex items-center gap-2">
                   <div className="w-40 h-40 md:w-50 md:h-40 relative flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
                     <Image
@@ -389,7 +385,7 @@ export const Navbar = () => {
                     key={idx}
                     item={item}
                     pathname={pathname}
-                    onClick={() => !item.subLinks && setIsOpen(false)}
+                    onClick={() => setIsOpen(false)} 
                   />
                 ))}
 
@@ -407,7 +403,7 @@ export const Navbar = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.nav>
+      </nav>
 
       <AnimatePresence>
         {isOpen && (

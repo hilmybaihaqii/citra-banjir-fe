@@ -134,7 +134,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isOpen, onClose }) => {
                           <input
                             type="text"
                             required
-                            className="relative w-full h-12 pl-12 pr-4 bg-white border border-transparent rounded-sm text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                            className="relative w-full h-12 pl-12 pr-4 bg-white border border-transparent rounded-sm text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
                             placeholder="Ketik username"
                             value={logic.username}
                             onChange={(e) => logic.setUsername(e.target.value)}
@@ -153,7 +153,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isOpen, onClose }) => {
                           <input
                             type={logic.showPassword ? "text" : "password"}
                             required
-                            className="relative w-full h-12 pl-12 pr-12 bg-white border border-transparent rounded-sm text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                            className="relative w-full h-12 pl-12 pr-12 bg-white border border-transparent rounded-sm text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
                             placeholder="Ketik password"
                             value={logic.password}
                             onChange={(e) => logic.setPassword(e.target.value)}
