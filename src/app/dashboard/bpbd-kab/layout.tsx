@@ -98,7 +98,7 @@ export default function BPBDKabLayout({
 
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
-          <Link href="/dashboard/admin" className="flex items-center" onClick={handleMenuClick}>
+          <Link href="/dashboard/bpbd-kab" className="flex items-center" onClick={handleMenuClick}>
             <Image 
               src="/images/logo-citra-banjir.png" 
               alt="Logo Citra Banjir" 

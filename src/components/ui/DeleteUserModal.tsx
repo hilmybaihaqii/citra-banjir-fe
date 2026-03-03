@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AlertTriangle, X, Trash2, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, Loader2, User } from "lucide-react";
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -16,100 +16,92 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ isOpen, onClos
 
   const handleConfirm = () => {
     setIsDeleting(true);
-
-    // Simulasi proses API penghapusan
+    // Simulasi API Call
     setTimeout(() => {
       setIsDeleting(false);
       setShowSuccess(true);
       
-      // Tunggu sebentar agar user melihat pesan sukses, lalu tutup modal & jalankan fungsi hapus di tabel
       setTimeout(() => {
         onConfirm();
-        // Reset state setelah modal tertutup oleh fungsi onConfirm
         setShowSuccess(false);
       }, 1500); 
-    }, 800);
+    }, 1200);
   };
 
   const handleCloseModal = () => {
+    if (isDeleting) return;
     onClose();
-    // Reset state dengan jeda waktu sedikit agar tidak terlihat berkedip saat animasi menutup
-    setTimeout(() => {
-      setIsDeleting(false);
-      setShowSuccess(false);
-    }, 300);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/60 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200">
-        
-        {/* Header Modal */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-rose-600">
-            <Trash2 size={18} strokeWidth={2.5} />
-            <h3 className="font-bold uppercase tracking-widest text-xs">Hapus Pengguna</h3>
-          </div>
-          {!showSuccess && (
-            <button 
-              onClick={handleCloseModal} 
-              className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-            >
-              <X size={18} strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] transition-opacity" 
+        onClick={handleCloseModal} 
+      />
 
-        {/* State: Notifikasi Sukses */}
+      <div className="relative w-full max-w-100 overflow-hidden rounded-md bg-white shadow-xl animate-in fade-in zoom-in-95 duration-200">
+        {!showSuccess && (
+          <button 
+            onClick={handleCloseModal} 
+            className="absolute right-4 top-4 z-10 rounded-full p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X size={20} />
+          </button>
+        )}
+
         {showSuccess ? (
-          <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-4 border border-rose-100">
-              <CheckCircle2 size={32} className="text-rose-500" strokeWidth={2} />
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-400">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+              <CheckCircle2 size={32} strokeWidth={1.5} />
             </div>
-            <h4 className="text-lg font-bold text-rose-950 mb-1">Berhasil Dihapus!</h4>
-            <p className="text-sm text-slate-500">Akses untuk {userToDelete.name} telah dicabut permanen.</p>
+            <h4 className="text-lg font-semibold text-slate-900">Data Terhapus</h4>
+            <p className="mt-1 text-sm text-slate-500">
+              Akun <span className="font-medium text-slate-900">@{userToDelete.username}</span> berhasil dihapus.
+            </p>
           </div>
         ) : (
-          /* State: Konfirmasi Utama */
-          <div className="p-6 space-y-5">
-            <div className="flex flex-col items-center text-center pt-2">
-              <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center mb-4 border border-rose-100">
-                <AlertTriangle size={26} className="text-rose-500" strokeWidth={2} />
+          <div>
+            <div className="p-8">
+              <div className="mb-6 text-left">
+                <h3 className="text-xl font-semibold text-slate-900">Hapus Pengguna</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                  Apakah Anda yakin ingin menghapus akun ini? Seluruh data yang terkait akan terhapus secara permanen.
+                </p>
               </div>
-              <h4 className="text-sm font-bold text-blue-950 mb-2">Konfirmasi Pencabutan Akses</h4>
-              {/* max-w-[280px] sudah diganti menjadi max-w-70 di bawah ini */}
-              <p className="text-xs text-slate-500 mb-5 leading-relaxed max-w-70">
-                Tindakan ini tidak dapat dibatalkan. Anda yakin ingin menghapus data pengguna ini dari sistem?
-              </p>
-              
-              <div className="w-full bg-slate-50 border border-slate-200 rounded-sm p-4 text-left flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                  <span className="text-slate-500 text-xs font-bold uppercase">
-                    {userToDelete.name.substring(0, 2)}
-                  </span>
+
+              <div className="flex items-center gap-4 rounded-md border border-slate-100 bg-slate-50/50 p-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 shadow-sm">
+                  <User size={20} />
                 </div>
-                <div>
-                  <p className="font-bold text-blue-950 text-sm">{userToDelete.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium tracking-wide">@{userToDelete.username}</p>
+                <div className="overflow-hidden">
+                  <p className="truncate text-sm font-semibold text-slate-900">{userToDelete.name}</p>
+                  <p className="truncate text-xs text-slate-500 italic">@{userToDelete.username}</p>
                 </div>
               </div>
             </div>
-
-            {/* Footer Action */}
-            <div className="pt-4 mt-2 flex justify-end gap-3 border-t border-slate-100">
+            
+            <div className="flex items-center gap-3 border-t border-slate-50 bg-white px-8 py-6">
               <button 
                 onClick={handleCloseModal}
                 disabled={isDeleting}
-                className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-blue-950 bg-white border border-slate-200 hover:border-slate-300 rounded-sm transition-all disabled:opacity-50"
+                className="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
                 Batal
               </button>
               <button 
                 onClick={handleConfirm}
                 disabled={isDeleting}
-                className="px-8 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-700 border border-rose-600 hover:border-rose-700 rounded-sm transition-all disabled:opacity-70 disabled:cursor-wait min-w-30"
+                className="flex-[1.5] flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-rose-700 active:scale-[0.98] disabled:bg-rose-400 disabled:cursor-not-allowed"
               >
-                {isDeleting ? "Memproses..." : "Hapus Data"}
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Ya, Hapus Akun"
+                )}
               </button>
             </div>
           </div>

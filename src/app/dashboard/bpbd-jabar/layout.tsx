@@ -104,7 +104,7 @@ export default function BPBDLayout({
         }`}
       >
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
-          <Link href="/dashboard/admin" className="flex items-center" onClick={handleMenuClick}>
+          <Link href="/dashboard/bpbd-jabar" className="flex items-center" onClick={handleMenuClick}>
             <Image 
               src="/images/logo-citra-banjir.png" 
               alt="Logo Citra Banjir" 
