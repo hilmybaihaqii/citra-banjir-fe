@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, UserPlus, CheckCircle2, ShieldCheck } from "lucide-react";
-// Import tipe data asli dari file types
+import { X, UserPlus, CheckCircle2 } from "lucide-react";
 import { User, UserRole } from "@/types";
 
 interface AddUserModalProps {
@@ -12,13 +11,12 @@ interface AddUserModalProps {
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) => {
-  // Inisialisasi state dengan tipe role yang spesifik (UserRole)
   const [formData, setFormData] = useState({
     username: "",
     name: "",
     password: "",
     agencyId: "bpbd",
-    role: "admin" as UserRole, // Casting ke UserRole agar sinkron dengan interface User
+    role: "admin" as UserRole, 
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +42,6 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
       setShowSuccess(true);
       
       setTimeout(() => {
-        // Mengirim data sesuai kontrak interface User di types/index.ts
         onAdd({
           username: formData.username,
           name: formData.name,
@@ -68,19 +65,19 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-950/60 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200">
-        
-        {/* Header Modal */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
+      <div className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
           <div className="flex items-center gap-3 text-blue-950">
-            <UserPlus size={18} strokeWidth={2.5} />
-            <h3 className="font-bold uppercase tracking-widest text-xs">Tambah Personil BPBD</h3>
+            <div className="flex h-8 w-8 items-center justify-center rounded-md text-blue-700">
+                <UserPlus size={18} strokeWidth={2.5} />
+            </div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">Tambah Pengguna Baru</h3>
           </div>
           {!showSuccess && (
             <button 
               onClick={handleCloseModal} 
-              className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
             >
               <X size={18} strokeWidth={2.5} />
             </button>
@@ -88,92 +85,84 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
         </div>
 
         {showSuccess ? (
-          <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100">
-              <CheckCircle2 size={32} className="text-emerald-500" strokeWidth={2} />
+          <div className="flex flex-col items-center justify-center p-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-emerald-50 bg-emerald-100">
+              <CheckCircle2 size={32} className="text-emerald-600" strokeWidth={2.5} />
             </div>
-            <h4 className="text-lg font-bold text-blue-950 mb-1">Berhasil Didaftarkan!</h4>
-            <p className="text-sm text-slate-500 font-medium">Akun @{formData.username} telah aktif.</p>
+            <h4 className="mb-1 text-lg font-black tracking-tight text-blue-950">Berhasil Didaftarkan!</h4>
+            <p className="text-base font-medium text-slate-500">Akun <span className="font-bold text-slate-700">@{formData.username}</span> telah aktif.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {/* Locked Agency View */}
-            <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-sm flex items-center gap-3">
-              <ShieldCheck size={16} className="text-blue-600" />
-              <div>
-                <p className="text-[10px] font-bold text-blue-900 uppercase tracking-widest">Registrasi Internal</p>
-                <p className="text-xs font-bold text-blue-950">BPBD PROVINSI JAWA BARAT</p>
-              </div>
-            </div>
-
+          <form onSubmit={handleSubmit} className="space-y-5 p-6">
+            
             <div>
-              <label className="block text-[10px] font-bold text-blue-950 uppercase tracking-widest mb-2">Nama Lengkap</label>
+              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Nama Lengkap <span className="text-rose-500">*</span></label>
               <input 
                 required 
                 type="text" 
                 name="name" 
                 value={formData.name} 
                 onChange={handleChange} 
-                placeholder="Masukkan nama personil"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-sm text-sm text-blue-950 font-medium placeholder:text-slate-400 focus:outline-none focus:border-blue-950 focus:ring-1 focus:ring-blue-950 transition-all" 
+                placeholder="Nama"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950" 
               />
             </div>
             
             <div>
-              <label className="block text-[10px] font-bold text-blue-950 uppercase tracking-widest mb-2">Username</label>
+              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Username <span className="text-rose-500">*</span></label>
               <input 
                 required 
                 type="text" 
                 name="username" 
                 value={formData.username} 
                 onChange={handleChange} 
-                placeholder="Contoh: bpbd_jabar_01"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-sm text-sm text-blue-950 font-medium focus:outline-none focus:border-blue-950 focus:ring-1 focus:ring-blue-950 transition-all" 
+                placeholder="Username"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950" 
               />
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-blue-950 uppercase tracking-widest mb-2">Password</label>
-              <input 
-                required 
-                type="password" 
-                name="password" 
-                value={formData.password} 
-                onChange={handleChange} 
-                placeholder="••••••••"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-sm text-sm text-blue-950 font-medium focus:outline-none focus:border-blue-950 focus:ring-1 focus:ring-blue-950 transition-all" 
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Password <span className="text-rose-500">*</span></label>
+                <input 
+                  required 
+                  type="password" 
+                  name="password" 
+                  value={formData.password} 
+                  onChange={handleChange} 
+                  placeholder="••••••••"
+                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950" 
+                />
+              </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-blue-950 uppercase tracking-widest mb-2">Otoritas Akses</label>
-              <select 
-                name="role" 
-                value={formData.role} 
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-sm text-sm text-blue-950 font-medium focus:outline-none focus:border-blue-950 focus:ring-1 focus:ring-blue-950 transition-all cursor-pointer appearance-none"
-              >
-                <option value="admin">Admin Biasa</option>
-                <option value="superadmin">Super Admin</option>
-                <option value="viewer">Viewer (Hanya Lihat)</option>
-              </select>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Otoritas Akses <span className="text-rose-500">*</span></label>
+                <select 
+                  name="role" 
+                  value={formData.role} 
+                  onChange={handleChange}
+                  className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
+                </select>
+              </div>
             </div>
-
-            {/* Footer Action */}
-            <div className="pt-6 mt-2 flex justify-end gap-3 border-t border-slate-100">
+            <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-5">
               <button 
                 type="button" 
                 onClick={handleCloseModal}
-                className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-blue-950 bg-white border border-slate-200 hover:border-slate-300 rounded-sm transition-all"
+                disabled={isSubmitting}
+                className="rounded-md border border-slate-200 bg-slate-50 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-950 disabled:opacity-50"
               >
                 Batal
               </button>
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white bg-blue-950 hover:bg-blue-900 border border-blue-950 rounded-sm transition-all disabled:opacity-70 disabled:cursor-wait min-w-30"
+                className="min-w-32 rounded-md bg-blue-950 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:bg-blue-900 disabled:cursor-wait disabled:opacity-70"
               >
-                {isSubmitting ? "Memproses..." : "Daftarkan Akun"}
+                {isSubmitting ? "MEMPROSES..." : "DAFTARKAN AKUN"}
               </button>
             </div>
           </form>

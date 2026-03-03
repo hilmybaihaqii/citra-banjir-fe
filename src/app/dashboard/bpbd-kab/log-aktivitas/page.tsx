@@ -48,11 +48,12 @@ export default function BPBDKabLogsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6 pb-12 lg:pb-8">
       
+      {/* HEADER SECTION */}
       <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">
+          <h1 className="text-xl font-black uppercase tracking-tight text-blue-950 md:text-2xl">
             Log Aktivitas Kabupaten
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
@@ -75,7 +76,7 @@ export default function BPBDKabLogsPage() {
           <button 
             onClick={handleExportExcel}
             disabled={isExporting}
-            className="flex w-full shrink-0 min-w-35 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+            className="flex w-full min-w-35 shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
           >
             {isExporting ? (
               <>
@@ -91,15 +92,15 @@ export default function BPBDKabLogsPage() {
       </div>
 
       <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        
         <div className="custom-scrollbar overflow-x-auto">
-          <table className="w-full min-w-175 border-collapse text-left">
+          <table className="w-full min-w-225 border-collapse text-left">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
                 <th className="w-16 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">No</th>
-                <th className="w-56 p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Waktu (WIB)</th>
-                <th className="w-32 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Aktivitas</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Detail & Personil</th>
+                <th className="w-48 p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Waktu (WIB)</th>
+                <th className="w-28 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Aktivitas</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Detail Laporan</th>
+                <th className="w-48 p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Pengguna</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -120,15 +121,16 @@ export default function BPBDKabLogsPage() {
                     
                     <td className="p-4">
                       <p className="text-sm font-bold uppercase text-blue-950">{log.detail}</p>
-                      <p className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        Oleh: {log.userName}
-                      </p>
+                    </td>
+
+                    <td className="p-4">
+                      <p className="text-sm font-bold text-slate-700">{log.userName}</p>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-16 text-center align-middle">
+                  <td colSpan={5} className="py-16 text-center align-middle">
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <History size={32} className="mb-3 text-slate-300" />
                       <span className="text-sm font-medium">Tidak ada riwayat aktivitas ditemukan.</span>
@@ -145,10 +147,10 @@ export default function BPBDKabLogsPage() {
             Menampilkan <span className="font-bold text-blue-950">{filteredLogs.length}</span> log aktivitas
           </p>
           <div className="flex w-full gap-2 sm:w-auto">
-            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">
+            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:flex-none">
               PREV
             </button>
-            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-all hover:border-blue-950 hover:bg-slate-50 sm:flex-none">
+            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-colors hover:bg-slate-50 hover:border-blue-950 sm:flex-none">
               NEXT
             </button>
           </div>
