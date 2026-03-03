@@ -18,7 +18,7 @@ const MapPicker = dynamic(() => import("@/components/ui/MapPicker"), {
   )
 });
 
-export default function BPBDJabarUpdateWilayahPage() {
+export default function BPBDKabUpdateWilayahPage() {
   const [locations, setLocations] = useState<KecamatanDetail[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -104,7 +104,7 @@ export default function BPBDJabarUpdateWilayahPage() {
     const latNum = parseFloat(formData.lat);
     const lngNum = parseFloat(formData.lng);
     if (isNaN(latNum) || isNaN(lngNum)) { 
-      setErrorMessage("Koordinat tidak valid! Silakan masukkan angka atau klik pada Peta."); 
+      setErrorMessage("Koordinat Latitude dan Longitude tidak valid!"); 
       return; 
     }
 
@@ -179,16 +179,15 @@ export default function BPBDJabarUpdateWilayahPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-12 lg:h-[calc(100dvh-7rem)] lg:pb-0">
-      
-      <div className="flex shrink-0 flex-col gap-4 md:flex-row md:items-end md:justify-between z-10">
+      <div className="z-10 flex shrink-0 flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">Update Wilayah</h1>
-          <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Pantau, tambahkan, atau perbarui data komprehensif daerah terdampak.
+          <p className="mt-1 text-base font-medium tracking-wide text-slate-500">
+            Pantau, tambahkan, atau perbarui data komprehensif daerah terdampak banjir.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-auto">
+        <div className="flex w-full flex-col gap-2 md:w-auto">
           {successMessage && (
             <div className="flex w-full items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-emerald-600 shadow-sm md:w-auto">
               <CheckCircle2 size={16} className="shrink-0" /> <span className="truncate">{successMessage}</span>
@@ -202,9 +201,8 @@ export default function BPBDJabarUpdateWilayahPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-6 lg:flex-row min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
         
-
         <div className="relative z-0 flex h-100 w-full shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 lg:h-full lg:w-2/3">
           <MapPicker 
             locations={locations} 
@@ -231,20 +229,20 @@ export default function BPBDJabarUpdateWilayahPage() {
             )}
           </div>
 
-          <form id="updateRegionForm" onSubmit={handleSubmit} className="custom-scrollbar flex-1 overflow-y-auto p-5 space-y-6">
+          <form id="updateRegionForm" onSubmit={handleSubmit} className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-5">
             
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Nama Wilayah <span className="text-red-500">*</span></label>
-                <input required type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Baleendah" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
+                <input required type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Contoh: Baleendah" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
               </div>
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Status Peringatan <span className="text-red-500">*</span></label>
-                <select name="status" value={formData.status} onChange={handleInputChange} className="w-full cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-2.5 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
-                  <option value="Aman">Aman </option>
-                  <option value="Waspada">Waspada </option>
-                  <option value="Siaga 2">Siaga 2 </option>
-                  <option value="Siaga 1">Siaga 1 </option>
+                <select name="status" value={formData.status} onChange={handleInputChange} className="w-full cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-2 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
+                  <option value="Aman">Aman (Hijau)</option>
+                  <option value="Waspada">Waspada (Kuning)</option>
+                  <option value="Siaga 2">Siaga 2 (Merah)</option>
+                  <option value="Siaga 1">Siaga 1 (Merah Pekat)</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -260,7 +258,7 @@ export default function BPBDJabarUpdateWilayahPage() {
                 <Users size={16} className="text-slate-400" />
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-950">Statistik Korban & Warga</h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Kepala Keluarga (KK)</span>
                   <input type="number" min="0" name="kepalaKeluarga" value={formData.kepalaKeluarga} onChange={handleInputChange} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
@@ -285,13 +283,12 @@ export default function BPBDJabarUpdateWilayahPage() {
             </div>
 
             <div className="border-t border-dashed border-slate-200"></div>
-
             <div>
               <div className="mb-4 flex items-center gap-2">
                 <Home size={16} className="text-slate-400" />
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-950">Kerusakan Bangunan</h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Rumah Terendam</span>
                   <input type="number" min="0" name="rumahTerendam" value={formData.rumahTerendam} onChange={handleInputChange} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base font-bold text-blue-950 outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />

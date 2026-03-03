@@ -9,25 +9,16 @@ import {
 } from "lucide-react";
 
 const MOCK_LOGS = [
-  { id: 1, time: "28 Feb 2026, 05:30 WIB", agencyId: "bbws", userName: "Operator BBWS", action: "UPDATE", detail: "Memperbarui data tinggi muka air harian" },
-  { id: 2, time: "27 Feb 2026, 14:15 WIB", agencyId: "admin", userName: "Developer Pusat", action: "DELETE", detail: "Menghapus akun staff_bpbdkab lama" },
-  { id: 3, time: "27 Feb 2026, 10:05 WIB", agencyId: "admin", userName: "Developer Pusat", action: "ADD", detail: "Menambahkan akun baru untuk BMKG" },
-  { id: 4, time: "26 Feb 2026, 08:45 WIB", agencyId: "bmkg", userName: "Staff Analis BMKG", action: "UPDATE", detail: "Pembaruan prakiraan cuaca Jawa Barat" },
-  { id: 5, time: "26 Feb 2026, 07:12 WIB", agencyId: "bpbd", userName: "Komandan BPBD Jabar", action: "LOGIN", detail: "Masuk ke sistem pusdalops provinsi" },
-  { id: 6, time: "25 Feb 2026, 21:00 WIB", agencyId: "bpbd_kab", userName: "Petugas BPBD Kab. Bandung", action: "UPDATE", detail: "Verifikasi laporan warga di Dayeuhkolot" },
-  { id: 7, time: "25 Feb 2026, 16:30 WIB", agencyId: "admin", userName: "Admin Moderator", action: "SETTING", detail: "Memperbarui konfigurasi sinkronisasi server" },
+  { id: 1, time: "02 Mar 2026, 14:30 WIB", userName: "Kepala BPBD Kab", action: "UPDATE", detail: "Mengubah status Siaga 2 di Majalaya" },
+  { id: 2, time: "02 Mar 2026, 12:15 WIB", userName: "Petugas Lapangan Kab", action: "ADD", detail: "Menambah laporan genangan baru di Rancaekek" },
+  { id: 3, time: "02 Mar 2026, 09:05 WIB", userName: "Petugas Lapangan Kab", action: "LOGIN", detail: "Masuk ke sistem dashboard pusdalops" },
+  { id: 4, time: "01 Mar 2026, 22:45 WIB", userName: "Kepala BPBD Kab", action: "SETTING", detail: "Menambahkan user baru ke dalam sistem" },
+  { id: 5, time: "01 Mar 2026, 18:12 WIB", userName: "Admin BPBD Kab", action: "DELETE", detail: "Menghapus laporan tidak valid dari warga" },
+  { id: 6, time: "01 Mar 2026, 15:00 WIB", userName: "Admin BPBD Kab", action: "UPDATE", detail: "Sinkronisasi titik pengungsian di Baleendah" },
+  { id: 7, time: "28 Feb 2026, 21:30 WIB", userName: "Petugas Lapangan Kab", action: "UPDATE", detail: "Memperbarui jumlah korban terdampak di Dayeuhkolot" },
 ];
 
-// MENGUBAH WARNA INSTANSI MENJADI BADGE STYLE
-const AGENCIES: Record<string, { label: string; badge: string }> = {
-  "bbws": { label: "BBWS Citarum", badge: "border-blue-200 bg-blue-50 text-blue-700" },
-  "bpbd": { label: "BPBD Jawa Barat", badge: "border-orange-200 bg-orange-50 text-orange-700" },
-  "bpbd_kab": { label: "BPBD Kab. Bandung", badge: "border-red-200 bg-red-50 text-red-700" },
-  "bmkg": { label: "BMKG Jawa Barat", badge: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  "admin": { label: "Citra Banjir Pusat", badge: "border-indigo-200 bg-indigo-50 text-indigo-700" }
-};
-
-export default function AdminLogs() {
+export default function BPBDKabLogsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
@@ -35,15 +26,14 @@ export default function AdminLogs() {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
-      alert("Berkas Excel 'Log_Aktivitas_CitraBanjir.xlsx' berhasil diunduh!");
+      alert("Berkas Excel 'Log_Aktivitas_BPBD_Kab_Bandung.xlsx' berhasil diunduh!");
     }, 2000);
   };
 
   const filteredLogs = MOCK_LOGS.filter(log => 
     log.userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
     log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.detail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (AGENCIES[log.agencyId]?.label || "").toLowerCase().includes(searchQuery.toLowerCase())
+    log.detail.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getActionBadge = (action: string) => {
@@ -60,13 +50,14 @@ export default function AdminLogs() {
   return (
     <div className="flex flex-col gap-6 pb-12 lg:pb-8">
       
+      {/* HEADER SECTION */}
       <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-xl font-black uppercase tracking-tight text-blue-950 md:text-2xl">
-            Log Aktivitas Sistem
+            Log Aktivitas Kabupaten
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Pantau riwayat aksi dan aktivitas pengguna dari seluruh instansi.
+            Riwayat perubahan data dan aksi personil Pusdalops BPBD Kabupaten Bandung.
           </p>
         </div>
         
@@ -75,7 +66,7 @@ export default function AdminLogs() {
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Cari aksi, detail, atau instansi..." 
+              placeholder="Cari aksi atau personil..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
@@ -102,7 +93,7 @@ export default function AdminLogs() {
 
       <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="custom-scrollbar overflow-x-auto">
-          <table className="w-full min-w-275 border-collapse text-left">
+          <table className="w-full min-w-225 border-collapse text-left">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
                 <th className="w-16 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">No</th>
@@ -110,47 +101,36 @@ export default function AdminLogs() {
                 <th className="w-28 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Aktivitas</th>
                 <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Detail Laporan</th>
                 <th className="w-48 p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Pengguna</th>
-                <th className="w-48 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Instansi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredLogs.length > 0 ? (
-                filteredLogs.map((log, index) => {
-                  const agency = AGENCIES[log.agencyId] || { label: "Unknown", badge: "border-slate-200 bg-slate-50 text-slate-700" };
-                  
-                  return (
-                    <tr key={log.id} className="transition-colors hover:bg-slate-50">
-                      <td className="p-4 text-center text-sm font-medium text-slate-500">{index + 1}</td>
-                      
-                      <td className="p-4 text-sm font-bold text-blue-950">
-                        {log.time}
-                      </td>
-                      
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex min-w-20 items-center justify-center rounded border px-2 py-1.5 text-[10px] font-black uppercase tracking-widest ${getActionBadge(log.action)}`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      
-                      <td className="p-4">
-                        <p className="text-sm font-bold uppercase text-blue-950">{log.detail}</p>
-                      </td>
+                filteredLogs.map((log, index) => (
+                  <tr key={log.id} className="transition-colors hover:bg-slate-50">
+                    <td className="p-4 text-center text-sm font-medium text-slate-500">{index + 1}</td>
+                    
+                    <td className="p-4 text-sm font-bold text-blue-950">
+                      {log.time}
+                    </td>
+                    
+                    <td className="p-4 text-center">
+                      <span className={`inline-flex min-w-20 items-center justify-center rounded border px-2 py-1.5 text-[10px] font-black uppercase tracking-widest ${getActionBadge(log.action)}`}>
+                        {log.action}
+                      </span>
+                    </td>
+                    
+                    <td className="p-4">
+                      <p className="text-sm font-bold uppercase text-blue-950">{log.detail}</p>
+                    </td>
 
-                      <td className="p-4">
-                        <p className="text-sm font-bold text-slate-700">{log.userName}</p>
-                      </td>
-
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex items-center justify-center rounded border px-3 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm ${agency.badge}`}>
-                          {agency.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
+                    <td className="p-4">
+                      <p className="text-sm font-bold text-slate-700">{log.userName}</p>
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center align-middle">
+                  <td colSpan={5} className="py-16 text-center align-middle">
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <History size={32} className="mb-3 text-slate-300" />
                       <span className="text-sm font-medium">Tidak ada riwayat aktivitas ditemukan.</span>

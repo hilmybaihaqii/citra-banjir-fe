@@ -1,35 +1,22 @@
+"use client";
+
 import React, { useState } from "react";
 import { X, UserPlus, CheckCircle2 } from "lucide-react";
-
-export interface UserType {
-  username: string;
-  name: string;
-  agencyId: string;
-  role: string;
-  password?: string;
-}
+import { User, UserRole } from "@/types";
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (userData: UserType) => void;
+  onAdd: (userData: User) => void;
 }
 
-const AGENCIES = [
-  { id: "bbws", label: "BBWS Citarum" },
-  { id: "bpbd", label: "BPBD Jawa Barat" },
-  { id: "bpbd_kab", label: "BPBD Kab. Bandung" },
-  { id: "bmkg", label: "BMKG Jawa Barat" },
-  { id: "admin", label: "Citra Banjir Pusat" },
-];
-
-export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) => {
+export const AddUserKabModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
     username: "",
     name: "",
     password: "",
-    agencyId: "bbws",
-    role: "admin",
+    agencyId: "bpbd_kab",
+    role: "admin" as UserRole,
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +27,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
   const handleCloseModal = () => {
     onClose();
     setTimeout(() => {
-      setFormData({ username: "", name: "", password: "", agencyId: "bbws", role: "admin" });
+      setFormData({ username: "", name: "", password: "", agencyId: "bpbd_kab", role: "admin" as UserRole });
       setShowSuccess(false);
       setIsSubmitting(false);
     }, 300);
@@ -58,19 +45,23 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
         onAdd({
           username: formData.username,
           name: formData.name,
-          agencyId: formData.agencyId,
-          role: formData.role,
           password: formData.password,
+          agencyId: "bpbd_kab", 
+          role: formData.role, 
         });
         
-        setFormData({ username: "", name: "", password: "", agencyId: "bbws", role: "admin" });
+        setFormData({ username: "", name: "", password: "", agencyId: "bpbd_kab", role: "admin" as UserRole });
         setShowSuccess(false);
       }, 1500); 
     }, 800);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
@@ -98,12 +89,12 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-emerald-50 bg-emerald-100">
               <CheckCircle2 size={32} className="text-emerald-600" strokeWidth={2.5} />
             </div>
-            <h4 className="mb-1 text-lg font-black tracking-tight text-blue-950">Berhasil Ditambahkan!</h4>
-            <p className="text-base font-medium text-slate-500">Akun <span className="font-bold text-slate-700">{formData.name}</span> telah aktif.</p>
+            <h4 className="mb-1 text-lg font-black tracking-tight text-blue-950">Berhasil Didaftarkan!</h4>
+            <p className="text-base font-medium text-slate-500">Akun <span className="font-bold text-slate-700">@{formData.username}</span> telah aktif.</p>
           </div>
         ) : (
-
           <form onSubmit={handleSubmit} className="space-y-5 p-6">
+            
             <div>
               <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Nama Lengkap <span className="text-rose-500">*</span></label>
               <input 
@@ -130,36 +121,22 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
               />
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Password Akses <span className="text-rose-500">*</span></label>
-              <input 
-                required 
-                type="password" 
-                name="password" 
-                value={formData.password} 
-                onChange={handleChange} 
-                placeholder="••••••••"
-                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950" 
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Instansi <span className="text-rose-500">*</span></label>
-                <select 
-                  name="agencyId" 
-                  value={formData.agencyId} 
-                  onChange={handleChange}
-                  className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
-                >
-                  {AGENCIES.map(agency => (
-                    <option key={agency.id} value={agency.id}>{agency.label}</option>
-                  ))}
-                </select>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Password <span className="text-rose-500">*</span></label>
+                <input 
+                  required 
+                  type="password" 
+                  name="password" 
+                  value={formData.password} 
+                  onChange={handleChange} 
+                  placeholder="••••••••"
+                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950" 
+                />
               </div>
-              
+
               <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Level Akses <span className="text-rose-500">*</span></label>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Otoritas Akses <span className="text-rose-500">*</span></label>
                 <select 
                   name="role" 
                   value={formData.role} 
@@ -186,7 +163,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onA
                 disabled={isSubmitting}
                 className="min-w-32 rounded-md bg-blue-950 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:bg-blue-900 disabled:cursor-wait disabled:opacity-70"
               >
-                {isSubmitting ? "MEMPROSES..." : "Daftarkan Akun"}
+                {isSubmitting ? "MEMPROSES..." : "DAFTARKAN AKUN"}
               </button>
             </div>
           </form>

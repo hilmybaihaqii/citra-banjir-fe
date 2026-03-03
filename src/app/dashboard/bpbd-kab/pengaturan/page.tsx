@@ -11,7 +11,7 @@ const AGENCIES: Record<string, string> = {
   admin: "Citra Banjir Pusat",
 };
 
-export default function BPBDJabarSettings() {
+export default function BPBDKabSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -31,10 +31,10 @@ export default function BPBDJabarSettings() {
         }
       }
       return {
-        username: "super_bpbd",
-        name: "Komandan BPBD Jabar",
+        username: "super_bpbdkab",
+        name: "Kepala BPBD Kab. Bandung",
         role: "superadmin",
-        agency_id: "bpbd",
+        agency_id: "bpbd_kab",
       };
     }
     return null;
@@ -42,7 +42,6 @@ export default function BPBDJabarSettings() {
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
   const [profileForm, setProfileForm] = useState({ 
     name: userData?.name || "", 
     username: userData?.username || "" 
@@ -111,7 +110,7 @@ export default function BPBDJabarSettings() {
   const handleUploadPhoto = () => fileInputRef.current?.click();
 
   const getRoleLabel = (role: string) => {
-    return role === "superadmin" ? "Super Admin Provinsi" : "Admin Staff";
+    return role === "superadmin" ? "Super Admin Kabupaten" : "Admin Staff";
   };
 
   if (!isMounted || !userData) return null;

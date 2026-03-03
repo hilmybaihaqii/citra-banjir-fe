@@ -62,7 +62,7 @@ export const SecurityModule = ({ onVerify, showError }: SecurityModuleProps) => 
         <div className="flex justify-between items-center">
           <label className={`text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 ${(showError || status === 'error') ? 'text-rose-500' : 'text-slate-400'}`}>
             <div className={`w-1.5 h-1.5 rounded-full ${(showError || status === 'error') ? 'bg-rose-500' : 'bg-slate-300'}`}></div>
-            Verifikasi Keamanan Lapangan
+            Verifikasi Keamanan
           </label>
           {(showError || status === 'error') && (
             <span className="text-[10px] text-rose-500 font-bold tracking-widest">

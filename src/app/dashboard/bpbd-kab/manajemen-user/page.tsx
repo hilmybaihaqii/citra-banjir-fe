@@ -9,12 +9,12 @@ import {
   Users
 } from "lucide-react";
 
-import { AddUserModal } from '@/components/ui/AddUserbpbd';
+import { AddUserKabModal } from '@/components/ui/AddUserbpbdKab';
 import { DeleteUserModal } from '@/components/ui/DeleteUserModal';
 import { MOCK_USERS } from "@/lib/data"; 
 import { User } from "@/types";
 
-export default function BPBDUserManagement() {
+export default function BPBDKabUserManagement() {
   const [isMounted, setIsMounted] = useState(false);
 
   const [userData] = useState<{ username: string; role: string; agencyId: string } | null>(() => {
@@ -27,17 +27,16 @@ export default function BPBDUserManagement() {
           console.error("Gagal parsing session", e);
         }
       }
-      return { username: "super_bpbd", role: "superadmin", agencyId: "bpbd" };
+      return { username: "super_bpbdkab", role: "superadmin", agencyId: "bpbd_kab" };
     }
     return null;
   });
 
   const [usersList, setUsersList] = useState<User[]>(() => 
-    MOCK_USERS.filter(user => user.agencyId === "bpbd")
+    MOCK_USERS.filter(user => user.agencyId === "bpbd_kab")
   );
   
   const [searchQuery, setSearchQuery] = useState("");
-  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ name: string; username: string } | null>(null);
@@ -46,6 +45,7 @@ export default function BPBDUserManagement() {
     const timer = setTimeout(() => {
       setIsMounted(true);
     }, 0);
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -54,7 +54,7 @@ export default function BPBDUserManagement() {
   const isSuperAdmin = userData?.role === "superadmin";
 
   const handleAddUser = (newUser: User) => { 
-    const formattedUser = { ...newUser, agencyId: "bpbd" };
+    const formattedUser = { ...newUser, agencyId: "bpbd_kab" };
     setUsersList(prev => [...prev, formattedUser]);
     setIsAddModalOpen(false);
   };
@@ -74,26 +74,24 @@ export default function BPBDUserManagement() {
 
   return (
     <div className="flex flex-col gap-6 pb-8">
-      
       {!isSuperAdmin && (
-        <div className="flex shrink-0 items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-4">
+        <div className="flex shrink-0 items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 shadow-sm">
           <ShieldAlert className="mt-0.5 shrink-0 text-blue-600" size={18} />
           <div>
             <h4 className="text-sm font-bold text-blue-900">Mode Akses Terbatas</h4>
             <p className="mt-1 text-xs font-medium text-blue-800">
-              Anda login sebagai Petugas BPBD. Penambahan dan penghapusan akun dibatasi khusus untuk Komandan/Super Admin BPBD Jabar.
+              Anda login sebagai Petugas BPBD Kab. Penambahan dan penghapusan akun dibatasi khusus untuk Kepala/Super Admin BPBD Kabupaten Bandung.
             </p>
           </div>
         </div>
       )}
-
       <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">
-            Manajemen User
+            Manajemen User Kab.
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Daftar akses akun internal BPBD Provinsi Jawa Barat
+            Daftar akses akun internal Pusdalops BPBD Kabupaten Bandung
           </p>
         </div>
         
@@ -120,7 +118,9 @@ export default function BPBDUserManagement() {
         </div>
       </div>
 
+      {/* TABEL USERS (Dynamic Height & Horizontal Scroll) */}
       <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-175 border-collapse text-left">
             <thead className="bg-slate-50">
@@ -147,7 +147,7 @@ export default function BPBDUserManagement() {
                     
                     <td className="p-4">
                       <span className="inline-flex items-center rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                        BPBD Jawa Barat
+                        BPBD Kab. Bandung
                       </span>
                     </td>
                     
@@ -183,7 +183,7 @@ export default function BPBDUserManagement() {
                   <td colSpan={isSuperAdmin ? 5 : 4} className="py-16 text-center align-middle">
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <Users size={32} className="mb-3 text-slate-300" />
-                      <span className="text-sm font-medium">Tidak ada personil BPBD yang ditemukan.</span>
+                      <span className="text-sm font-medium">Tidak ada personil BPBD Kab. Bandung yang ditemukan.</span>
                     </div>
                   </td>
                 </tr>
@@ -192,22 +192,24 @@ export default function BPBDUserManagement() {
           </table>
         </div>
 
+        {/* Footer / Pagination */}
         <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
           <p className="text-xs font-medium text-slate-600">
             Menampilkan <span className="font-bold text-blue-950">{filteredUsers.length}</span> personil
           </p>
           <div className="flex w-full gap-2 sm:w-auto">
-            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:flex-none">
+            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">
               PREV
             </button>
-            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-colors hover:bg-slate-50 hover:border-blue-950 sm:flex-none">
+            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-all hover:border-blue-950 hover:bg-slate-50 sm:flex-none">
               NEXT
             </button>
           </div>
         </div>
       </div>
 
-      <AddUserModal 
+      {/* MODALS */}
+      <AddUserKabModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onAdd={handleAddUser} 

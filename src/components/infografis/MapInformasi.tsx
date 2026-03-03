@@ -7,7 +7,6 @@ import { renderToString } from 'react-dom/server';
 import { Waves } from 'lucide-react';
 import "leaflet/dist/leaflet.css";
 
-// Pastikan path komponen ini sesuai
 import { KECAMATAN_DATA, KecamatanDetail } from '@/lib/mapData';
 import { MapController } from './MapController';
 import { MapActionButtons } from './MapActionButtons';
@@ -33,29 +32,24 @@ const FloodMap = () => {
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
   
-  // STATE PENAMPUNG DATA PETA (Dinamis dari LocalStorage)
   const [mapLocations, setMapLocations] = useState<KecamatanDetail[]>([]);
-
   const [activeModal, setActiveModal] = useState<"data" | "dampak" | null>(null);
   const [selectedKecamatan, setSelectedKecamatan] = useState<KecamatanDetail | null>(null);
 
-  // --- MEMBACA DATA DARI DATABASE SIMULASI ---
+  const STORAGE_KEY = "simulasi_database_banjir";
+
   useEffect(() => {
     const fetchMapData = () => {
-      const savedData = localStorage.getItem("simulasi_database_banjir");
+      const savedData = localStorage.getItem(STORAGE_KEY);
       if (savedData) {
         setMapLocations(JSON.parse(savedData));
       } else {
-        // Fallback jika localStorage kosong
         setMapLocations(KECAMATAN_DATA);
       }
     };
 
-    // Ambil data saat komponen pertama kali dirender
     fetchMapData();
 
-    // Event listener ini membuat peta User otomatis ter-update 
-    // JIKA ada perubahan localStorage dari tab lain (Tab Admin)
     window.addEventListener("storage", fetchMapData);
     
     return () => {
@@ -63,7 +57,6 @@ const FloodMap = () => {
     };
   }, []);
 
-  // --- PEMBUATAN ICON MARKER ---
   const getCustomIcon = useCallback((status: string) => {
     const isDanger = status.includes("Siaga");
     const isWarning = status === "Waspada";
@@ -86,6 +79,7 @@ const FloodMap = () => {
 
   return (
     <div className="w-full h-full relative font-sans overflow-hidden bg-slate-50">
+      
       <MapContainer 
         center={centerPosition} 
         zoom={12} 
@@ -97,12 +91,10 @@ const FloodMap = () => {
         <ZoomHandler setZoomMethods={setZoomHandlers} />
         <AttributionControl position="bottomleft" prefix={false} />
 
-        {/* Tile Layers */}
         {activeLayer === 'osm' && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />}
         {activeLayer === 'topo' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" maxZoom={18} />}
         {activeLayer === 'satellite' && <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" maxZoom={19} />}
 
-        {/* MENGGUNAKAN MAPLOCATIONS (DARI LOCAL STORAGE), BUKAN DATA STATIS */}
         {mapLocations.map((kec) => (
           <Marker 
             key={kec.id} 
@@ -129,11 +121,9 @@ const FloodMap = () => {
         ))}
       </MapContainer>
 
-      {/* --- UI OVERLAY --- */}
       <MapActionButtons setActiveModal={setActiveModal} />
       <MapModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
       
-      {/* Pastikan Modal Detail juga membaca data statistik baru dengan benar */}
       <RegionalDetailModal 
         data={selectedKecamatan} 
         onClose={() => setSelectedKecamatan(null)} 
