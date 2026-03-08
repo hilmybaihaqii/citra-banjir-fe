@@ -185,9 +185,8 @@ export const AddUserBMKGModal: React.FC<AddUserModalProps> = ({
                   onChange={handleChange}
                   className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
                 >
-                  <option value="admin">Admin Stasiun</option>
+                  <option value="admin">Admin</option>
                   <option value="superadmin">Super Admin</option>
-                  <option value="petugas">Petugas Lapangan</option>
                 </select>
               </div>
             </div>

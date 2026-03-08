@@ -111,15 +111,6 @@ export default function UpdateDebitSungaiPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="bg-blue-950 p-4 flex items-center gap-3">
-            <div className="p-2 bg-amber-400 rounded-lg">
-              <Droplets className="text-blue-950" size={18} />
-            </div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-              Formulir Laporan Debit Air
-            </h2>
-          </div>
-
           <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2 text-blue-950">
@@ -133,7 +124,7 @@ export default function UpdateDebitSungaiPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, lokasi: e.target.value })
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:bg-white focus:border-blue-950 transition-all uppercase tracking-wider"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:bg-white focus:border-blue-950 transition-all tracking-wider"
                 >
                   <option value="">-- Pilih Pos Pantau --</option>
                   {LOKASI_SUNGAI.map((loc) => (
@@ -227,7 +218,7 @@ export default function UpdateDebitSungaiPage() {
                 ? "Menyimpan..."
                 : success
                   ? "Data Tersimpan"
-                  : "Update Debit"}
+                  : "Simpan Data"}
             </button>
           </form>
         </div>

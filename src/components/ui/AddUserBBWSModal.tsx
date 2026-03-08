@@ -1,173 +1,216 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, User, Lock, Shield, Mail, CheckCircle2 } from "lucide-react";
-import { User as UserType, UserRole } from "@/types";
+import { X, UserPlus, CheckCircle2 } from "lucide-react";
+import { User, UserRole } from "@/types";
 
-interface AddUserBBWSModalProps {
+interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (user: UserType) => void;
+  onAdd: (userData: User) => void;
 }
 
-export function AddUserBBWSModal({
+export const AddUserBBWSModal: React.FC<AddUserModalProps> = ({
   isOpen,
   onClose,
   onAdd,
-}: AddUserBBWSModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+}) => {
   const [formData, setFormData] = useState({
-    name: "",
     username: "",
+    name: "",
     password: "",
+    agencyId: "bbws",
     role: "admin" as UserRole,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleCloseModal = () => {
+    onClose();
+    // Reset form setelah modal tertutup
+    setTimeout(() => {
+      setFormData({
+        username: "",
+        name: "",
+        password: "",
+        agencyId: "bbws",
+        role: "admin" as UserRole,
+      });
+      setShowSuccess(false);
+      setIsSubmitting(false);
+    }, 300);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Simulasi loading
     setTimeout(() => {
-      // Perbaikan: Tambahkan property 'password' agar sesuai dengan interface UserType
-      const newUser: UserType = {
-        name: formData.name,
-        username: formData.username,
-        password: formData.password, // Sekarang sudah lengkap sesuai kontrak type User
-        role: formData.role,
-        agencyId: "bbws",
-      };
-
-      onAdd(newUser);
       setIsSubmitting(false);
-      setFormData({
-        name: "",
-        username: "",
-        password: "",
-        role: "admin" as UserRole,
-      });
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        onAdd({
+          username: formData.username,
+          name: formData.name,
+          password: formData.password,
+          agencyId: "bbws",
+          role: formData.role,
+        });
+
+        setFormData({
+          username: "",
+          name: "",
+          password: "",
+          agencyId: "bbws",
+          role: "admin" as UserRole,
+        });
+        setShowSuccess(false);
+      }, 1500);
     }, 800);
   };
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-blue-950/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
-        {/* HEADER */}
-        <div className="bg-blue-950 p-6 text-white flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-400 rounded-lg">
-              <Shield className="text-blue-950" size={20} />
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
+      <div className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        {/* Header - Identik dengan BMKG Style */}
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+          <div className="flex items-center gap-3 text-blue-950">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md text-blue-700">
+              <UserPlus size={18} strokeWidth={2.5} />
             </div>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-widest">
-                Registrasi Akun
-              </h3>
-              <p className="text-[9px] text-blue-300 font-bold uppercase tracking-tighter">
-                Otoritas Internal BBWS Citarum
-              </p>
-            </div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
+              Tambah Petugas BBWS
+            </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-blue-300 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+          {!showSuccess && (
+            <button
+              onClick={handleCloseModal}
+              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
 
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-              <User size={14} /> Nama Lengkap Petugas
-            </label>
-            <input
-              required
-              type="text"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none transition-all"
-              placeholder="Masukkan nama asli..."
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
+        {showSuccess ? (
+          <div className="flex flex-col items-center justify-center p-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-emerald-50 bg-emerald-100">
+              <CheckCircle2
+                size={32}
+                className="text-emerald-600"
+                strokeWidth={2.5}
+              />
+            </div>
+            <h4 className="mb-1 text-lg font-black tracking-tight text-blue-950">
+              Petugas Terdaftar!
+            </h4>
+            <p className="text-base font-medium text-slate-500">
+              Akun{" "}
+              <span className="font-bold text-slate-700">
+                @{formData.username}
+              </span>{" "}
+              telah aktif di sistem BBWS.
+            </p>
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-              <Mail size={14} /> ID Username
-            </label>
-            <input
-              required
-              type="text"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none transition-all"
-              placeholder="petugas_citarum01"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                <Lock size={14} /> Password
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5 p-6">
+            <div>
+              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Nama Lengkap Petugas <span className="text-rose-500">*</span>
               </label>
               <input
                 required
-                type="password"
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none transition-all"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Masukkan nama lengkap..."
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                <Shield size={14} /> Hak Akses
-              </label>
-              <select
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value as UserRole })
-                }
-              >
-                <option value="admin">Admin Balai</option>
-                <option value="superadmin">Kepala Balai</option>
-              </select>
-            </div>
-          </div>
 
-          {/* ACTIONS */}
-          <div className="flex gap-3 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 rounded-lg border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-3 rounded-lg bg-blue-950 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-blue-900 transition-all flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle2 size={16} /> Daftarkan
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+            <div>
+              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Username <span className="text-rose-500">*</span>
+              </label>
+              <input
+                required
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Contoh: petugas_citarum"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Password <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  required
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Otoritas Akses <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-5">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                disabled={isSubmitting}
+                className="rounded-md border border-slate-200 bg-slate-50 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-950 disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="min-w-32 rounded-md bg-blue-950 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:bg-blue-900 disabled:cursor-wait disabled:opacity-70"
+              >
+                {isSubmitting ? "MEMPROSES..." : "DAFTARKAN PETUGAS"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
-}
+};
