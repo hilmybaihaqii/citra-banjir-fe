@@ -5,9 +5,9 @@ import {
   LayoutDashboard,
   MapPinned,
   Inbox,
-  Users,
+  Users, // Digunakan untuk Manajemen User
   History,
-  Settings,
+  Settings, // Digunakan untuk Pengaturan
   LogOut,
   ChevronRight,
   Menu,
@@ -17,7 +17,6 @@ import { Outfit } from "next/font/google";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-
 import LogoutModal from "@/components/LogoutModal";
 
 const outfit = Outfit({
@@ -32,54 +31,43 @@ export default function BPBDKabLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-
   const [userData, setUserData] = useState<{
     username: string;
     role: string;
-    agencyId?: string;
     name?: string;
   } | null>(null);
-
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
+    const timer = setTimeout(() => {
       const savedUser = localStorage.getItem("user_session");
       if (!savedUser) {
         router.push("/");
         return;
       }
       try {
-        const parsed = JSON.parse(savedUser);
-        setUserData(parsed);
+        setUserData(JSON.parse(savedUser));
         setIsLoaded(true);
-      } catch (e) {
-        console.error("Gagal parsing data user", e);
+      } catch {
         localStorage.removeItem("user_session");
         router.push("/");
       }
-    };
-    loadData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("user_session");
     localStorage.removeItem("auth_token");
-    router.push("/");
+    window.location.href = "/";
   };
-
-  if (!isLoaded) {
-    return null;
-  }
 
   const isActive = (path: string) => {
     if (path === "/dashboard/bpbd-kab" && pathname === "/dashboard/bpbd-kab")
       return true;
-    if (path !== "/dashboard/bpbd-kab" && pathname.startsWith(path))
-      return true;
-    return false;
+    return path !== "/dashboard/bpbd-kab" && pathname.startsWith(path);
   };
 
   const activeClass =
@@ -87,7 +75,7 @@ export default function BPBDKabLayout({
   const inactiveClass =
     "w-full flex items-center justify-between p-3.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg text-xs uppercase tracking-widest transition-all";
 
-  const handleMenuClick = () => setIsSidebarOpen(false);
+  if (!isLoaded) return null;
 
   return (
     <div
@@ -95,24 +83,23 @@ export default function BPBDKabLayout({
     >
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-          aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
           <Link
             href="/dashboard/bpbd-kab"
             className="flex items-center"
-            onClick={handleMenuClick}
+            onClick={() => setIsSidebarOpen(false)}
           >
             <Image
               src="/images/logo-citra-banjir.png"
-              alt="Logo Citra Banjir"
+              alt="Logo"
               width={200}
               height={100}
               className="object-contain"
@@ -120,24 +107,24 @@ export default function BPBDKabLayout({
             />
           </Link>
           <button
-            className="rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden text-slate-300"
           >
             <X size={24} />
           </button>
         </div>
 
-        <nav className="custom-scrollbar flex-1 space-y-1.5 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-1.5 overflow-y-auto p-4 custom-scrollbar">
           <p className="mb-2 px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-            Menu Utama
+            Pusdalops Kab. Bandung
           </p>
 
           <Link
             href="/dashboard/bpbd-kab"
-            onClick={handleMenuClick}
             className="block"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <div
+            <button
               className={
                 isActive("/dashboard/bpbd-kab") ? activeClass : inactiveClass
               }
@@ -146,15 +133,15 @@ export default function BPBDKabLayout({
                 <LayoutDashboard size={18} /> Dashboard
               </div>
               {isActive("/dashboard/bpbd-kab") && <ChevronRight size={14} />}
-            </div>
+            </button>
           </Link>
 
           <Link
             href="/dashboard/bpbd-kab/laporan"
-            onClick={handleMenuClick}
             className="block"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <div
+            <button
               className={
                 isActive("/dashboard/bpbd-kab/laporan")
                   ? activeClass
@@ -162,20 +149,20 @@ export default function BPBDKabLayout({
               }
             >
               <div className="flex items-center gap-3">
-                <Inbox size={18} /> Semua Laporan
+                <Inbox size={18} /> Laporan Masuk
               </div>
               {isActive("/dashboard/bpbd-kab/laporan") && (
                 <ChevronRight size={14} />
               )}
-            </div>
+            </button>
           </Link>
 
           <Link
             href="/dashboard/bpbd-kab/update-wilayah"
-            onClick={handleMenuClick}
             className="block"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <div
+            <button
               className={
                 isActive("/dashboard/bpbd-kab/update-wilayah")
                   ? activeClass
@@ -188,20 +175,22 @@ export default function BPBDKabLayout({
               {isActive("/dashboard/bpbd-kab/update-wilayah") && (
                 <ChevronRight size={14} />
               )}
-            </div>
+            </button>
           </Link>
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
               Sistem & Administrasi
             </p>
+
+            {/* Menu Manajemen User Balik Lagi */}
             {userData?.role === "superadmin" && (
               <Link
                 href="/dashboard/bpbd-kab/manajemen-user"
-                onClick={handleMenuClick}
-                className="mb-1.5 block"
+                className="block mb-1.5"
+                onClick={() => setIsSidebarOpen(false)}
               >
-                <div
+                <button
                   className={
                     isActive("/dashboard/bpbd-kab/manajemen-user")
                       ? activeClass
@@ -214,16 +203,16 @@ export default function BPBDKabLayout({
                   {isActive("/dashboard/bpbd-kab/manajemen-user") && (
                     <ChevronRight size={14} />
                   )}
-                </div>
+                </button>
               </Link>
             )}
 
             <Link
               href="/dashboard/bpbd-kab/log-aktivitas"
-              onClick={handleMenuClick}
-              className="mb-1.5 block"
+              className="block mb-1.5"
+              onClick={() => setIsSidebarOpen(false)}
             >
-              <div
+              <button
                 className={
                   isActive("/dashboard/bpbd-kab/log-aktivitas")
                     ? activeClass
@@ -236,15 +225,15 @@ export default function BPBDKabLayout({
                 {isActive("/dashboard/bpbd-kab/log-aktivitas") && (
                   <ChevronRight size={14} />
                 )}
-              </div>
+              </button>
             </Link>
 
             <Link
               href="/dashboard/bpbd-kab/pengaturan"
-              onClick={handleMenuClick}
               className="block"
+              onClick={() => setIsSidebarOpen(false)}
             >
-              <div
+              <button
                 className={
                   isActive("/dashboard/bpbd-kab/pengaturan")
                     ? activeClass
@@ -257,7 +246,7 @@ export default function BPBDKabLayout({
                 {isActive("/dashboard/bpbd-kab/pengaturan") && (
                   <ChevronRight size={14} />
                 )}
-              </div>
+              </button>
             </Link>
           </div>
         </nav>
@@ -265,61 +254,42 @@ export default function BPBDKabLayout({
         <div className="shrink-0 border-t border-white/10 bg-blue-950/80 p-4">
           <button
             onClick={() => setIsLogoutModalOpen(true)}
-            className="flex w-full items-center gap-3 rounded-lg p-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+            className="flex w-full items-center gap-3 rounded-lg p-3 text-xs font-bold uppercase text-red-400 hover:bg-red-500/10 transition-all"
           >
             <LogOut size={18} /> Keluar
           </button>
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm lg:justify-end lg:px-8">
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
           <button
-            className="rounded-lg p-2 text-blue-950 transition-colors hover:bg-slate-100 lg:hidden"
             onClick={() => setIsSidebarOpen(true)}
+            className="lg:hidden text-blue-950"
           >
             <Menu size={26} />
           </button>
-
           <div className="flex items-center gap-3 lg:gap-5">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-black uppercase leading-none tracking-wider text-blue-950">
-                {userData?.name || userData?.username || "Petugas Kab."}
+            <div className="hidden sm:block text-right">
+              <p className="text-sm font-black uppercase text-blue-950">
+                {userData?.name || "Petugas Kab."}
               </p>
-              <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[9px] font-bold uppercase tracking-widest text-amber-600">
-                {userData?.role === "superadmin" && (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5">
-                    SUPERADMIN
-                  </span>
-                )}
-                <span>PUSDALOPS KAB. BANDUNG</span>
-              </div>
+              <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest">
+                PUSDALOPS KAB. BANDUNG
+              </p>
             </div>
-
-            <div className="hidden h-8 w-px bg-slate-200 sm:block" />
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1 pr-3 transition-colors hover:border-amber-400 lg:pr-4">
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
-                <Image
-                  src="/images/LOGOBPBD.png"
-                  alt="Logo BPBD"
-                  fill
-                  sizes="40px"
-                  className="object-contain p-0.5"
-                />
-              </div>
-              <div className="hidden flex-col sm:flex">
-                <span className="text-[11px] font-black leading-tight text-blue-950">
-                  BPBD
-                </span>
-                <span className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">
-                  Kabupaten Bandung
-                </span>
-              </div>
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
+              <Image
+                src="/images/LOGOBPBD.png"
+                alt="Logo"
+                fill
+                className="object-contain p-1"
+              />
             </div>
           </div>
         </header>
 
-        <main className="custom-scrollbar flex-1 overflow-y-auto bg-slate-50/50 p-4 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50/50 custom-scrollbar">
           {children}
         </main>
       </div>
