@@ -9,7 +9,7 @@ import {
   User,
   Mail,
   Lock,
-} from "lucide-react"; // Camera & icon lain sudah ditambah di sini
+} from "lucide-react";
 import { Outfit } from "next/font/google";
 
 const outfit = Outfit({
@@ -20,12 +20,10 @@ const outfit = Outfit({
 const AGENCIES: Record<string, string> = {
   bbws: "BBWS Citarum",
   bpbd: "BPBD Jawa Barat",
-  bpbd_kab: "BPBD Kab. Bandung",
   bmkg: "BMKG Jawa Barat",
-  admin: "Citra Banjir Pusat",
 };
 
-export default function BMKGSettingsPage() {
+export default function BBWSSettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -57,34 +55,24 @@ export default function BMKGSettingsPage() {
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
         setUserData(parsed);
-        setProfileForm({ name: parsed.name, username: parsed.username });
-      } else {
-        const fallback = {
-          username: "admin_bmkg",
-          name: "Staf Operasional BMKG",
-          role: "superadmin",
-          agency_id: "bmkg",
-        };
-        setUserData(fallback);
-        setProfileForm({ name: fallback.name, username: fallback.username });
+        setProfileForm({
+          name: parsed.name || parsed.username,
+          username: parsed.username,
+        });
       }
     }, 0);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
-  };
-
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
     if (errorMessage) setErrorMessage("");
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-
     setTimeout(() => {
       setIsSaving(false);
       if (userData) {
@@ -98,7 +86,7 @@ export default function BMKGSettingsPage() {
         window.dispatchEvent(new Event("storage"));
       }
       setIsProfileModalOpen(false);
-      setSuccessMessage("Profil BMKG berhasil diperbarui!");
+      setSuccessMessage("Profil BBWS Citarum diperbarui!");
       setTimeout(() => setSuccessMessage(""), 3000);
     }, 1000);
   };
@@ -109,28 +97,27 @@ export default function BMKGSettingsPage() {
       setErrorMessage("Konfirmasi password tidak cocok!");
       return;
     }
-
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
       setIsPasswordModalOpen(false);
       setPasswordForm({ current: "", new: "", confirm: "" });
-      setSuccessMessage("Password keamanan berhasil diganti!");
+      setSuccessMessage("Password berhasil diganti!");
       setTimeout(() => setSuccessMessage(""), 3000);
     }, 1000);
   };
 
-  const handleUploadPhoto = () => fileInputRef.current?.click();
-
   const getRoleLabel = (role: string) => {
-    return role === "superadmin" ? "Super Admin Stasiun" : "Petugas Teknis";
+    return role === "superadmin"
+      ? "Kepala Balai / Super Admin"
+      : "Petugas Operasional";
   };
 
   if (!isMounted || !userData) return null;
 
   return (
     <div
-      className={`mx-auto flex w-full max-w-xl flex-col pb-8 animate-in fade-in duration-500 ${outfit.className}`}
+      className={`mx-auto flex w-full max-w-xl flex-col pb-12 animate-in fade-in duration-500 ${outfit.className}`}
     >
       {/* Toast Notification */}
       <div
@@ -141,16 +128,15 @@ export default function BMKGSettingsPage() {
 
       <div className="mb-10 flex flex-col items-center">
         <h1 className="mb-8 text-2xl font-black uppercase tracking-tight text-blue-950 text-center">
-          Pengaturan Akun BMKG
+          Pengaturan Akun BBWS
         </h1>
 
-        {/* Lingkaran Foto - Desain disamakan dengan BBWS */}
         <div
-          onClick={handleUploadPhoto}
+          onClick={() => fileInputRef.current?.click()}
           className="group relative flex h-32 w-32 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
           <span className="text-4xl font-black uppercase text-slate-400 group-hover:opacity-0 transition-opacity">
-            {userData.name ? userData.name.substring(0, 2) : "BM"}
+            {userData.name ? userData.name.substring(0, 2) : "BB"}
           </span>
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-950/80 opacity-0 group-hover:opacity-100 transition-opacity text-white">
             <Camera size={20} className="mb-1" />
@@ -168,24 +154,23 @@ export default function BMKGSettingsPage() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* Info Cards */}
         <div
           onClick={() => setIsProfileModalOpen(true)}
-          className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-900 transition-all"
+          className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-600 transition-all"
         >
           <div className="flex items-center gap-4">
             <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-50 transition-colors">
               <User
                 size={18}
-                className="text-slate-400 group-hover:text-blue-900"
+                className="text-slate-400 group-hover:text-blue-600"
               />
             </div>
             <div>
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                Nama Petugas BMKG
+                Nama Petugas Balai
               </p>
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData.name}
+                {userData.name || userData.username}
               </p>
             </div>
           </div>
@@ -196,18 +181,18 @@ export default function BMKGSettingsPage() {
 
         <div
           onClick={() => setIsProfileModalOpen(true)}
-          className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-900 transition-all"
+          className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-600 transition-all"
         >
           <div className="flex items-center gap-4">
             <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-50 transition-colors">
               <Mail
                 size={18}
-                className="text-slate-400 group-hover:text-blue-900"
+                className="text-slate-400 group-hover:text-blue-600"
               />
             </div>
             <div>
               <p className="mb-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                ID Username
+                ID Kredensial
               </p>
               <p className="text-base font-black text-blue-950">
                 @{userData.username}
@@ -229,7 +214,7 @@ export default function BMKGSettingsPage() {
                 Instansi Afiliasi
               </p>
               <p className="text-sm font-bold uppercase text-slate-700">
-                {AGENCIES[userData.agency_id] || "BMKG Jawa Barat"}
+                {AGENCIES[userData.agency_id] || "BBWS Citarum"}
               </p>
             </div>
           </div>
@@ -265,7 +250,7 @@ export default function BMKGSettingsPage() {
         </button>
       </div>
 
-      {/* Profile Modal */}
+      {/* Modal Profile */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div
@@ -275,7 +260,7 @@ export default function BMKGSettingsPage() {
           <div className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
             <div className="mb-6 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
-                Update Informasi Petugas
+                Update Profil
               </h3>
               <button
                 onClick={() => setIsProfileModalOpen(false)}
@@ -292,10 +277,11 @@ export default function BMKGSettingsPage() {
                 <input
                   required
                   type="text"
-                  name="name"
                   value={profileForm.name}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-blue-950 focus:border-blue-950 focus:ring-1 focus:ring-blue-950 outline-none"
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, name: e.target.value })
+                  }
+                  className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
                 />
               </div>
               <div className="space-y-1.5">
@@ -305,10 +291,11 @@ export default function BMKGSettingsPage() {
                 <input
                   required
                   type="text"
-                  name="username"
                   value={profileForm.username}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-blue-950 focus:border-blue-950 focus:ring-1 focus:ring-blue-950 outline-none"
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, username: e.target.value })
+                  }
+                  className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -332,7 +319,7 @@ export default function BMKGSettingsPage() {
         </div>
       )}
 
-      {/* Password Modal */}
+      {/* Modal Password */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div

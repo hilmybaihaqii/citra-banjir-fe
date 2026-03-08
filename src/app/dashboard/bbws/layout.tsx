@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  CloudSun,
   CloudRain,
+  Waves,
+  Droplets,
   UserPlus,
   History,
   Settings,
@@ -12,7 +13,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  MapPinned,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter, usePathname } from "next/navigation";
@@ -25,7 +25,7 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function BMKGLayout({
+export default function BBWSLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -56,7 +56,6 @@ export default function BMKGLayout({
         router.push("/");
       }
     }, 0);
-
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -67,9 +66,9 @@ export default function BMKGLayout({
   };
 
   const isActive = (path: string) => {
-    if (path === "/dashboard/bmkg" && pathname === "/dashboard/bmkg")
+    if (path === "/dashboard/bbws" && pathname === "/dashboard/bbws")
       return true;
-    return path !== "/dashboard/bmkg" && pathname.startsWith(path);
+    return path !== "/dashboard/bbws" && pathname.startsWith(path);
   };
 
   const activeClass =
@@ -90,13 +89,12 @@ export default function BMKGLayout({
         />
       )}
 
-      {/* SIDEBAR */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
           <Link
-            href="/dashboard/bmkg"
+            href="/dashboard/bbws"
             className="flex items-center"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -119,34 +117,55 @@ export default function BMKGLayout({
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto p-4 custom-scrollbar">
           <p className="mb-2 px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-            Menu Utama
+            Panel Kendali Hidrologi
           </p>
 
           <Link
-            href="/dashboard/bmkg"
+            href="/dashboard/bbws"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bmkg") ? activeClass : inactiveClass
+                isActive("/dashboard/bbws") ? activeClass : inactiveClass
               }
             >
               <div className="flex items-center gap-3">
                 <LayoutDashboard size={18} /> Dashboard
               </div>
-              {isActive("/dashboard/bmkg") && <ChevronRight size={14} />}
+              {isActive("/dashboard/bbws") && <ChevronRight size={14} />}
             </button>
           </Link>
 
           <Link
-            href="/dashboard/bmkg/update-curahhujan"
+            href="/dashboard/bbws/update-tinggiair"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bmkg/update-curahhujan")
+                isActive("/dashboard/bbws/update-tinggiair")
+                  ? activeClass
+                  : inactiveClass
+              }
+            >
+              <div className="flex items-center gap-3">
+                <Waves size={18} /> Update Tinggi Air
+              </div>
+              {isActive("/dashboard/bbws/update-tinggiair") && (
+                <ChevronRight size={14} />
+              )}
+            </button>
+          </Link>
+
+          <Link
+            href="/dashboard/bbws/update-curahhujan"
+            className="block"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <button
+              className={
+                isActive("/dashboard/bbws/update-curahhujan")
                   ? activeClass
                   : inactiveClass
               }
@@ -154,49 +173,28 @@ export default function BMKGLayout({
               <div className="flex items-center gap-3">
                 <CloudRain size={18} /> Update Curah Hujan
               </div>
-              {isActive("/dashboard/bmkg/update-curahhujan") && (
+              {isActive("/dashboard/bbws/update-curahhujan") && (
                 <ChevronRight size={14} />
               )}
             </button>
           </Link>
 
           <Link
-            href="/dashboard/bmkg/update-cuaca"
+            href="/dashboard/bbws/update-sungai"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bmkg/update-cuaca")
+                isActive("/dashboard/bbws/update-sungai")
                   ? activeClass
                   : inactiveClass
               }
             >
               <div className="flex items-center gap-3">
-                <CloudSun size={18} /> Update Cuaca
+                <Droplets size={18} /> Update Debit Sungai
               </div>
-              {isActive("/dashboard/bmkg/update-cuaca") && (
-                <ChevronRight size={14} />
-              )}
-            </button>
-          </Link>
-
-          <Link
-            href="/dashboard/bmkg/update-wilayah"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bmkg/update-wilayah")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
-              <div className="flex items-center gap-3">
-                <MapPinned size={18} /> Update Wilayah
-              </div>
-              {isActive("/dashboard/bmkg/update-wilayah") && (
+              {isActive("/dashboard/bbws/update-sungai") && (
                 <ChevronRight size={14} />
               )}
             </button>
@@ -204,17 +202,16 @@ export default function BMKGLayout({
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-              Sistem & Administrasi
+              Sistem & User
             </p>
-
             <Link
-              href="/dashboard/bmkg/manajemen-user"
+              href="/dashboard/bbws/manajemen-user"
               className="block mb-1.5"
               onClick={() => setIsSidebarOpen(false)}
             >
               <button
                 className={
-                  isActive("/dashboard/bmkg/manajemen-user")
+                  isActive("/dashboard/bbws/manajemen-user")
                     ? activeClass
                     : inactiveClass
                 }
@@ -222,20 +219,19 @@ export default function BMKGLayout({
                 <div className="flex items-center gap-3">
                   <UserPlus size={18} /> Manajemen User
                 </div>
-                {isActive("/dashboard/bmkg/manajemen-user") && (
+                {isActive("/dashboard/bbws/manajemen-user") && (
                   <ChevronRight size={14} />
                 )}
               </button>
             </Link>
-
             <Link
-              href="/dashboard/bmkg/log-aktivitas"
+              href="/dashboard/bbws/log-aktivitas"
               className="block mb-1.5"
               onClick={() => setIsSidebarOpen(false)}
             >
               <button
                 className={
-                  isActive("/dashboard/bmkg/log-aktivitas")
+                  isActive("/dashboard/bbws/log-aktivitas")
                     ? activeClass
                     : inactiveClass
                 }
@@ -243,20 +239,19 @@ export default function BMKGLayout({
                 <div className="flex items-center gap-3">
                   <History size={18} /> Log Aktivitas
                 </div>
-                {isActive("/dashboard/bmkg/log-aktivitas") && (
+                {isActive("/dashboard/bbws/log-aktivitas") && (
                   <ChevronRight size={14} />
                 )}
               </button>
             </Link>
-
             <Link
-              href="/dashboard/bmkg/pengaturan"
+              href="/dashboard/bbws/pengaturan"
               className="block"
               onClick={() => setIsSidebarOpen(false)}
             >
               <button
                 className={
-                  isActive("/dashboard/bmkg/pengaturan")
+                  isActive("/dashboard/bbws/pengaturan")
                     ? activeClass
                     : inactiveClass
                 }
@@ -264,7 +259,7 @@ export default function BMKGLayout({
                 <div className="flex items-center gap-3">
                   <Settings size={18} /> Pengaturan
                 </div>
-                {isActive("/dashboard/bmkg/pengaturan") && (
+                {isActive("/dashboard/bbws/pengaturan") && (
                   <ChevronRight size={14} />
                 )}
               </button>
@@ -293,16 +288,16 @@ export default function BMKGLayout({
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData?.name || userData?.username}
+                {userData?.name || userData?.username || "Admin BBWS"}
               </p>
-              <p className="text-[9px] font-bold uppercase text-amber-600">
-                STASIUN METEOROLOGI JABAR
+              <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest">
+                BALAI BESAR WILAYAH SUNGAI
               </p>
             </div>
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
               <Image
-                src="/images/BMKG.png"
-                alt="Logo BMKG"
+                src="/images/bbws.png"
+                alt="Logo BBWS"
                 fill
                 className="object-contain p-1"
               />
