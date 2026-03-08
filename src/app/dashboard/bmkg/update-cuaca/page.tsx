@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import {
   CloudSun,
-  ArrowLeft,
   Save,
   Thermometer,
   Wind,
@@ -11,10 +10,9 @@ import {
   Sun,
   Cloud,
   Navigation,
+  Info,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function UpdateCuacaBMKG() {
   const [loading, setLoading] = useState(false);
@@ -31,7 +29,6 @@ export default function UpdateCuacaBMKG() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulasi pengiriman data ke sistem
     setTimeout(() => {
       setLoading(false);
       setSuccess(true);
@@ -46,192 +43,169 @@ export default function UpdateCuacaBMKG() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* HEADER NAVIGATION */}
-      <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-10 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/bmkg">
-            <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
-              <ArrowLeft size={20} />
-            </button>
-          </Link>
-          <div className="flex items-center gap-3 border-l pl-4 border-slate-200">
-            <div className="relative w-8 h-8">
-              <Image
-                src="/images/citrabanjir.png"
-                alt="Logo Citra Banjir"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-black text-blue-950 uppercase tracking-tight leading-none">
-                Update Data Cuaca
-              </h1>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                Pusat Meteorologi BMKG Jabar
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-100">
-          <CloudSun className="text-emerald-600" size={18} />
-          <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
-            Stasiun Meteorologi
-          </span>
-        </div>
-      </header>
-
-      <main className="p-10 max-w-5xl mx-auto">
+    <div className="animate-in fade-in duration-500 max-w-4xl mx-auto">
+      {" "}
+      {/* Perkecil container jadi max-w-4xl */}
+      {/* JUDUL HALAMAN - Lebih Compact */}
+      <div className="mb-6 px-2">
+        <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">
+          Update Status Cuaca
+        </h1>
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">
+          Stasiun Meteorologi Jawa Barat
+        </p>
+      </div>
+      <AnimatePresence>
         {success && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-emerald-500 text-white rounded-sm shadow-lg flex items-center gap-3"
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="mb-6 p-3 bg-emerald-500 text-white rounded-xl shadow-lg flex items-center gap-3 mx-2"
           >
-            <Save size={18} />
-            <span className="text-xs font-bold uppercase tracking-widest">
-              Prakiraan Cuaca Berhasil Diperbarui
+            <Save size={16} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">
+              Data Cuaca Berhasil Diperbarui
             </span>
           </motion.div>
         )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* FORM SECTION */}
-          <div className="lg:col-span-2">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white p-8 rounded-sm shadow-sm border border-slate-200 space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Input Suhu */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
-                    <Thermometer size={12} className="text-orange-500" /> Suhu
-                    Udara (°C)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="Contoh: 26"
-                    className="w-full p-3 bg-white border border-slate-300 rounded-sm text-sm text-blue-950 font-semibold focus:outline-none focus:border-emerald-500 transition-colors"
-                    value={formData.suhu}
-                    onChange={(e) =>
-                      setFormData({ ...formData, suhu: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* Input Angin */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
-                    <Wind size={12} className="text-blue-500" /> Kecepatan Angin
-                    (km/j)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="Contoh: 15"
-                    className="w-full p-3 bg-white border border-slate-300 rounded-sm text-sm text-blue-950 font-semibold focus:outline-none focus:border-emerald-500 transition-colors"
-                    value={formData.angin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, angin: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Prakiraan Selector */}
-              <div className="space-y-3">
+      </AnimatePresence>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* FORM SECTION - Memakan 7 dari 12 kolom */}
+        <div className="lg:col-span-8 px-2">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white p-6 md:p-7 rounded-2xl shadow-sm border border-slate-200 space-y-5"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
-                  <CloudSun size={12} className="text-emerald-500" /> Kondisi
-                  Prakiraan
+                  <Thermometer size={12} className="text-orange-500" /> Suhu
+                  (°C)
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { id: "Cerah", icon: <Sun size={14} /> },
-                    { id: "Berawan", icon: <Cloud size={14} /> },
-                    { id: "Hujan", icon: <CloudRain size={14} /> },
-                    {
-                      id: "Badai",
-                      icon: <Navigation size={14} className="rotate-45" />,
-                    },
-                  ].map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() =>
-                        setFormData({ ...formData, prakiraan: p.id })
-                      }
-                      className={`p-3 text-[10px] font-bold uppercase border rounded-sm transition-all flex items-center justify-center gap-2 ${
-                        formData.prakiraan === p.id
-                          ? "bg-emerald-600 text-white border-transparent shadow-md"
-                          : "bg-white text-blue-950 border-slate-300 hover:border-emerald-500"
-                      }`}
-                    >
-                      {p.icon} {p.id}
-                    </button>
-                  ))}
-                </div>
+                <input
+                  type="number"
+                  required
+                  placeholder="26"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-blue-950 font-bold focus:outline-none focus:border-blue-950 transition-colors"
+                  value={formData.suhu}
+                  onChange={(e) =>
+                    setFormData({ ...formData, suhu: e.target.value })
+                  }
+                />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest">
-                  Keterangan Cuaca Ekstrim (Opsional)
+                <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
+                  <Wind size={12} className="text-blue-500" /> Angin (km/j)
                 </label>
-                <textarea
-                  rows={4}
-                  placeholder="Masukkan peringatan dini atau catatan cuaca lainnya..."
-                  className="w-full p-3 bg-white border border-slate-300 rounded-sm text-sm text-blue-950 font-medium focus:outline-none focus:border-emerald-500 transition-colors"
-                  value={formData.keterangan}
+                <input
+                  type="number"
+                  required
+                  placeholder="15"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-blue-950 font-bold focus:outline-none focus:border-blue-950 transition-colors"
+                  value={formData.angin}
                   onChange={(e) =>
-                    setFormData({ ...formData, keterangan: e.target.value })
+                    setFormData({ ...formData, angin: e.target.value })
                   }
-                ></textarea>
+                />
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-xs tracking-[0.2em] py-4 rounded-sm shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
-              >
-                {loading ? (
-                  "Sinkronisasi Data..."
-                ) : (
-                  <>
-                    <Save size={16} /> Update Status Cuaca
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest flex items-center gap-2">
+                <CloudSun size={12} className="text-blue-600" /> Prakiraan
+                Kondisi
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: "Cerah", icon: <Sun size={14} /> },
+                  { id: "Berawan", icon: <Cloud size={14} /> },
+                  { id: "Hujan", icon: <CloudRain size={14} /> },
+                  {
+                    id: "Badai",
+                    icon: <Navigation size={14} className="rotate-45" />,
+                  },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, prakiraan: p.id })
+                    }
+                    className={`p-2.5 text-[9px] font-black uppercase border rounded-lg transition-all flex items-center justify-center gap-2 ${
+                      formData.prakiraan === p.id
+                        ? "bg-blue-950 text-white border-transparent shadow-md"
+                        : "bg-white text-blue-950 border-slate-200 hover:border-blue-950"
+                    }`}
+                  >
+                    {p.icon} {p.id}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* SIDE INFO */}
-          <div className="space-y-6">
-            <div className="bg-emerald-950 p-6 text-white rounded-sm shadow-xl border-l-4 border-emerald-400">
-              <h4 className="text-[10px] text-emerald-400 font-bold uppercase mb-6 tracking-[0.2em]">
-                Informasi Publik
-              </h4>
-              <p className="text-[11px] leading-relaxed opacity-80">
-                Data prakiraan yang diupdate di sini akan tampil secara
-                real-time di halaman utama aplikasi sebagai panduan masyarakat
-                luas.
-              </p>
-              <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-emerald-400">
-                    <Sun size={16} />
-                  </div>
-                  <div className="text-[10px]">
-                    <p className="font-bold uppercase">Update Otomatis</p>
-                    <p className="opacity-50">Setiap 3 Jam Sekali</p>
-                  </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest">
+                Catatan Tambahan
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Keterangan opsional..."
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-blue-950 font-medium focus:outline-none focus:border-blue-950 transition-colors"
+                value={formData.keterangan}
+                onChange={(e) =>
+                  setFormData({ ...formData, keterangan: e.target.value })
+                }
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-950 hover:bg-slate-900 text-white font-black uppercase text-[10px] tracking-[0.2em] py-3.5 rounded-xl shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 transition-all"
+            >
+              {loading ? (
+                "Sinkronisasi..."
+              ) : (
+                <>
+                  <Save size={14} /> Update Cuaca
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* SIDE INFO - Memakan 4 dari 12 kolom */}
+        <div className="lg:col-span-4 space-y-4 px-2">
+          <div className="bg-blue-950 p-5 text-white rounded-2xl shadow-xl border-l-4 border-amber-400">
+            <h4 className="text-[9px] text-amber-400 font-bold uppercase mb-3 tracking-[0.2em] flex items-center gap-2">
+              <Info size={12} /> Info Publik
+            </h4>
+            <p className="text-[10px] leading-relaxed opacity-70">
+              Data ini akan langsung terbit di aplikasi Citra Banjir publik.
+            </p>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-amber-400">
+                  <Sun size={14} />
+                </div>
+                <div className="text-[9px]">
+                  <p className="font-bold uppercase">Siklus Update</p>
+                  <p className="opacity-50">Setiap 3 Jam</p>
                 </div>
               </div>
             </div>
           </div>
+
+          <div className="p-4 bg-blue-100/30 rounded-xl border border-blue-100 flex items-start gap-3">
+            <Info className="text-blue-600 shrink-0" size={16} />
+            <p className="text-[9px] font-bold text-blue-900 uppercase leading-relaxed">
+              Gunakan data observasi terbaru dari stasiun meteorologi.
+            </p>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
