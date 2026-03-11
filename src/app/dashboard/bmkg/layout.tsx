@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  MapPinned,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import { useRouter, usePathname } from "next/navigation";
@@ -176,27 +175,6 @@ export default function BMKGLayout({
                 <CloudSun size={18} /> Update Cuaca
               </div>
               {isActive("/dashboard/bmkg/update-cuaca") && (
-                <ChevronRight size={14} />
-              )}
-            </button>
-          </Link>
-
-          <Link
-            href="/dashboard/bmkg/update-wilayah"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bmkg/update-wilayah")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
-              <div className="flex items-center gap-3">
-                <MapPinned size={18} /> Update Wilayah
-              </div>
-              {isActive("/dashboard/bmkg/update-wilayah") && (
                 <ChevronRight size={14} />
               )}
             </button>
