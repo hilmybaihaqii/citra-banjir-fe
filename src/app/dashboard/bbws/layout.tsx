@@ -15,9 +15,10 @@ import {
   X,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import LogoutModal from "@/components/LogoutModal";
 
 const outfit = Outfit({
@@ -30,38 +31,49 @@ export default function BBWSLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
+  
   const [userData, setUserData] = useState<{
-    username: string;
+    email?: string;
+    username?: string;
     role: string;
     name?: string;
   } | null>(null);
+  
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const savedUser = localStorage.getItem("user_session");
-      if (!savedUser) {
-        router.push("/");
+      // Membaca dari Cookies untuk menghindari bug cache lintas-dashboard
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
+      
+      if (!savedUserStr || !token) {
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/";
         return;
       }
+
       try {
-        setUserData(JSON.parse(savedUser));
+        setUserData(JSON.parse(savedUserStr));
         setIsLoaded(true);
-      } catch {
-        localStorage.removeItem("user_session");
-        router.push("/");
+      } catch (error) {
+        console.error("Gagal membaca session:", error);
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/";
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user_session");
-    localStorage.removeItem("auth_token");
+    // Hapus seluruh Cookie saat Logout
+    Cookies.remove("user_session", { path: "/" });
+    Cookies.remove("auth_token", { path: "/" }); 
     window.location.href = "/";
   };
 
@@ -75,7 +87,7 @@ export default function BBWSLayout({
     "w-full flex items-center justify-between p-3.5 bg-amber-400 text-blue-950 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-amber-400/20";
   const inactiveClass =
     "w-full flex items-center justify-between p-3.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg text-xs uppercase tracking-widest transition-all";
-
+  
   if (!isLoaded) return null;
 
   return (
@@ -109,7 +121,7 @@ export default function BBWSLayout({
           </Link>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-slate-300"
+            className="lg:hidden text-slate-300 hover:text-white transition-colors"
           >
             <X size={24} />
           </button>
@@ -204,26 +216,30 @@ export default function BBWSLayout({
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
               Sistem & User
             </p>
-            <Link
-              href="/dashboard/bbws/manajemen-user"
-              className="block mb-1.5"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/bbws/manajemen-user")
-                    ? activeClass
-                    : inactiveClass
-                }
+
+            {userData?.role === "MASTER_ADMIN" && (
+              <Link
+                href="/dashboard/bbws/manajemen-user"
+                className="block mb-1.5"
+                onClick={() => setIsSidebarOpen(false)}
               >
-                <div className="flex items-center gap-3">
-                  <UserPlus size={18} /> Manajemen User
-                </div>
-                {isActive("/dashboard/bbws/manajemen-user") && (
-                  <ChevronRight size={14} />
-                )}
-              </button>
-            </Link>
+                <button
+                  className={
+                    isActive("/dashboard/bbws/manajemen-user")
+                      ? activeClass
+                      : inactiveClass
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <UserPlus size={18} /> Manajemen User
+                  </div>
+                  {isActive("/dashboard/bbws/manajemen-user") && (
+                    <ChevronRight size={14} />
+                  )}
+                </button>
+              </Link>
+            )}
+
             <Link
               href="/dashboard/bbws/log-aktivitas"
               className="block mb-1.5"
@@ -244,6 +260,7 @@ export default function BBWSLayout({
                 )}
               </button>
             </Link>
+            
             <Link
               href="/dashboard/bbws/pengaturan"
               className="block"
@@ -281,14 +298,15 @@ export default function BBWSLayout({
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950"
+            className="lg:hidden text-blue-950 hover:text-blue-700 transition-colors"
           >
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
+              {/* Fallback Name Berjenjang */}
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData?.name || userData?.username || "Admin BBWS"}
+                {userData?.name || userData?.email || userData?.username || "Admin BBWS"}
               </p>
               <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest">
                 BALAI BESAR WILAYAH SUNGAI
@@ -304,8 +322,8 @@ export default function BBWSLayout({
             </div>
           </div>
         </header>
-
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50/50 custom-scrollbar">
+        
+        <main className="flex-1 overflow-y-auto p-4 pb-12 lg:p-8 bg-slate-50/50 custom-scrollbar">
           {children}
         </main>
       </div>

@@ -14,9 +14,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
-import { usePathname } from "next/navigation"; // useRouter dihapus
+import { usePathname } from "next/navigation"; 
 import Image from "next/image";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import LogoutModal from "@/components/LogoutModal";
 
 const outfit = Outfit({
@@ -29,38 +30,51 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const router = useRouter(); <-- Ini penyebab errornya, sudah dihapus
   const pathname = usePathname();
 
   const [userData, setUserData] = useState<{
-    username: string;
-    name: string;
+    username?: string;
+    email?: string;
+    name?: string;
     role: string;
   } | null>(null);
+  
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const savedUser = localStorage.getItem("user_session");
-      if (savedUser) {
-        setUserData(JSON.parse(savedUser));
-      } else {
-        setUserData({
-          username: "root",
-          name: "Developer Pusat",
-          role: "superadmin",
-        });
+      // Membaca session HANYA dari Cookies
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
+      
+      // Jika session tidak valid, tendang ke halaman login
+      if (!savedUserStr || !token) {
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/"; 
+        return;
       }
-      setIsLoaded(true);
+      
+      try {
+        setUserData(JSON.parse(savedUserStr));
+        setIsLoaded(true);
+      } catch (error) {
+        console.error("Session parse error:", error);
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/";
+      }
+
     }, 0);
     return () => clearTimeout(timer);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user_session");
-    localStorage.removeItem("auth_token");
+    // Bersihkan semua cookie saat keluar
+    Cookies.remove("user_session", { path: "/" });
+    Cookies.remove("auth_token", { path: "/" }); 
     window.location.href = "/";
   };
 
@@ -74,7 +88,7 @@ export default function AdminLayout({
     "w-full flex items-center justify-between p-3.5 bg-amber-400 text-blue-950 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-amber-400/20";
   const inactiveClass =
     "w-full flex items-center justify-between p-3.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg text-xs uppercase tracking-widest transition-all";
-
+  
   if (!isLoaded) return null;
 
   return (
@@ -108,7 +122,7 @@ export default function AdminLayout({
           </Link>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-slate-300"
+            className="lg:hidden text-slate-300 hover:text-white transition-colors"
           >
             <X size={24} />
           </button>
@@ -157,26 +171,31 @@ export default function AdminLayout({
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
               Sistem & User
             </p>
-            <Link
-              href="/dashboard/admin/users"
-              className="block mb-1.5"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/admin/users")
-                    ? activeClass
-                    : inactiveClass
-                }
+
+            {/* HANYA SUPER ADMIN PUSAT YANG BOLEH KELOLA USER GLOBAL */}
+            {userData?.role === "SUPER_ADMIN" && (
+              <Link
+                href="/dashboard/admin/users"
+                className="block mb-1.5"
+                onClick={() => setIsSidebarOpen(false)}
               >
-                <div className="flex items-center gap-3">
-                  <Users size={18} /> Manajemen User
-                </div>
-                {isActive("/dashboard/admin/users") && (
-                  <ChevronRight size={14} />
-                )}
-              </button>
-            </Link>
+                <button
+                  className={
+                    isActive("/dashboard/admin/users")
+                      ? activeClass
+                      : inactiveClass
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <Users size={18} /> Manajemen User
+                  </div>
+                  {isActive("/dashboard/admin/users") && (
+                    <ChevronRight size={14} />
+                  )}
+                </button>
+              </Link>
+            )}
+
             <Link
               href="/dashboard/admin/logs"
               className="block mb-1.5"
@@ -197,6 +216,7 @@ export default function AdminLayout({
                 )}
               </button>
             </Link>
+
             <Link
               href="/dashboard/admin/settings"
               className="block"
@@ -234,17 +254,17 @@ export default function AdminLayout({
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950"
+            className="lg:hidden text-blue-950 hover:text-blue-700 transition-colors"
           >
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData?.name || "Administrator"}
+                {userData?.name || userData?.email || userData?.username || "Administrator"}
               </p>
               <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest flex items-center justify-end gap-1.5">
-                <ShieldCheck size={12} /> CITRA BANJAR PUSDATIN
+                <ShieldCheck size={12} /> CITRA BANJIR PUSDATIN
               </p>
             </div>
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-blue-950 flex items-center justify-center shadow-sm">
@@ -254,8 +274,8 @@ export default function AdminLayout({
             </div>
           </div>
         </header>
-
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50/50 custom-scrollbar">
+        
+        <main className="flex-1 overflow-y-auto p-4 pb-12 lg:p-8 bg-slate-50/50 custom-scrollbar">
           {children}
         </main>
       </div>

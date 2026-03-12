@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Camera,
   X,
   ShieldCheck,
   Lock,
   User,
-  Mail,
-  KeyRound,
+  Briefcase,
+  Activity,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Outfit } from "next/font/google";
+import Cookies from "js-cookie";
+import { motion, AnimatePresence } from "framer-motion";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -18,298 +24,350 @@ const outfit = Outfit({
 });
 
 const AGENCIES: Record<string, string> = {
-  bbws: "BBWS Citarum",
-  bpbd: "BPBD Jawa Barat",
-  bpbd_kab: "BPBD Kab. Bandung",
-  bmkg: "BMKG Jawa Barat",
-  admin: "Citra Banjir Pusat",
+  "CITRA_BANJIR": "Citra Banjir Pusat",
+  "BBWS": "BBWS Citarum",
+  "BPBD_JABAR": "BPBD Provinsi Jawa Barat",
+  "BPBD_KAB": "BPBD Kab. Bandung",
+  "BMKG": "BMKG Jawa Barat",
 };
 
 export default function BBWSSettingsPage() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  
   const [userData, setUserData] = useState<{
-    username: string;
+    id: number;
+    email: string;
+    username?: string;
     name: string;
     role: string;
-    agency_id: string;
+    agency: string | null;
   } | null>(null);
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ name: "", username: "" });
+  
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [nameForm, setNameForm] = useState("");
   const [passwordForm, setPasswordForm] = useState({
-    current: "",
     new: "",
     confirm: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+    show: false,
+    message: "",
+    type: "success",
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-      const savedUser = localStorage.getItem("user_session");
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        setUserData(parsed);
-        setProfileForm({
-          name: parsed.name || parsed.username,
-          username: parsed.username,
-        });
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    setIsMounted(true);
+    
+    const fetchProfile = async () => {
+      // GANTI: Membaca session dari Cookies, bukan localStorage
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+      if (savedUserStr && token) {
+        try {
+          const parsedUser = JSON.parse(savedUserStr);
+          
+          const res = await fetch(`${baseUrl}/users/${parsedUser.id}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const responseData = await res.json();
+
+          if (res.ok && responseData.success) {
+            const freshUser = responseData.data;
+            setUserData(freshUser);
+            setNameForm(freshUser.name || "");
+            
+            // GANTI: Memperbarui session di Cookies
+            Cookies.set("user_session", JSON.stringify(freshUser), { path: "/" });
+          } else {
+            setUserData(parsedUser);
+            setNameForm(parsedUser.name || "");
+          }
+        } catch (error) {
+          console.error("Gagal menarik data profil:", error);
+          const parsedUser = JSON.parse(savedUserStr);
+          setUserData(parsedUser);
+          setNameForm(parsedUser.name || "");
+        } finally {
+          setIsLoadingData(false);
+        }
+      } else {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchProfile();
+  }, [baseUrl]);
+
+  const handleSaveName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userData) return;
+
+    setIsSaving(true);
+    try {
+      const token = Cookies.get("auth_token");
+      const res = await fetch(`${baseUrl}/users/${userData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: nameForm }), 
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Gagal memperbarui nama.");
+
+      const updatedUser = { ...userData, name: nameForm };
+      setUserData(updatedUser);
+      
+      // GANTI: Perbarui data nama di cookie agar langsung berefek pada header/sidebar
+      Cookies.set("user_session", JSON.stringify(updatedUser), { path: "/" });
+
+      setIsProfileModalOpen(false);
+      showToast("Nama berhasil diperbarui.", "success");
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
+      showToast(errMsg, "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userData) return;
+
+    if (passwordForm.new !== passwordForm.confirm) {
+      showToast("Konfirmasi password tidak cocok.", "error");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const token = Cookies.get("auth_token");
+      const res = await fetch(`${baseUrl}/users/${userData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: passwordForm.new }), 
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Gagal memperbarui password.");
+
+      closePasswordModal();
+      showToast("Password berhasil diperbarui.", "success");
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
+      showToast(errMsg, "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
-    if (errorMessage) setErrorMessage("");
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      if (userData) {
-        const updated = {
-          ...userData,
-          name: profileForm.name,
-          username: profileForm.username,
-        };
-        setUserData(updated);
-        localStorage.setItem("user_session", JSON.stringify(updated));
-        // Trigger event untuk update sidebar/header jika perlu
-        window.dispatchEvent(new Event("storage"));
-      }
-      setIsProfileModalOpen(false);
-      setSuccessMessage("Profil BBWS Citarum diperbarui!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }, 1000);
+  const closePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordForm({ new: "", confirm: "" });
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   };
 
-  const handleSavePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordForm.new !== passwordForm.confirm) {
-      setErrorMessage("Konfirmasi password tidak cocok!");
-      return;
-    }
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsPasswordModalOpen(false);
-      setPasswordForm({ current: "", new: "", confirm: "" });
-      setSuccessMessage("Password keamanan diperbarui!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }, 1000);
-  };
+  if (!isMounted) return null;
 
-  if (!isMounted || !userData) return null;
+  if (isLoadingData || !userData) {
+    return (
+      <div className={`flex h-full w-full items-center justify-center ${outfit.className}`}>
+        <LoadingSpinner message="Memuat profil BBWS..." />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`mx-auto flex w-full max-w-xl flex-col pb-8 ${outfit.className}`}
-    >
-      {/* Toast Success (Disamakan dengan style BMKG) */}
-      <div
-        className={`fixed left-1/2 top-6 z-100 -translate-x-1/2 rounded-xl border border-emerald-200 bg-white px-6 py-4 shadow-2xl transition-all duration-500 ${
-          successMessage
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-8 opacity-0"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-emerald-100 p-1.5 text-emerald-600">
-            <ShieldCheck size={18} />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
-            {successMessage}
-          </span>
-        </div>
-      </div>
+    <div className={`mx-auto flex w-full max-w-xl flex-col pb-12 lg:pb-8 relative ${outfit.className}`}>
+      
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className={`fixed z-200 flex items-center gap-3 rounded-sm border px-4 py-3.5 shadow-xl backdrop-blur-md bottom-20 left-4 right-4 sm:bottom-10 sm:left-auto sm:right-10 sm:max-w-md ${
+              toast.type === "success"
+                ? "border-emerald-200/60 bg-emerald-50/95 text-emerald-700"
+                : "border-rose-200/60 bg-rose-50/95 text-rose-700"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <ShieldCheck size={20} className="shrink-0 text-emerald-600" />
+            ) : (
+              <AlertCircle size={20} className="shrink-0 text-rose-600" />
+            )}
+            <p className="text-sm font-medium tracking-wide">{toast.message}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mb-8 flex flex-col items-center">
-        <h1 className="mb-8 text-2xl font-black uppercase tracking-tight text-blue-950">
-          Pengaturan Akun BBWS
+        <h1 className="mb-8 text-xl font-medium uppercase tracking-tight text-slate-900 text-center">
+          Pengaturan Akun
         </h1>
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="group relative flex h-32 w-32 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-xl transition-all hover:scale-105 active:scale-95"
-        >
-          <span className="text-4xl font-black uppercase tracking-widest text-slate-500">
-            {userData.name ? userData.name.substring(0, 2) : "BB"}
+        <div className="flex h-24 w-24 flex-col items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 text-slate-600">
+          <span className="text-3xl font-medium uppercase tracking-widest">
+            {userData.name ? userData.name.substring(0, 2) : "BW"}
           </span>
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-950/80 opacity-0 group-hover:opacity-100 transition-opacity text-white">
-            <Camera size={20} className="mb-1" />
-            <span className="text-[8px] font-bold uppercase tracking-widest text-center">
-              Ubah <br /> Foto
-            </span>
-          </div>
         </div>
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*"
-        />
       </div>
 
       <div className="flex w-full flex-col gap-3">
-        {/* Nama Petugas */}
         <div
           onClick={() => setIsProfileModalOpen(true)}
-          className="group flex cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-900"
+          className="group flex cursor-pointer items-center justify-between rounded-sm border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-slate-300"
         >
           <div className="flex items-center gap-4">
             <User size={18} className="text-slate-400" />
             <div>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                Nama Petugas Balai
+              <p className="mb-1 text-[10px] uppercase tracking-widest text-slate-400">
+                Nama Lengkap
               </p>
-              <p className="text-sm font-black uppercase text-blue-950">
-                {userData.name || userData.username}
+              <p className="text-sm font-medium text-slate-900">
+                {userData.name}
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-bold tracking-widest text-blue-600 opacity-0 transition-opacity group-hover:opacity-100 uppercase">
+          <span className="text-xs font-medium text-slate-500 opacity-0 transition-opacity group-hover:opacity-100">
             Ubah
           </span>
         </div>
 
-        {/* Username */}
-        <div
-          onClick={() => setIsProfileModalOpen(true)}
-          className="group flex cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-900"
-        >
+        <div className="flex items-center justify-between rounded-sm border border-slate-200 bg-slate-50 p-5">
           <div className="flex items-center gap-4">
-            <Mail size={18} className="text-slate-400" />
+            <Activity size={18} className="text-slate-400" />
             <div>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                ID Kredensial
+              <p className="mb-1 text-[10px] uppercase tracking-widest text-slate-400">
+                Email
               </p>
-              <p className="text-sm font-black text-blue-950">
-                @{userData.username}
+              <p className="text-sm font-medium text-slate-700">
+                {userData.email || userData.username}
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-bold tracking-widest text-blue-600 opacity-0 transition-opacity group-hover:opacity-100 uppercase">
-            Ubah
-          </span>
+          <Lock size={14} className="text-slate-300" />
         </div>
 
-        {/* Instansi (Read Only) */}
-        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-5">
+        <div className="flex items-center justify-between rounded-sm border border-slate-200 bg-slate-50 p-5">
+          <div className="flex items-center gap-4">
+            <Briefcase size={18} className="text-slate-400" />
+            <div>
+              <p className="mb-1 text-[10px] uppercase tracking-widest text-slate-400">
+                Instansi
+              </p>
+              <p className="text-sm font-medium text-slate-700">
+                {userData.agency ? (AGENCIES[userData.agency] || userData.agency) : "BBWS Citarum"}
+              </p>
+            </div>
+          </div>
+          <Lock size={14} className="text-slate-300" />
+        </div>
+
+        <div className="flex items-center justify-between rounded-sm border border-slate-200 bg-slate-50 p-5">
           <div className="flex items-center gap-4">
             <ShieldCheck size={18} className="text-slate-400" />
             <div>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                Instansi Afiliasi
+              <p className="mb-1 text-[10px] uppercase tracking-widest text-slate-400">
+                Akses
               </p>
-              <p className="text-sm font-bold uppercase text-slate-700">
-                {AGENCIES[userData.agency_id] || "BBWS Citarum"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Role (Read Only) */}
-        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-5">
-          <div className="flex items-center gap-4">
-            <KeyRound size={18} className="text-slate-400" />
-            <div>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                Otoritas Sistem
-              </p>
-              <p className="text-sm font-bold uppercase text-slate-700">
-                {userData.role === "superadmin"
-                  ? "Super Admin"
-                  : "Petugas Operasional"}
+              <p className="text-sm font-medium text-slate-700">
+                {userData.role.replace("_", " ")}
               </p>
             </div>
           </div>
+          <Lock size={14} className="text-slate-300" />
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <button
-          onClick={() => {
-            setPasswordForm({ current: "", new: "", confirm: "" });
-            setErrorMessage("");
-            setIsPasswordModalOpen(true);
-          }}
-          className="w-full rounded-md border border-slate-300 bg-white px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-colors hover:border-blue-950 hover:bg-slate-50"
+          onClick={() => setIsPasswordModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-sm border border-slate-300 bg-white px-6 py-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
-          Ganti Password Keamanan
+          Ubah Password
         </button>
       </div>
 
-      {/* MODAL UBAH PROFIL */}
+      {/* MODAL UBAH NAMA LENGKAP */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => setIsProfileModalOpen(false)}
           />
-          <div className="relative w-full max-w-sm overflow-hidden rounded-lg bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-sm bg-white p-6 shadow-xl border border-slate-200">
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
-                Update Profil BBWS
+              <h3 className="text-sm font-medium text-slate-900">
+                Ubah Nama Lengkap
               </h3>
               <button
                 onClick={() => setIsProfileModalOpen(false)}
-                className="rounded-md p-1 text-slate-400 hover:bg-slate-100"
+                className="rounded-sm p-1 text-slate-400 hover:bg-slate-100"
               >
                 <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSaveProfile} className="space-y-5">
+            <form onSubmit={handleSaveName} className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <label className="mb-1.5 block text-xs text-slate-500">
                   Nama Lengkap
                 </label>
                 <input
                   required
                   type="text"
-                  name="name"
-                  value={profileForm.name}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
+                  value={nameForm}
+                  onChange={(e) => setNameForm(e.target.value)}
+                  className="w-full rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 outline-none"
                 />
               </div>
-              <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Username
-                </label>
-                <input
-                  required
-                  type="text"
-                  name="username"
-                  value={profileForm.username}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsProfileModalOpen(false)}
-                  className="flex-1 rounded-md border border-slate-300 bg-white py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-600"
+                  disabled={isSaving}
+                  className="rounded-sm border border-slate-300 bg-white px-4 py-2 text-xs font-medium text-slate-600 disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 rounded-md bg-blue-950 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md"
+                  className="flex min-w-22.5 items-center justify-center gap-2 rounded-sm bg-slate-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-70"
                 >
-                  {isSaving ? "PROSES..." : "SIMPAN"}
+                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : "Simpan"}
                 </button>
               </div>
             </form>
@@ -317,71 +375,88 @@ export default function BBWSSettingsPage() {
         </div>
       )}
 
-      {/* MODAL GANTI PASSWORD (Sama persis dengan BMKG) */}
+      {/* MODAL GANTI PASSWORD */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-            onClick={() => setIsPasswordModalOpen(false)}
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={closePasswordModal}
           />
-          <div className="relative w-full max-w-sm overflow-hidden rounded-lg bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-sm bg-white p-6 shadow-xl border border-slate-200">
             <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
-                Update Password
+              <h3 className="text-sm font-medium text-slate-900">
+                Ubah Password
               </h3>
               <button
-                onClick={() => setIsPasswordModalOpen(false)}
-                className="rounded-md p-1 text-slate-400 hover:bg-slate-100"
+                onClick={closePasswordModal}
+                className="rounded-sm p-1 text-slate-400 hover:bg-slate-100"
               >
                 <X size={18} />
               </button>
             </div>
-            {errorMessage && (
-              <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-3 text-center text-[10px] font-bold uppercase text-rose-700">
-                {errorMessage}
-              </div>
-            )}
+            
             <form onSubmit={handleSavePassword} className="space-y-4">
-              {["current", "new", "confirm"].map((f) => (
-                <div key={f}>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    {f === "current"
-                      ? "Password Saat Ini"
-                      : f === "new"
-                        ? "Password Baru"
-                        : "Konfirmasi Password Baru"}
-                  </label>
-                  <div className="relative">
-                    <Lock
-                      size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"
-                    />
-                    <input
-                      required
-                      type="password"
-                      name={f}
-                      value={passwordForm[f as keyof typeof passwordForm]}
-                      onChange={handlePasswordChange}
-                      className="w-full rounded-md border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm font-bold text-blue-950 focus:border-blue-950 outline-none"
-                      placeholder="••••••••"
-                    />
-                  </div>
+              <div>
+                <label className="mb-1.5 block text-xs text-slate-500">
+                  Password Baru
+                </label>
+                <div className="relative">
+                  <input
+                    required
+                    type={showNewPassword ? "text" : "password"}
+                    name="new"
+                    value={passwordForm.new}
+                    onChange={handlePasswordChange}
+                    className="w-full rounded-sm border border-slate-300 bg-white px-3 py-2 pr-10 text-sm text-slate-900 focus:border-slate-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
-              ))}
-              <div className="flex gap-3 pt-4">
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs text-slate-500">
+                  Konfirmasi Password Baru
+                </label>
+                <div className="relative">
+                  <input
+                    required
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirm"
+                    value={passwordForm.confirm}
+                    onChange={handlePasswordChange}
+                    className="w-full rounded-sm border border-slate-300 bg-white px-3 py-2 pr-10 text-sm text-slate-900 focus:border-slate-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 rounded-md border border-slate-300 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-600"
+                  onClick={closePasswordModal}
+                  disabled={isSaving}
+                  className="rounded-sm border border-slate-300 bg-white px-4 py-2 text-xs font-medium text-slate-600 disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 rounded-md bg-blue-950 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md"
+                  className="flex min-w-22.5 items-center justify-center gap-2 rounded-sm bg-slate-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-70"
                 >
-                  {isSaving ? "PROSES..." : "SIMPAN"}
+                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : "Simpan"}
                 </button>
               </div>
             </form>

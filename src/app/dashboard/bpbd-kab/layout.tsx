@@ -5,18 +5,19 @@ import {
   LayoutDashboard,
   MapPinned,
   Inbox,
-  Users, // Digunakan untuk Manajemen User
+  Users, 
   History,
-  Settings, // Digunakan untuk Pengaturan
+  Settings, 
   LogOut,
   ChevronRight,
   Menu,
   X,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import LogoutModal from "@/components/LogoutModal";
 
 const outfit = Outfit({
@@ -29,10 +30,11 @@ export default function BPBDKabLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
+  
   const [userData, setUserData] = useState<{
-    username: string;
+    username?: string;
+    email?: string;
     role: string;
     name?: string;
   } | null>(null);
@@ -42,25 +44,30 @@ export default function BPBDKabLayout({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const savedUser = localStorage.getItem("user_session");
-      if (!savedUser) {
-        router.push("/");
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
+      if (!savedUserStr || !token) {
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/";
         return;
       }
+      
       try {
-        setUserData(JSON.parse(savedUser));
+        setUserData(JSON.parse(savedUserStr));
         setIsLoaded(true);
       } catch {
-        localStorage.removeItem("user_session");
-        router.push("/");
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("user_session", { path: "/" });
+        window.location.href = "/";
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user_session");
-    localStorage.removeItem("auth_token");
+    Cookies.remove("user_session", { path: "/" });
+    Cookies.remove("auth_token", { path: "/" });
     window.location.href = "/";
   };
 
@@ -74,7 +81,7 @@ export default function BPBDKabLayout({
     "w-full flex items-center justify-between p-3.5 bg-amber-400 text-blue-950 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-md shadow-amber-400/20";
   const inactiveClass =
     "w-full flex items-center justify-between p-3.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg text-xs uppercase tracking-widest transition-all";
-
+  
   if (!isLoaded) return null;
 
   return (
@@ -108,7 +115,7 @@ export default function BPBDKabLayout({
           </Link>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-slate-300"
+            className="lg:hidden text-slate-300 hover:text-white"
           >
             <X size={24} />
           </button>
@@ -183,8 +190,7 @@ export default function BPBDKabLayout({
               Sistem & Administrasi
             </p>
 
-            {/* Menu Manajemen User Balik Lagi */}
-            {userData?.role === "superadmin" && (
+            {userData?.role === "MASTER_ADMIN" && (
               <Link
                 href="/dashboard/bpbd-kab/manajemen-user"
                 className="block mb-1.5"
@@ -265,14 +271,14 @@ export default function BPBDKabLayout({
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950"
+            className="lg:hidden text-blue-950 hover:text-blue-700"
           >
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData?.name || "Petugas Kab."}
+                {userData?.name || userData?.email || userData?.username || "Petugas Kab."}
               </p>
               <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest">
                 PUSDALOPS KAB. BANDUNG
@@ -281,7 +287,7 @@ export default function BPBDKabLayout({
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
               <Image
                 src="/images/LOGOBPBD.png"
-                alt="Logo"
+                alt="Logo BPBD"
                 fill
                 className="object-contain p-1"
               />
@@ -289,7 +295,7 @@ export default function BPBDKabLayout({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50/50 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 pb-12 lg:p-8 bg-slate-50/50 custom-scrollbar">
           {children}
         </main>
       </div>
