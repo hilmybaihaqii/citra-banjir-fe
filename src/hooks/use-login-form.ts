@@ -1,134 +1,114 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Agency } from "@/types";
+import Cookies from "js-cookie";
 
 export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
-  const router = useRouter();
-
-  // --- STATE ---
-  const [step, setStep] = useState<"agency" | "form">("agency");
-  const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null);
-
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Reset form saat modal tutup
   useEffect(() => {
     if (!isOpen) {
       const timer = setTimeout(() => {
-        setStep("agency");
-        setSelectedAgency(null);
-        setUsername("");
+        setEmail("");
         setPassword("");
         setError("");
         setIsLoading(false);
+        setShowPassword(false);
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  const selectAgency = (agency: Agency) => {
-    setSelectedAgency(agency);
-    setStep("form");
-    setError("");
-  };
-
-  const goBack = () => {
-    setStep("agency");
-    setError("");
-    setUsername("");
-    setPassword("");
-  };
-
-  // --- LOGIKA LOGIN SEDERHANA ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      // 1. Hit API Login
-      const res = await fetch("/api/auth/login", {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+      const res = await fetch(`${baseUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
-          password,
-          agency_id: selectedAgency?.id, // Opsional
+          email: email, 
+          password: password,
         }),
       });
 
-      const data = await res.json();
+      const responseData = await res.json();
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Login gagal.");
+      if (!res.ok || !responseData.success) {
+        throw new Error(responseData.message || "Email atau password yang Anda masukkan salah.");
       }
 
-      // 2. Simpan Data User di LocalStorage (Supaya Dashboard tahu siapa yang login)
-      localStorage.setItem("user_session", JSON.stringify(data.user));
-      localStorage.setItem("auth_token", data.token); // Disimpan buat request API nanti
+      const userData = responseData.data;
+      const token = responseData.token;
 
-      // 3. Tentukan Tujuan (Logic Routing)
-      // Kita ambil dari response server biar akurat
-      const roleOrAgency = data.user.agency_id || data.user.agencyId;
+      let expiresAt: Date | number = 1;
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.exp) {
+            expiresAt = new Date(payload.exp * 1000);
+          }
+        }
+      } catch (decodeErr) {
+        console.error("Gagal membaca waktu expired token:", decodeErr);
+      }
 
-      let targetPath = "/dashboard/admin"; // Default
-
-      switch (roleOrAgency) {
-        case "bbws":
+      Cookies.set("user_session", JSON.stringify(userData), { expires: expiresAt, path: "/" });
+      Cookies.set("auth_token", token, { expires: expiresAt, path: "/" });
+      const userAgency = userData.agency || "";
+      let targetPath = "/dashboard/admin";
+      
+      switch (userAgency) {
+        case "BBWS":
           targetPath = "/dashboard/bbws";
           break;
-        case "bpbd":
+        case "BPBD_JABAR":
           targetPath = "/dashboard/bpbd-jabar";
           break;
-        case "bpbd_kab":
+        case "BPBD_KAB":
           targetPath = "/dashboard/bpbd-kab";
           break;
-        case "bmkg":
+        case "BMKG":
           targetPath = "/dashboard/bmkg";
           break;
-        case "admin":
+        case "CITRA_BANJIR":
           targetPath = "/dashboard/admin";
           break;
         default:
           targetPath = "/dashboard/admin";
-          break;
       }
 
-      console.log("Login Sukses! Mengarahkan ke:", targetPath);
+      console.log("Login Success! Redirect to:", targetPath);
+      onClose();
+      window.location.href = targetPath;
 
-      // 4. PINDAH HALAMAN (Tanpa mikirin cookie)
-      onClose(); // Tutup modal biar bersih
-      router.push(targetPath);
     } catch (err: unknown) {
       console.error(err);
       const errorMessage =
-        err instanceof Error ? err.message : "Terjadi kesalahan sistem.";
+        err instanceof Error ? err.message : "Terjadi kesalahan sistem. Coba lagi nanti.";
       setError(errorMessage);
       setIsLoading(false);
     }
-    // Note: Kalau sukses, biarkan loading true sampai halaman berpindah agar user gak klik 2x
   };
 
   return {
-    step,
-    selectedAgency,
-    username,
-    setUsername,
+    email,
+    setEmail,
     password,
     setPassword,
     isLoading,
     error,
     showPassword,
     setShowPassword,
-    selectAgency,
     handleSubmit,
-    goBack,
   };
 };
