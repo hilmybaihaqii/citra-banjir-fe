@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X, UserPlus } from "lucide-react";
-import { NewUserPayload } from "@/app/dashboard/bpbd-jabar/manajemen-user/page";
+import { NewUserPayload } from "@/app/dashboard/bmkg/manajemen-user/page"; 
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface AddUserModalProps {
   onAdd: (userData: NewUserPayload) => Promise<void>;
 }
 
-export const AddUserModal: React.FC<AddUserModalProps> = ({
+export const AddUserBMKGModal: React.FC<AddUserModalProps> = ({
   isOpen,
   onClose,
   onAdd,
@@ -47,7 +47,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
       setFormData({ email: "", name: "", password: "", role: "ADMIN" });
       setIsSubmitting(false);
     } catch (error) {
-      console.error("Gagal menambahkan user:", error);
+      console.error("Gagal mendaftarkan petugas:", error);
       setIsSubmitting(false);
     }
   };
@@ -63,15 +63,17 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
       <div className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Header - BMKG Style */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
           <div className="flex items-center gap-3 text-blue-950">
             <div className="flex h-8 w-8 items-center justify-center rounded-md text-blue-700">
               <UserPlus size={18} strokeWidth={2.5} />
             </div>
             <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
-              Tambah Pengguna Baru
+              Tambah Petugas BMKG
             </h3>
           </div>
           <button
@@ -85,7 +87,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div>
             <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              Nama Lengkap <span className="text-rose-500">*</span>
+              Nama Lengkap<span className="text-rose-500">*</span>
             </label>
             <input
               required
@@ -159,7 +161,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
               disabled={isSubmitting}
               className="min-w-32 rounded-md bg-blue-950 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:bg-blue-900 disabled:cursor-wait disabled:opacity-70"
             >
-              {isSubmitting ? "MEMPROSES..." : "DAFTARKAN AKUN"}
+              {isSubmitting ? "MEMPROSES..." : "DAFTARKAN PETUGAS"}
             </button>
           </div>
         </form>

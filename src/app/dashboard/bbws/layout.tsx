@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  MapPinned,
-  Inbox,
-  Users, 
+  CloudRain,
+  Waves,
+  Droplets,
+  UserPlus,
   History,
-  Settings, 
+  Settings,
   LogOut,
   ChevronRight,
   Menu,
@@ -25,7 +26,7 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export default function BPBDKabLayout({
+export default function BBWSLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -33,30 +34,34 @@ export default function BPBDKabLayout({
   const pathname = usePathname();
   
   const [userData, setUserData] = useState<{
-    username?: string;
     email?: string;
+    username?: string;
     role: string;
     name?: string;
   } | null>(null);
+  
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Membaca dari Cookies untuk menghindari bug cache lintas-dashboard
       const savedUserStr = Cookies.get("user_session");
       const token = Cookies.get("auth_token");
+      
       if (!savedUserStr || !token) {
         Cookies.remove("auth_token", { path: "/" });
         Cookies.remove("user_session", { path: "/" });
         window.location.href = "/";
         return;
       }
-      
+
       try {
         setUserData(JSON.parse(savedUserStr));
         setIsLoaded(true);
-      } catch {
+      } catch (error) {
+        console.error("Gagal membaca session:", error);
         Cookies.remove("auth_token", { path: "/" });
         Cookies.remove("user_session", { path: "/" });
         window.location.href = "/";
@@ -66,15 +71,16 @@ export default function BPBDKabLayout({
   }, []);
 
   const handleLogout = () => {
+    // Hapus seluruh Cookie saat Logout
     Cookies.remove("user_session", { path: "/" });
-    Cookies.remove("auth_token", { path: "/" });
+    Cookies.remove("auth_token", { path: "/" }); 
     window.location.href = "/";
   };
 
   const isActive = (path: string) => {
-    if (path === "/dashboard/bpbd-kab" && pathname === "/dashboard/bpbd-kab")
+    if (path === "/dashboard/bbws" && pathname === "/dashboard/bbws")
       return true;
-    return path !== "/dashboard/bpbd-kab" && pathname.startsWith(path);
+    return path !== "/dashboard/bbws" && pathname.startsWith(path);
   };
 
   const activeClass =
@@ -100,7 +106,7 @@ export default function BPBDKabLayout({
       >
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
           <Link
-            href="/dashboard/bpbd-kab"
+            href="/dashboard/bbws"
             className="flex items-center"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -115,7 +121,7 @@ export default function BPBDKabLayout({
           </Link>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-slate-300 hover:text-white"
+            className="lg:hidden text-slate-300 hover:text-white transition-colors"
           >
             <X size={24} />
           </button>
@@ -123,63 +129,84 @@ export default function BPBDKabLayout({
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto p-4 custom-scrollbar">
           <p className="mb-2 px-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-            Pusdalops Kab. Bandung
+            Panel Kendali Hidrologi
           </p>
 
           <Link
-            href="/dashboard/bpbd-kab"
+            href="/dashboard/bbws"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bpbd-kab") ? activeClass : inactiveClass
+                isActive("/dashboard/bbws") ? activeClass : inactiveClass
               }
             >
               <div className="flex items-center gap-3">
                 <LayoutDashboard size={18} /> Dashboard
               </div>
-              {isActive("/dashboard/bpbd-kab") && <ChevronRight size={14} />}
+              {isActive("/dashboard/bbws") && <ChevronRight size={14} />}
             </button>
           </Link>
 
           <Link
-            href="/dashboard/bpbd-kab/laporan"
+            href="/dashboard/bbws/update-tinggiair"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bpbd-kab/laporan")
+                isActive("/dashboard/bbws/update-tinggiair")
                   ? activeClass
                   : inactiveClass
               }
             >
               <div className="flex items-center gap-3">
-                <Inbox size={18} /> Laporan Masuk
+                <Waves size={18} /> Update Tinggi Air
               </div>
-              {isActive("/dashboard/bpbd-kab/laporan") && (
+              {isActive("/dashboard/bbws/update-tinggiair") && (
                 <ChevronRight size={14} />
               )}
             </button>
           </Link>
 
           <Link
-            href="/dashboard/bpbd-kab/update-wilayah"
+            href="/dashboard/bbws/update-curahhujan"
             className="block"
             onClick={() => setIsSidebarOpen(false)}
           >
             <button
               className={
-                isActive("/dashboard/bpbd-kab/update-wilayah")
+                isActive("/dashboard/bbws/update-curahhujan")
                   ? activeClass
                   : inactiveClass
               }
             >
               <div className="flex items-center gap-3">
-                <MapPinned size={18} /> Update Wilayah
+                <CloudRain size={18} /> Update Curah Hujan
               </div>
-              {isActive("/dashboard/bpbd-kab/update-wilayah") && (
+              {isActive("/dashboard/bbws/update-curahhujan") && (
+                <ChevronRight size={14} />
+              )}
+            </button>
+          </Link>
+
+          <Link
+            href="/dashboard/bbws/update-sungai"
+            className="block"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <button
+              className={
+                isActive("/dashboard/bbws/update-sungai")
+                  ? activeClass
+                  : inactiveClass
+              }
+            >
+              <div className="flex items-center gap-3">
+                <Droplets size={18} /> Update Debit Sungai
+              </div>
+              {isActive("/dashboard/bbws/update-sungai") && (
                 <ChevronRight size={14} />
               )}
             </button>
@@ -187,26 +214,26 @@ export default function BPBDKabLayout({
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
-              Sistem & Administrasi
+              Sistem & User
             </p>
 
             {userData?.role === "MASTER_ADMIN" && (
               <Link
-                href="/dashboard/bpbd-kab/manajemen-user"
+                href="/dashboard/bbws/manajemen-user"
                 className="block mb-1.5"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <button
                   className={
-                    isActive("/dashboard/bpbd-kab/manajemen-user")
+                    isActive("/dashboard/bbws/manajemen-user")
                       ? activeClass
                       : inactiveClass
                   }
                 >
                   <div className="flex items-center gap-3">
-                    <Users size={18} /> Manajemen User
+                    <UserPlus size={18} /> Manajemen User
                   </div>
-                  {isActive("/dashboard/bpbd-kab/manajemen-user") && (
+                  {isActive("/dashboard/bbws/manajemen-user") && (
                     <ChevronRight size={14} />
                   )}
                 </button>
@@ -214,13 +241,13 @@ export default function BPBDKabLayout({
             )}
 
             <Link
-              href="/dashboard/bpbd-kab/log-aktivitas"
+              href="/dashboard/bbws/log-aktivitas"
               className="block mb-1.5"
               onClick={() => setIsSidebarOpen(false)}
             >
               <button
                 className={
-                  isActive("/dashboard/bpbd-kab/log-aktivitas")
+                  isActive("/dashboard/bbws/log-aktivitas")
                     ? activeClass
                     : inactiveClass
                 }
@@ -228,20 +255,20 @@ export default function BPBDKabLayout({
                 <div className="flex items-center gap-3">
                   <History size={18} /> Log Aktivitas
                 </div>
-                {isActive("/dashboard/bpbd-kab/log-aktivitas") && (
+                {isActive("/dashboard/bbws/log-aktivitas") && (
                   <ChevronRight size={14} />
                 )}
               </button>
             </Link>
-
+            
             <Link
-              href="/dashboard/bpbd-kab/pengaturan"
+              href="/dashboard/bbws/pengaturan"
               className="block"
               onClick={() => setIsSidebarOpen(false)}
             >
               <button
                 className={
-                  isActive("/dashboard/bpbd-kab/pengaturan")
+                  isActive("/dashboard/bbws/pengaturan")
                     ? activeClass
                     : inactiveClass
                 }
@@ -249,7 +276,7 @@ export default function BPBDKabLayout({
                 <div className="flex items-center gap-3">
                   <Settings size={18} /> Pengaturan
                 </div>
-                {isActive("/dashboard/bpbd-kab/pengaturan") && (
+                {isActive("/dashboard/bbws/pengaturan") && (
                   <ChevronRight size={14} />
                 )}
               </button>
@@ -271,30 +298,31 @@ export default function BPBDKabLayout({
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950 hover:text-blue-700"
+            className="lg:hidden text-blue-950 hover:text-blue-700 transition-colors"
           >
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
+              {/* Fallback Name Berjenjang */}
               <p className="text-sm font-black uppercase text-blue-950">
-                {userData?.name || userData?.email || userData?.username || "Petugas Kab."}
+                {userData?.name || userData?.email || userData?.username || "Admin BBWS"}
               </p>
               <p className="text-[9px] font-bold uppercase text-amber-600 tracking-widest">
-                PUSDALOPS KAB. BANDUNG
+                BALAI BESAR WILAYAH SUNGAI
               </p>
             </div>
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
               <Image
-                src="/images/LOGOBPBD.png"
-                alt="Logo BPBD"
+                src="/images/bbws.png"
+                alt="Logo BBWS"
                 fill
                 className="object-contain p-1"
               />
             </div>
           </div>
         </header>
-
+        
         <main className="flex-1 overflow-y-auto p-4 pb-12 lg:p-8 bg-slate-50/50 custom-scrollbar">
           {children}
         </main>

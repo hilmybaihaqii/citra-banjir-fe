@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@studio-freight/react-lenis": "^0.0.47",
+    "@types/js-cookie": "^3.0.6",
     "clsx": "^2.1.1",
     "framer-motion": "^12.29.2",
+    "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",

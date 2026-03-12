@@ -31,7 +31,7 @@ const AGENCIES: Record<string, string> = {
   "BMKG": "BMKG Jawa Barat",
 };
 
-export default function BPBDKabSettings() {
+export default function BBWSSettingsPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
@@ -46,6 +46,7 @@ export default function BPBDKabSettings() {
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -96,7 +97,7 @@ export default function BPBDKabSettings() {
             setUserData(freshUser);
             setNameForm(freshUser.name || "");
             
-            // GANTI: Menyimpan session terbaru ke Cookies
+            // GANTI: Memperbarui session di Cookies
             Cookies.set("user_session", JSON.stringify(freshUser), { path: "/" });
           } else {
             setUserData(parsedUser);
@@ -140,14 +141,11 @@ export default function BPBDKabSettings() {
       const updatedUser = { ...userData, name: nameForm };
       setUserData(updatedUser);
       
-      // GANTI: Update cookie agar nama baru terbaca oleh Layout/Header
+      // GANTI: Perbarui data nama di cookie agar langsung berefek pada header/sidebar
       Cookies.set("user_session", JSON.stringify(updatedUser), { path: "/" });
 
       setIsProfileModalOpen(false);
       showToast("Nama berhasil diperbarui.", "success");
-      
-      // Opsional: Reload otomatis halaman jika ingin sidebar langsung terupdate 100%
-      // window.location.reload(); 
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
       showToast(errMsg, "error");
@@ -206,7 +204,7 @@ export default function BPBDKabSettings() {
   if (isLoadingData || !userData) {
     return (
       <div className={`flex h-full w-full items-center justify-center ${outfit.className}`}>
-        <LoadingSpinner message="Memuat profil..." />
+        <LoadingSpinner message="Memuat profil BBWS..." />
       </div>
     );
   }
@@ -242,7 +240,7 @@ export default function BPBDKabSettings() {
         </h1>
         <div className="flex h-24 w-24 flex-col items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 text-slate-600">
           <span className="text-3xl font-medium uppercase tracking-widest">
-            {userData.name ? userData.name.substring(0, 2) : "BP"}
+            {userData.name ? userData.name.substring(0, 2) : "BW"}
           </span>
         </div>
       </div>
@@ -291,7 +289,7 @@ export default function BPBDKabSettings() {
                 Instansi
               </p>
               <p className="text-sm font-medium text-slate-700">
-                {userData.agency ? (AGENCIES[userData.agency] || userData.agency) : "BPBD Kabupaten Bandung"}
+                {userData.agency ? (AGENCIES[userData.agency] || userData.agency) : "BBWS Citarum"}
               </p>
             </div>
           </div>
@@ -323,6 +321,7 @@ export default function BPBDKabSettings() {
         </button>
       </div>
 
+      {/* MODAL UBAH NAMA LENGKAP */}
       {isProfileModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div
@@ -376,6 +375,7 @@ export default function BPBDKabSettings() {
         </div>
       )}
 
+      {/* MODAL GANTI PASSWORD */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-110 flex items-center justify-center p-4">
           <div

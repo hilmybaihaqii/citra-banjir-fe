@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -24,12 +23,48 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* Memastikan scroll halus saat berpindah section */
+  scroll-behavior: smooth;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(300%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
 }
+
+/* --- UTILITIES UNTUK RESPONSIVITAS TABEL --- */
+
+/* Scrollbar kustom agar tabel terlihat rapi saat di-scroll horizontal di HP */
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    height: 5px; /* Ketinggian scrollbar horizontal */
+    width: 5px; /* Lebar scrollbar vertikal */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1; /* Warna slate-300 */
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; /* Warna slate-400 saat di-hover */
+  }
+}
+
+/* Memastikan pengalaman scroll menyentuh (touch) yang mulus di perangkat mobile */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- LEAFLET MAP STYLING --- */
 
 .leaflet-container {
   width: 100%;
@@ -42,7 +77,9 @@ body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(226, 232, 240, 0.8);
   padding: 0;
   overflow: hidden;
@@ -75,6 +112,6 @@ body {
 }
 
 .leaflet-container a.leaflet-popup-close-button:hover {
-  background-color: #f1f5f9; 
-  color: #ef4444; 
+  background-color: #f1f5f9;
+  color: #ef4444;
 }
