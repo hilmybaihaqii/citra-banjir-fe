@@ -1,99 +1,106 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, History, FileSpreadsheet, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Search,
+  History,
+  FileSpreadsheet,
+  Loader2,
+  RefreshCw,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import { Outfit } from "next/font/google";
+import { apiFetch } from "@/lib/api";
 
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
 });
 
-// Mock data disesuaikan dengan konteks BMKG
-const BMKG_LOGS = [
-  {
-    id: 1,
-    time: "08 Mar 2026, 10:30 WIB",
-    userName: "Petugas_BMKG_01",
-    action: "UPDATE",
-    detail: "Update Curah Hujan Pos Nanjung: 12mm/hr (Waspada)",
-  },
-  {
-    id: 2,
-    time: "08 Mar 2026, 09:15 WIB",
-    userName: "Prakirawan_Jabar",
-    action: "WEATHER",
-    detail: "Update Prakiraan: Bandung Raya Berawan -> Hujan Ringan",
-  },
-  {
-    id: 3,
-    time: "08 Mar 2026, 08:05 WIB",
-    userName: "Admin_BMKG_Pusat",
-    action: "ADD",
-    detail: "Menambahkan akses user: petugas_lapangan_02",
-  },
-  {
-    id: 4,
-    time: "07 Mar 2026, 22:45 WIB",
-    userName: "System_Security",
-    action: "LOGIN",
-    detail: "Sesi dimulai dari perangkat Desktop (Chrome)",
-  },
-  {
-    id: 5,
-    time: "07 Mar 2026, 18:12 WIB",
-    userName: "Admin_BMKG_Pusat",
-    action: "DANGER",
-    detail: "Upaya login tidak sah dari IP 112.12.99.1",
-  },
-  {
-    id: 6,
-    time: "07 Mar 2026, 15:00 WIB",
-    userName: "Prakirawan_Jabar",
-    action: "UPDATE",
-    detail: "Pembaruan data radar wilayah DAS Citarum",
-  },
-];
+interface LogEntry {
+  id: number;
+  action: string;
+  description: string;
+  createdAt: string;
+  user: {
+    name: string;
+    agency: string;
+  } | null;
+}
 
 export default function LogAktivitasBMKGPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [logsList, setLogsList] = useState<LogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
+  // Pastikan baseUrl terbaca
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  const fetchLogs = useCallback(async () => {
+    // DEBUG: Cek apakah fungsi ini terpanggil
+    console.log("Memulai fetchLogs...");
+    console.log("Base URL yang digunakan:", baseUrl);
+
+    setIsLoading(true);
+    try {
+      const res = await apiFetch(`${baseUrl}/logs`);
+      console.log("Status Response API:", res.status);
+
+      const result = await res.json();
+      console.log("Data JSON dari API:", result);
+
+      if (res.ok && result.success) {
+        setLogsList(result.data);
+      } else {
+        console.warn(
+          "API Berhasil dipanggil tapi success false atau status bukan 200",
+        );
+      }
+    } catch (error) {
+      console.error("Gagal total mengambil log aktivitas:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [baseUrl]);
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    // Set mounted terlebih dahulu
+    setIsMounted(true);
+
+    // Panggil logs
+    fetchLogs();
+  }, [fetchLogs]);
 
   const handleExportExcel = () => {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
-      alert("Berkas Excel 'Log_Aktivitas_BMKG_Jabar.xlsx' berhasil diunduh!");
-    }, 2000);
+      alert("Fitur Export sedang dalam pengembangan menggunakan SheetJS!");
+    }, 1500);
   };
 
-  const filteredLogs = BMKG_LOGS.filter(
+  const filteredLogs = logsList.filter(
     (log) =>
-      log.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.detail.toLowerCase().includes(searchQuery.toLowerCase()),
+      log.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.action.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getActionBadge = (action: string) => {
     switch (action) {
-      case "ADD":
+      case "CREATE":
         return "border-emerald-200 bg-emerald-50 text-emerald-700";
-      case "DANGER":
+      case "DELETE":
         return "border-rose-200 bg-rose-50 text-rose-700";
       case "UPDATE":
         return "border-blue-200 bg-blue-50 text-blue-700";
-      case "WEATHER":
-        return "border-amber-200 bg-amber-50 text-amber-700";
       case "LOGIN":
         return "border-slate-200 bg-slate-50 text-slate-700";
       default:
-        return "border-slate-200 bg-slate-50 text-slate-700";
+        return "border-amber-200 bg-amber-50 text-amber-700";
     }
   };
 
@@ -108,7 +115,7 @@ export default function LogAktivitasBMKGPage() {
             Log Aktivitas BMKG
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Riwayat pembaruan data cuaca dan transaksi sistem BMKG Jabar.
+            Riwayat pembaruan data cuaca dan transaksi sistem otomatis.
           </p>
         </div>
 
@@ -123,29 +130,37 @@ export default function LogAktivitasBMKGPage() {
               placeholder="Cari aksi atau petugas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+              className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
             />
           </div>
 
-          <button
-            onClick={handleExportExcel}
-            disabled={isExporting}
-            className="flex w-full min-w-35 shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" /> MENGUNDUH
-              </>
-            ) : (
-              <>
-                <FileSpreadsheet size={16} /> EXPORT EXCEL
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={fetchLogs}
+              className="flex items-center justify-center rounded-md border border-slate-300 bg-white p-2.5 text-slate-600 hover:bg-slate-50"
+            >
+              <RefreshCw
+                size={18}
+                className={isLoading ? "animate-spin" : ""}
+              />
+            </button>
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting || isLoading}
+              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm hover:bg-emerald-700 disabled:opacity-70 sm:w-auto"
+            >
+              {isExporting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <FileSpreadsheet size={16} />
+              )}
+              EXPORT
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* TABLE SECTION - Responsive & Scrollable */}
+      {/* TABLE SECTION */}
       <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm mx-4 sm:mx-0">
         <div className="custom-scrollbar overflow-x-auto">
           <table className="w-full min-w-225 border-collapse text-left">
@@ -169,7 +184,16 @@ export default function LogAktivitasBMKGPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredLogs.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="py-20 text-center text-sm font-bold text-slate-400 italic"
+                  >
+                    MENYINKRONKAN DATA LOG DARI SERVER...
+                  </td>
+                </tr>
+              ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log, index) => (
                   <tr
                     key={log.id}
@@ -178,11 +202,16 @@ export default function LogAktivitasBMKGPage() {
                     <td className="p-4 text-center text-sm font-medium text-slate-500">
                       {index + 1}
                     </td>
-
                     <td className="p-4 text-sm font-bold text-blue-950">
-                      {log.time}
+                      {new Date(log.createdAt).toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      WIB
                     </td>
-
                     <td className="p-4 text-center">
                       <span
                         className={`inline-flex min-w-20 items-center justify-center rounded border px-2 py-1.5 text-[10px] font-black uppercase tracking-widest ${getActionBadge(log.action)}`}
@@ -190,21 +219,26 @@ export default function LogAktivitasBMKGPage() {
                         {log.action}
                       </span>
                     </td>
-
-                    <td className="p-4">
-                      <p className="text-sm font-bold uppercase text-blue-950 leading-relaxed">
-                        {log.detail}
-                      </p>
+                    <td className="p-4 text-sm font-bold uppercase text-blue-950 leading-relaxed">
+                      {log.description}
                     </td>
-
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">
-                          {log.userName.charAt(0)}
+                        <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+                          {log.user ? (
+                            <User size={14} />
+                          ) : (
+                            <ShieldCheck size={14} />
+                          )}
                         </div>
-                        <p className="text-sm font-bold text-slate-700">
-                          {log.userName}
-                        </p>
+                        <div>
+                          <p className="text-xs font-bold text-slate-700">
+                            {log.user?.name || "System"}
+                          </p>
+                          <p className="text-[9px] font-bold text-amber-600 uppercase tracking-tighter">
+                            {log.user?.agency || "AUTOMATED"}
+                          </p>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -223,25 +257,6 @@ export default function LogAktivitasBMKGPage() {
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* FOOTER / PAGINATION */}
-        <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
-          <p className="text-xs font-medium text-slate-600">
-            Menampilkan{" "}
-            <span className="font-bold text-blue-950">
-              {filteredLogs.length}
-            </span>{" "}
-            log aktivitas
-          </p>
-          <div className="flex w-full gap-2 sm:w-auto">
-            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:flex-none">
-              PREV
-            </button>
-            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-colors hover:bg-slate-50 hover:border-blue-950 sm:flex-none">
-              NEXT
-            </button>
-          </div>
         </div>
       </div>
     </div>

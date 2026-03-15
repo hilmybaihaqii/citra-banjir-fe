@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { CloudSun, Thermometer, CloudRain, Calendar } from "lucide-react"; // TrendingUp dihapus
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  CloudSun,
+  Thermometer,
+  CloudRain,
+  Calendar,
+  RefreshCw,
+} from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -14,6 +20,7 @@ import {
   Bar,
   Cell,
 } from "recharts";
+import { apiFetch } from "@/lib/api";
 
 const rainData = [
   { day: "Sen", mm: 12 },
@@ -35,13 +42,44 @@ const tempData = [
 ];
 
 export default function BMKGDashboard() {
-  const [currentDate, setCurrentDate] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentDate, setCurrentDate] = useState("");
+  const [weatherStats, setWeatherStats] = useState({
+    temperature: 26,
+    precipitation: 12,
+    status: "Cerah Berawan",
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  const fetchRealtimeData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiFetch(`${baseUrl}/regions`);
+      const result = await res.json();
+
+      if (res.ok && result.success && result.data?.length > 0) {
+        // Ambil data terbaru (id paling besar atau data pertama)
+        const latest = result.data[0];
+        setWeatherStats({
+          temperature: 26, // Default jika field temperature belum ada di DB
+          precipitation: latest.alertStatus === "RAWAN_BANJIR" ? 65 : 12,
+          status:
+            latest.alertStatus === "RAWAN_BANJIR"
+              ? "Waspada Hujan"
+              : "Cerah Berawan",
+        });
+      }
+    } catch (error) {
+      console.error("Dashboard Sync Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [baseUrl]);
 
   useEffect(() => {
-    // Menggunakan setTimeout 0 agar setState dieksekusi setelah render awal selesai
-    const timer = setTimeout(() => {
-      setIsMounted(true);
+    const init = async () => {
       const now = new Date();
       setCurrentDate(
         now.toLocaleDateString("id-ID", {
@@ -51,10 +89,12 @@ export default function BMKGDashboard() {
           year: "numeric",
         }),
       );
-    }, 0);
 
-    return () => clearTimeout(timer);
-  }, []);
+      await fetchRealtimeData();
+      setIsMounted(true);
+    };
+    init();
+  }, [fetchRealtimeData]);
 
   if (!isMounted) return null;
 
@@ -66,12 +106,23 @@ export default function BMKGDashboard() {
             Monitor Meteorologi
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500 italic">
-            Pusat Data Presipitasi & Cuaca Jawa Barat
+            Pusat Data Presipitasi & Cuaca Jawa Barat (Real-time)
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm sm:w-auto">
-          <Calendar size={14} className="text-blue-600" />
-          <span>{currentDate}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchRealtimeData}
+            className="p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+          >
+            <RefreshCw
+              size={16}
+              className={`${isLoading ? "animate-spin" : ""} text-slate-600`}
+            />
+          </button>
+          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm">
+            <Calendar size={14} className="text-blue-600" />
+            <span>{currentDate}</span>
+          </div>
         </div>
       </div>
 
@@ -84,7 +135,8 @@ export default function BMKGDashboard() {
             <Thermometer size={20} className="text-amber-500" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            26<span className="text-amber-500">°C</span>
+            {weatherStats.temperature}
+            <span className="text-amber-500">°C</span>
           </h3>
         </div>
 
@@ -96,10 +148,8 @@ export default function BMKGDashboard() {
             <CloudRain size={20} className="text-blue-600" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            12{" "}
-            <span className="text-xs font-bold text-slate-400 tracking-normal">
-              mm/jam
-            </span>
+            {weatherStats.precipitation}{" "}
+            <span className="text-xs font-bold text-slate-400">mm/jam</span>
           </h3>
         </div>
 
@@ -111,7 +161,7 @@ export default function BMKGDashboard() {
             <CloudSun size={20} className="text-green-500" />
           </div>
           <h3 className="text-2xl font-black text-green-600 uppercase tracking-tight">
-            Cerah Berawan
+            {weatherStats.status}
           </h3>
         </div>
       </div>
