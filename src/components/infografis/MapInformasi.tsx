@@ -36,9 +36,9 @@ const FloodMap = () => {
   const [activeModal, setActiveModal] = useState<"data" | "dampak" | null>(null);
   const [selectedKecamatan, setSelectedKecamatan] = useState<KecamatanDetail | null>(null);
 
-  const [showKabupaten, setShowKabupaten] = useState(false);
+  const [showKabupaten, setShowKabupaten] = useState(true);
   const [showKecamatan, setShowKecamatan] = useState(false);
-  const [showLabelKabupaten, setShowLabelKabupaten] = useState(false);
+  const [showLabelKabupaten, setShowLabelKabupaten] = useState(true);
   const [showLabelKecamatan, setShowLabelKecamatan] = useState(false);
   
   const [kabData, setKabData] = useState<GeoJSON.FeatureCollection | null>(null);
@@ -66,8 +66,8 @@ const FloodMap = () => {
   const transparentStyle = { opacity: 0, fillOpacity: 0, weight: 0 }; 
   const renderKabupatenGeo = showKabupaten || showLabelKabupaten;
   const renderKecamatanGeo = showKecamatan || showLabelKecamatan;
-  const styleKabupaten = showKabupaten ? { ...baseBoundaryStyle, color: '#0f172a', dashArray: '5, 5' } : transparentStyle;
-  const styleKecamatan = showKecamatan ? { ...baseBoundaryStyle, color: '#3b82f6', dashArray: '3, 6' } : transparentStyle;
+  const styleKabupaten = showKabupaten ? { ...baseBoundaryStyle, color: '#000000', dashArray: '5, 5' } : transparentStyle;
+  const styleKecamatan = showKecamatan ? { ...baseBoundaryStyle, color: '#000000', dashArray: '3, 6' } : transparentStyle;
 
   const onEachKabupaten = useCallback((feature: GeoJSON.Feature, layer: L.Layer) => {
     if (showLabelKabupaten && feature.properties?.KAB_KOTA) {
