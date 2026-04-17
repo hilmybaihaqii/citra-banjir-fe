@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { MapPinned, Users, AlertTriangle, Calendar } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  MapPinned,
+  Users,
+  AlertTriangle,
+  Calendar,
+  RefreshCw,
+} from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -14,6 +20,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { apiFetch } from "@/lib/api";
+
+// Definisi struktur data dari API agar tidak menggunakan 'any'
+interface RegionData {
+  id: number;
+  regionName: string;
+  alertStatus: string;
+  evacueeCount: number;
+}
 
 const trendData = [
   { tanggal: "25 Feb", laporan: 1 },
@@ -25,30 +40,92 @@ const trendData = [
   { tanggal: "03 Mar", laporan: 8 },
 ];
 
-const severityData = [
-  { tingkat: "Rendah", jumlah: 12, fill: "#10b981" },
-  { tingkat: "Sedang", jumlah: 10, fill: "#f59e0b" },
-  { tingkat: "Tinggi", jumlah: 5, fill: "#ef4444" },
-];
-
 export default function BPBDKabDashboardHome() {
   const [currentDate, setCurrentDate] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [stats, setStats] = useState({
+    totalLokasi: 0,
+    totalPengungsi: 0,
+    statusSiaga: "Aman",
+    severityChart: [
+      { tingkat: "Rendah", jumlah: 0, fill: "#10b981" },
+      { tingkat: "Sedang", jumlah: 0, fill: "#f59e0b" },
+      { tingkat: "Tinggi", jumlah: 0, fill: "#ef4444" },
+    ],
+  });
+
+  const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiFetch(
+        "https://sicitra-banjir.onrender.com/api/regions",
+      );
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        const data: RegionData[] = result.data;
+
+        // Menghitung Total Pengungsi
+        const totalJiwa = data.reduce(
+          (acc: number, curr: RegionData) => acc + (curr.evacueeCount || 0),
+          0,
+        );
+
+        // Cek Status Siaga
+        const isWaspada = data.some(
+          (item: RegionData) => item.alertStatus === "RAWAN_BANJIR",
+        );
+
+        setStats({
+          totalLokasi: data.length,
+          totalPengungsi: totalJiwa,
+          statusSiaga: isWaspada ? "Waspada" : "Aman",
+          severityChart: [
+            {
+              tingkat: "Rendah",
+              jumlah: data.filter((i: RegionData) => i.alertStatus === "AMAN")
+                .length,
+              fill: "#10b981",
+            },
+            {
+              tingkat: "Sedang",
+              jumlah: data.filter(
+                (i: RegionData) => i.alertStatus === "RAWAN_BANJIR",
+              ).length,
+              fill: "#f59e0b",
+            },
+            {
+              tingkat: "Tinggi",
+              jumlah: data.filter((i: RegionData) => i.evacueeCount > 100)
+                .length,
+              fill: "#ef4444",
+            },
+          ],
+        });
+      }
+    } catch {
+      console.error("Gagal sinkronisasi dashboard");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-      setCurrentDate(
-        new Date().toLocaleDateString("id-ID", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-      );
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const now = new Date();
+    setCurrentDate(
+      now.toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    );
+
+    fetchDashboardData();
+    setIsMounted(true);
+  }, [fetchDashboardData]);
 
   if (!isMounted) return null;
 
@@ -60,16 +137,26 @@ export default function BPBDKabDashboardHome() {
             Situasi Terkini
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500 italic">
-            Kabupaten Bandung • Ringkasan Data Kebencanaan
+            Kabupaten Bandung • Ringkasan Data Kebencanaan (Live)
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm sm:w-auto">
-          <Calendar size={14} className="text-blue-600" />
-          <span>{currentDate}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchDashboardData}
+            className="p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <RefreshCw
+              size={16}
+              className={`${isLoading ? "animate-spin" : ""} text-slate-600`}
+            />
+          </button>
+          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm sm:w-auto">
+            <Calendar size={14} className="text-blue-600" />
+            <span>{currentDate}</span>
+          </div>
         </div>
       </div>
 
-      {/* STATISTIC CARDS - Konsisten dengan BBWS, BMKG & PROV */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
         <div className="rounded-xl border border-slate-200 bg-white p-6 border-l-4 border-l-amber-400 shadow-sm transition-all hover:shadow-md">
           <div className="flex items-center justify-between mb-4">
@@ -79,7 +166,7 @@ export default function BPBDKabDashboardHome() {
             <MapPinned size={20} className="text-amber-500" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            8{" "}
+            {stats.totalLokasi}{" "}
             <span className="text-xs font-bold text-slate-400 uppercase">
               Lokasi
             </span>
@@ -94,27 +181,39 @@ export default function BPBDKabDashboardHome() {
             <Users size={20} className="text-blue-600" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            84{" "}
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-normal">
+            {stats.totalPengungsi}{" "}
+            <span className="text-xs font-bold text-slate-400 uppercase">
               Jiwa
             </span>
           </h3>
         </div>
 
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 border-l-4 border-l-rose-500 shadow-sm transition-all hover:shadow-md sm:col-span-2 lg:col-span-1">
+        <div
+          className={`rounded-xl border p-6 border-l-4 shadow-sm transition-all hover:shadow-md sm:col-span-2 lg:col-span-1 ${stats.statusSiaga === "Waspada" ? "border-rose-200 bg-rose-50 border-l-rose-500" : "border-emerald-200 bg-emerald-50 border-l-emerald-500"}`}
+        >
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black uppercase text-rose-700 tracking-widest">
+            <p
+              className={`text-[10px] font-black uppercase tracking-widest ${stats.statusSiaga === "Waspada" ? "text-rose-700" : "text-emerald-700"}`}
+            >
               Status Siaga
             </p>
-            <AlertTriangle size={20} className="text-rose-500" />
+            <AlertTriangle
+              size={20}
+              className={
+                stats.statusSiaga === "Waspada"
+                  ? "text-rose-500"
+                  : "text-emerald-500"
+              }
+            />
           </div>
-          <h3 className="text-3xl font-black text-rose-600 uppercase">
-            Waspada
+          <h3
+            className={`text-3xl font-black uppercase ${stats.statusSiaga === "Waspada" ? "text-rose-600" : "text-emerald-600"}`}
+          >
+            {stats.statusSiaga}
           </h3>
         </div>
       </div>
 
-      {/* CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
           <div className="mb-6">
@@ -126,7 +225,7 @@ export default function BPBDKabDashboardHome() {
             </p>
           </div>
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minHeight={250}>
               <AreaChart data={trendData}>
                 <defs>
                   <linearGradient
@@ -181,7 +280,7 @@ export default function BPBDKabDashboardHome() {
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={severityData}>
+              <BarChart data={stats.severityChart}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
@@ -200,7 +299,7 @@ export default function BPBDKabDashboardHome() {
                 />
                 <Tooltip cursor={{ fill: "#f8fafc" }} />
                 <Bar dataKey="jumlah" radius={[4, 4, 0, 0]} barSize={40}>
-                  {severityData.map((entry, index) => (
+                  {stats.severityChart.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Bar>

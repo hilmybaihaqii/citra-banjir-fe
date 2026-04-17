@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-// CloudRain dihapus karena tidak digunakan (Linter Fix)
-import { Waves, Droplets, Calendar, Activity } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Waves, Droplets, Calendar, Activity, RefreshCw } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -15,6 +14,15 @@ import {
   Bar,
   Cell,
 } from "recharts";
+import { apiFetch } from "@/lib/api";
+
+// Interface agar TypeScript/ESLint tidak error 'any'
+interface RegionData {
+  id: number;
+  regionName: string;
+  alertStatus: string;
+  submergedHouses: number;
+}
 
 const tmaData = [
   { time: "00:00", level: 1.2 },
@@ -36,22 +44,58 @@ const rainTrend = [
 export default function BBWSDashboard() {
   const [currentDate, setCurrentDate] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // State untuk data statistik hidrologi real-time
+  const [bbwsStats, setBbwsStats] = useState({
+    totalTitik: 0,
+    debitRata: 120, // Default simulasi
+    statusDas: "Aman",
+  });
+
+  const fetchBbwsData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiFetch(
+        "https://sicitra-banjir.onrender.com/api/regions",
+      );
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        const data: RegionData[] = result.data;
+
+        // Cek apakah ada status bahaya di aliran sungai (Simulasi DAS)
+        const isHazard = data.some(
+          (item: RegionData) => item.alertStatus === "RAWAN_BANJIR",
+        );
+
+        setBbwsStats({
+          totalTitik: data.length,
+          debitRata: 120 + data.length, // Simulasi dinamis berdasarkan jumlah titik
+          statusDas: isHazard ? "Waspada" : "Aman",
+        });
+      }
+    } catch {
+      console.error("Gagal sinkronisasi dashboard BBWS");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Dibungkus setTimeout 0 untuk menghindari cascading renders (Linter Fix)
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-      setCurrentDate(
-        new Date().toLocaleDateString("id-ID", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-      );
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const now = new Date();
+    setCurrentDate(
+      now.toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    );
+
+    fetchBbwsData();
+    setIsMounted(true);
+  }, [fetchBbwsData]);
 
   if (!isMounted) return null;
 
@@ -66,9 +110,20 @@ export default function BBWSDashboard() {
             Monitoring Real-time Daerah Aliran Sungai Citarum
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm sm:w-auto">
-          <Calendar size={14} className="text-blue-600" />
-          <span>{currentDate}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchBbwsData}
+            className="p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+          >
+            <RefreshCw
+              size={16}
+              className={`${isLoading ? "animate-spin" : ""} text-slate-600`}
+            />
+          </button>
+          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-3 text-[10px] font-bold uppercase text-slate-600 shadow-sm sm:w-auto">
+            <Calendar size={14} className="text-blue-600" />
+            <span>{currentDate}</span>
+          </div>
         </div>
       </div>
 
@@ -81,7 +136,8 @@ export default function BBWSDashboard() {
             <Droplets size={20} className="text-amber-500" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            24 <span className="text-xs font-bold text-slate-400">LOKASI</span>
+            {bbwsStats.totalTitik}{" "}
+            <span className="text-xs font-bold text-slate-400">LOKASI</span>
           </h3>
         </div>
 
@@ -93,22 +149,47 @@ export default function BBWSDashboard() {
             <Waves size={20} className="text-blue-600" />
           </div>
           <h3 className="text-4xl font-black text-blue-950">
-            120{" "}
+            {bbwsStats.debitRata}{" "}
             <span className="text-xs font-bold text-slate-400 tracking-normal">
               m³/s
             </span>
           </h3>
         </div>
 
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 border-l-4 border-l-emerald-500 shadow-sm sm:col-span-2 lg:col-span-1">
+        <div
+          className={`rounded-xl border p-6 border-l-4 shadow-sm sm:col-span-2 lg:col-span-1 transition-all ${
+            bbwsStats.statusDas === "Waspada"
+              ? "border-rose-200 bg-rose-50 border-l-rose-500"
+              : "border-emerald-200 bg-emerald-50 border-l-emerald-500"
+          }`}
+        >
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">
+            <p
+              className={`text-[10px] font-black uppercase tracking-widest ${
+                bbwsStats.statusDas === "Waspada"
+                  ? "text-rose-700"
+                  : "text-emerald-700"
+              }`}
+            >
               Status DAS
             </p>
-            <Activity size={20} className="text-emerald-500" />
+            <Activity
+              size={20}
+              className={
+                bbwsStats.statusDas === "Waspada"
+                  ? "text-rose-500"
+                  : "text-emerald-500"
+              }
+            />
           </div>
-          <h3 className="text-3xl font-black text-emerald-600 uppercase">
-            Aman
+          <h3
+            className={`text-3xl font-black uppercase ${
+              bbwsStats.statusDas === "Waspada"
+                ? "text-rose-600"
+                : "text-emerald-600"
+            }`}
+          >
+            {bbwsStats.statusDas}
           </h3>
         </div>
       </div>
