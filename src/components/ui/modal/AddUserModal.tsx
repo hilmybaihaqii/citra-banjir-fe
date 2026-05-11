@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, UserPlus } from "lucide-react";
+import { X, UserPlus, Loader2 } from "lucide-react";
 import { NewUserPayload } from "@/app/dashboard/admin/users/page"; 
 
 interface AddUserModalProps {
@@ -36,6 +36,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   if (!isOpen) return null;
 
   const handleCloseModal = () => {
+    if (isSubmitting) return;
     onClose();
     setTimeout(() => {
       setFormData({
@@ -62,7 +63,6 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
       setFormData({ email: "", name: "", password: "", agency: "CITRA_BANJIR", role: "ADMIN" });
       setIsSubmitting(false);
     } catch (error) {
-      console.error("Gagal menambahkan user:", error);
       setIsSubmitting(false);
     }
   };
@@ -92,21 +92,21 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
-      <div className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        onClick={handleCloseModal}
+      />
+      <div className="relative w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-200">
         
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-          <div className="flex items-center gap-3 text-blue-950">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md text-blue-700">
-              <UserPlus size={18} strokeWidth={2.5} />
-            </div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-blue-950">
-              Tambah Pengguna
-            </h3>
-          </div>
+          <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-950">
+            <UserPlus size={16} /> TAMBAH PENGGUNA
+          </h3>
           <button
             onClick={handleCloseModal}
-            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+            disabled={isSubmitting}
+            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 focus:outline-none disabled:opacity-50"
           >
             <X size={18} strokeWidth={2.5} />
           </button>
@@ -114,7 +114,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Nama Lengkap <span className="text-rose-500">*</span>
             </label>
             <input
@@ -129,7 +129,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Email Akses <span className="text-rose-500">*</span>
             </label>
             <input
@@ -144,7 +144,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
               Password<span className="text-rose-500">*</span>
             </label>
             <input
@@ -160,14 +160,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Pilih Instansi <span className="text-rose-500">*</span>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Instansi <span className="text-rose-500">*</span>
               </label>
               <select
                 name="agency"
                 value={formData.agency}
                 onChange={handleChange}
-                className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+                className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
               >
                 {AGENCIES.map((agency) => (
                   <option key={agency.id} value={agency.id}>
@@ -178,14 +178,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Otoritas Akses <span className="text-rose-500">*</span>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Otoritas <span className="text-rose-500">*</span>
               </label>
               <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+                className="w-full cursor-pointer appearance-none rounded-md border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-blue-950 shadow-sm transition-all focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
               >
                 <option value="ADMIN">Admin</option>
                 {formData.agency === "CITRA_BANJIR" ? (
@@ -193,7 +193,6 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                 ) : (
                   <option value="MASTER_ADMIN">Master Admin</option>
                 )}
-                
               </select>
             </div>
           </div>
@@ -203,15 +202,20 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
               type="button"
               onClick={handleCloseModal}
               disabled={isSubmitting}
-              className="rounded-md border border-slate-200 bg-slate-50 px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-950 disabled:opacity-50"
+              className="rounded-md border border-slate-300 bg-white px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:bg-slate-100 focus:outline-none disabled:opacity-50"
             >
-              Batal
+              BATAL
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-md bg-blue-950 px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-md transition-all hover:bg-blue-900 disabled:cursor-wait disabled:opacity-70"
+              className="flex items-center gap-2 rounded-md bg-blue-950 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-blue-900 focus:outline-none disabled:opacity-70 min-w-30 justify-center"
             >
+              {isSubmitting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <UserPlus size={14} />
+              )}
               {isSubmitting ? "MEMPROSES..." : "DAFTARKAN"}
             </button>
           </div>

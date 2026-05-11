@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Trash2, ShieldAlert, Users, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Trash2,
+  ShieldAlert,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 
-import { AddUserModal } from "@/components/ui/AddUserbpbd";
-import { DeleteUserModal } from "@/components/ui/DeleteUserModal";
+import { AddUserModal } from "@/components/ui/modal/AddUserbpbd";
+import { DeleteUserModal } from "@/components/ui/modal/DeleteUserModal";
 
 interface User {
   id: number;
@@ -27,30 +36,41 @@ export interface NewUserPayload {
 
 export default function BPBDUserManagement() {
   const [isMounted, setIsMounted] = useState(false);
-  
-  // KOSONGKAN STATE AWAL, BACA NANTI DARI COOKIE
-  const [userData, setUserData] = useState<{ email?: string; role?: string; agencyId?: string } | null>(null);
+  const [userData, setUserData] = useState<{
+    email?: string;
+    role?: string;
+    agencyId?: string;
+  } | null>(null);
 
   const [usersList, setUsersList] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // STATE UNTUK NOTIFIKASI TOAST
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
   });
 
-  const isMasterAdmin = userData?.role === "MASTER_ADMIN";
+  // Hanya MASTER_ADMIN (atau SUPER_ADMIN jika ada) yang bisa menambah/menghapus user
+  const isMasterAdmin =
+    userData?.role === "MASTER_ADMIN" || userData?.role === "SUPER_ADMIN";
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500); 
+    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
 
   const fetchUsers = useCallback(async () => {
@@ -61,14 +81,20 @@ export default function BPBDUserManagement() {
 
       const res = await fetch(`${baseUrl}/users`, {
         method: "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setUsersList(data.data);
+
+      if (res.ok && data.data) {
+        // Handle response jika array dibungkus dalam items atau langsung array
+        const usersArray = data.data.items || data.data || [];
+        setUsersList(usersArray);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Gagal memuat data user:", error);
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +103,6 @@ export default function BPBDUserManagement() {
   useEffect(() => {
     setIsMounted(true);
 
-    // MENGAMBIL DATA SESSION DARI COOKIE
     const sessionCookie = Cookies.get("user_session");
     if (sessionCookie) {
       try {
@@ -96,21 +121,25 @@ export default function BPBDUserManagement() {
       const token = Cookies.get("auth_token");
       const res = await fetch(`${baseUrl}/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(newUser),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal menambahkan user");
+      if (!res.ok) throw new Error(data.message || "Gagal menambahkan user");
 
       fetchUsers();
       setIsAddModalOpen(false);
-      showToast("Pengguna baru berhasil didaftarkan!", "success"); 
+      showToast("Pengguna baru berhasil didaftarkan!", "success");
     } catch (error) {
       console.error(error);
-      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem";
-      showToast(errMsg, "error"); 
-      throw error; 
+      const errMsg =
+        error instanceof Error ? error.message : "Terjadi kesalahan sistem";
+      showToast(errMsg, "error");
+      throw error;
     }
   };
 
@@ -124,15 +153,21 @@ export default function BPBDUserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal menghapus pengguna. Akses ditolak."); 
+      if (!res.ok)
+        throw new Error(
+          data.message || "Gagal menghapus pengguna. Akses ditolak.",
+        );
 
       setUsersList((prev) => prev.filter((u) => u.id !== selectedUser.id));
       setSelectedUser(null);
       setIsDeleteModalOpen(false);
-      showToast("Akun berhasil dihapus secara permanen.", "success"); 
+      showToast("Akun berhasil dihapus secara permanen.", "success");
     } catch (error) {
       console.error(error);
-      throw error; 
+      const errMsg =
+        error instanceof Error ? error.message : "Gagal menghapus akun";
+      showToast(errMsg, "error");
+      throw error;
     }
   };
 
@@ -145,9 +180,8 @@ export default function BPBDUserManagement() {
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-8 relative">
-      
-      {/* KOMPONEN TOAST MELAYANG */}
+    <div className="flex flex-col gap-6 p-4 sm:p-6 w-full max-w-350 mx-auto pb-12 animate-in fade-in duration-500 relative">
+      {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast.show && (
           <motion.div
@@ -172,45 +206,52 @@ export default function BPBDUserManagement() {
 
       {/* ALERT MODE AKSES */}
       {!isMasterAdmin && (
-        <div className="flex shrink-0 items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-4 shadow-sm">
-          <ShieldAlert className="mt-0.5 shrink-0 text-blue-600" size={18} />
+        <div className="flex shrink-0 items-start gap-3 rounded-xl border border-blue-200 bg-blue-50/80 p-5 shadow-sm">
+          <ShieldAlert className="mt-0.5 shrink-0 text-blue-600" size={20} />
           <div>
-            <h4 className="text-sm font-bold text-blue-900">Mode Akses Terbatas</h4>
-            <p className="mt-1 text-xs font-medium text-blue-800">
-              Anda login sebagai Petugas/Admin biasa. Penambahan dan penghapusan
-              akun dibatasi khusus untuk Kepala/Master Admin BPBD Jabar.
+            <h4 className="text-sm font-bold text-blue-900 tracking-wide">
+              Mode Akses Terbatas
+            </h4>
+            <p className="mt-1 text-xs font-medium text-blue-800 leading-relaxed">
+              Anda login sebagai{" "}
+              <span className="font-bold">Admin Tingkat Dasar</span>. Hak akses
+              untuk menambah atau menghapus akun dibatasi dan hanya dapat
+              dilakukan oleh Master Admin.
             </p>
           </div>
         </div>
       )}
-      
-      <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+
+      {/* HEADER & SEARCH BAR */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">
             Manajemen User
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Daftar akses akun internal BPBD Provinsi Jawa Barat
+            Kelola daftar akses akun internal BPBD Provinsi Jawa Barat
           </p>
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-          <div className="relative w-full shrink-0 sm:w-64">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative w-full shrink-0 sm:w-72">
+            <Search
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="text"
               placeholder="Cari nama atau email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-950 focus:outline-none focus:ring-1 focus:ring-blue-950"
+              className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
           </div>
 
-          {/* HANYA MUNCUL JIKA MASTER ADMIN */}
           {isMasterAdmin && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex w-full shrink-0 items-center justify-center gap-2 rounded-md bg-blue-950 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-blue-900 sm:w-auto"
+              className="flex w-full shrink-0 items-center justify-center gap-2 rounded-md bg-blue-950 px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-blue-900 hover:shadow-md sm:w-auto active:scale-[0.98]"
             >
               <Plus size={16} /> Tambah Akun
             </button>
@@ -218,55 +259,102 @@ export default function BPBDUserManagement() {
         </div>
       </div>
 
-      <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      {/* TABLE SECTION */}
+      <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full min-w-175 border-collapse text-left">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-slate-200">
-                <th className="w-16 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">No</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Nama / Email</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Instansi</th>
-                <th className="w-32 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Level Akses</th>
-                {isMasterAdmin && <th className="w-24 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Aksi</th>}
+          <table className="w-full min-w-200 border-collapse text-left">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="w-16 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  No
+                </th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Informasi Pengguna
+                </th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Instansi / Unit
+                </th>
+                <th className="w-36 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Level Akses
+                </th>
+                {isMasterAdmin && (
+                  <th className="w-24 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Aksi
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isMasterAdmin ? 5 : 4} className="py-16 text-center">
-                    <span className="text-sm font-medium text-slate-500">Memuat data pengguna...</span>
+                  <td
+                    colSpan={isMasterAdmin ? 5 : 4}
+                    className="py-16 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <Loader2
+                        size={32}
+                        className="animate-spin text-blue-600"
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Sinkronisasi Data...
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user, index) => {
-                  const isRoleSuper = user.role === "MASTER_ADMIN" || user.role === "SUPER_ADMIN";
+                  const isRoleSuper =
+                    user.role === "MASTER_ADMIN" || user.role === "SUPER_ADMIN";
 
                   return (
-                    <tr key={user.id} className="transition-colors hover:bg-slate-50">
-                      <td className="p-4 text-center text-sm font-medium text-slate-500">{index + 1}</td>
-                      <td className="p-4">
-                        <p className="text-sm font-bold uppercase text-blue-950">{user.name}</p>
-                        <p className="mt-0.5 text-[11px] font-medium tracking-wide text-slate-400">{user.email}</p>
+                    <tr
+                      key={user.id}
+                      className="transition-colors hover:bg-slate-50/80"
+                    >
+                      <td className="p-4 text-center text-sm font-bold text-slate-400">
+                        {index + 1}
                       </td>
                       <td className="p-4">
-                        <span className="inline-flex items-center rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-blue-700">
+                        <p className="text-sm font-bold uppercase text-blue-950 tracking-wide">
+                          {user.name}
+                        </p>
+                        <p className="mt-0.5 text-xs font-medium text-slate-500">
+                          {user.email}
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-blue-700">
                           {user.agency || "BPBD Jawa Barat"}
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        <span className={`inline-flex items-center rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                            isRoleSuper ? "border-amber-200 bg-amber-50 text-amber-700" : "border-blue-200 bg-blue-50 text-blue-700"
-                        }`}>
-                          {user.role}
+                        <span
+                          className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest ${
+                            isRoleSuper
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : "border-slate-200 bg-white text-slate-600"
+                          }`}
+                        >
+                          {user.role.replace("_", " ")}
                         </span>
                       </td>
                       {isMasterAdmin && (
                         <td className="p-4 text-center">
                           <button
-                            onClick={() => { setSelectedUser(user); setIsDeleteModalOpen(true); }}
-                            className="mx-auto flex items-center justify-center rounded-md p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
-                            disabled={isRoleSuper || user.email === userData?.email}
-                            title={isRoleSuper ? "Tidak dapat menghapus sesama Master/Super Admin" : "Hapus User"}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="mx-auto flex items-center justify-center rounded-md p-2.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                            disabled={
+                              isRoleSuper || user.email === userData?.email
+                            }
+                            title={
+                              isRoleSuper
+                                ? "Tidak dapat menghapus sesama Master/Super Admin"
+                                : "Hapus User"
+                            }
                           >
                             <Trash2 size={18} />
                           </button>
@@ -277,10 +365,17 @@ export default function BPBDUserManagement() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={isMasterAdmin ? 5 : 4} className="py-16 text-center align-middle">
-                    <div className="flex flex-col items-center justify-center text-slate-500">
-                      <Users size={32} className="mb-3 text-slate-300" />
-                      <span className="text-sm font-medium">Tidak ada personil yang ditemukan.</span>
+                  <td
+                    colSpan={isMasterAdmin ? 5 : 4}
+                    className="py-20 text-center align-middle"
+                  >
+                    <div className="flex flex-col items-center justify-center text-slate-500 gap-3">
+                      <div className="p-4 bg-slate-100 rounded-full text-slate-300">
+                        <Users size={32} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Pengguna tidak ditemukan
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -288,17 +383,43 @@ export default function BPBDUserManagement() {
             </tbody>
           </table>
         </div>
+
+        {/* FOOTER PAGING (Opsional/UI Only) */}
         <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
-          <p className="text-xs font-medium text-slate-600">Total personil: <span className="font-bold text-blue-950">{filteredUsers.length}</span></p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            Total Personil:{" "}
+            <span className="text-blue-950">{filteredUsers.length}</span>
+          </p>
           <div className="flex w-full gap-2 sm:w-auto">
-            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">PREV</button>
-            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-all hover:border-blue-950 hover:bg-slate-50 sm:flex-none">NEXT</button>
+            <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">
+              PREV
+            </button>
+            <button className="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-950 shadow-sm transition-all hover:border-blue-950 hover:bg-slate-50 sm:flex-none">
+              NEXT
+            </button>
           </div>
         </div>
       </div>
 
-      <AddUserModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={handleAddUser} />
-      <DeleteUserModal isOpen={isDeleteModalOpen} onClose={() => { setIsDeleteModalOpen(false); setSelectedUser(null); }} onConfirm={handleDeleteUser} userToDelete={selectedUser ? { name: selectedUser.name, email: selectedUser.email } : null} />
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddUser}
+      />
+
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={handleDeleteUser}
+        userToDelete={
+          selectedUser
+            ? { name: selectedUser.name, email: selectedUser.email }
+            : null
+        }
+      />
     </div>
   );
 }

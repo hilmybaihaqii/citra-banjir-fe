@@ -1,77 +1,102 @@
 "use client";
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Loader2, AlertCircle, Check, AlertTriangle } from 'lucide-react';
+import React, { useState, ChangeEvent, FormEvent } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { Loader2, AlertCircle, Check, AlertTriangle } from "lucide-react";
 
 // Import komponen UI yang sudah kita buat
-import { FloatingInput } from '@/components/ui/FloatingInput';
-import { SecurityModule } from '@/components/ui/SecurityModule';
-import { SeveritySelector } from '@/components/ui/SeveritySelector';
-import { ImageUploader } from '@/components/ui/ImageUploader';
+import { FloatingInput } from "@/components/ui/form/FloatingInput";
+import { SecurityModule } from "@/components/ui/form/SecurityModule";
+import { SeveritySelector } from "@/components/ui/form/SeveritySelector";
+import { ImageUploader } from "@/components/ui/form/ImageUploader";
 
 const itemVar: Variants = {
   hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 const validateInput = (name: string, value: string) => {
   switch (name) {
-    case 'name':
-      if (!/^[a-zA-Z\s\.\']+$/.test(value)) return "Nama hanya boleh berisi huruf.";
+    case "reporterName":
+      if (!/^[a-zA-Z\s\.\']+$/.test(value))
+        return "Nama hanya boleh berisi huruf.";
       if (value.length < 3) return "Nama terlalu pendek.";
       return "";
-    case 'phone':
+    case "phone":
       if (!/^[0-9]+$/.test(value)) return "Hanya angka yang diperbolehkan.";
-      if (value.length < 10 || value.length > 15) return "Nomor tidak valid (10-15 digit).";
+      if (value.length < 10 || value.length > 15)
+        return "Nomor tidak valid (10-15 digit).";
       return "";
-    case 'location':
+    case "location":
       if (value.length < 5) return "Detail lokasi terlalu singkat.";
       return "";
-    case 'description':
+    case "description":
       if (value.length < 10) return "Deskripsi kejadian terlalu singkat.";
       if (/[<>]/.test(value)) return "Karakter < > tidak diizinkan.";
       return "";
-    default: return "";
+    default:
+      return "";
   }
 };
 
 export const EmergencyReportForm = () => {
-  const [form, setForm] = useState({ 
-    name: '', phone: '', location: '', waterLevel: '', description: '' 
+  const [form, setForm] = useState({
+    reporterName: "",
+    phone: "",
+    location: "",
+    waterLevel: "",
+    description: "",
   });
-  const [errors, setErrors] = useState({ 
-    name: '', phone: '', location: '', description: '' 
+  const [errors, setErrors] = useState({
+    reporterName: "",
+    phone: "",
+    location: "",
+    description: "",
   });
-  
-  const [severity, setSeverity] = useState('sedang');
+
+  const [severity, setSeverity] = useState("sedang");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [honeypot, setHoneypot] = useState('');
+  const [honeypot, setHoneypot] = useState("");
   const [verified, setVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success'>('idle');
+  const [status, setStatus] = useState<"idle" | "success">("idle");
   const [securityError, setSecurityError] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (name in errors) {
-      setErrors(prev => ({ ...prev, [name]: validateInput(name, value) }));
+      setErrors((prev) => ({ ...prev, [name]: validateInput(name, value) }));
     }
     if (securityError) setSecurityError(false);
+    if (apiError) setApiError(null);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (honeypot) return;
+    if (honeypot) return; // Honeypot trap untuk mencegah spam bot
 
-    const nameE = validateInput('name', form.name); 
-    const phoneE = validateInput('phone', form.phone);
-    const locE = validateInput('location', form.location); 
-    const descE = validateInput('description', form.description);
-    
+    const nameE = validateInput("reporterName", form.reporterName);
+    const phoneE = validateInput("phone", form.phone);
+    const locE = validateInput("location", form.location);
+    const descE = validateInput("description", form.description);
+
     if (nameE || phoneE || locE || descE) {
-      setErrors({ name: nameE, phone: phoneE, location: locE, description: descE }); 
+      setErrors({
+        reporterName: nameE,
+        phone: phoneE,
+        location: locE,
+        description: descE,
+      });
       return;
     }
 
@@ -81,75 +106,184 @@ export const EmergencyReportForm = () => {
     }
 
     setSubmitting(true);
-    
-    // Di sinilah nanti Anda menaruh logika POST ke API/Firebase
-    console.log("Data Terkirim:", { ...form, severity, file: selectedFile?.name });
-    await new Promise((r) => setTimeout(r, 2000));
-    
-    setSubmitting(false); 
-    setStatus('success');
+    setApiError(null);
+
+    try {
+      // 1. Format Impact sesuai kebutuhan operasional BPBD
+      const formattedImpact = `[Prioritas: ${severity.toUpperCase()}] [Ketinggian Air: ${form.waterLevel || "-"}] [Nomor HP: ${form.phone}] Deskripsi: ${form.description}`;
+
+      // 2. Payload yang 100% cocok dengan BE
+      const payload = {
+        reporterName: form.reporterName,
+        location: form.location,
+        impact: formattedImpact,
+      };
+
+      // 3. Tembak API tanpa Token (Fitur Publik)
+      const res = await fetch(`${API_URL}/reports`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Gagal mengirimkan laporan. Silakan coba lagi.",
+        );
+      }
+
+      // Jika berhasil
+      setStatus("success");
+    } catch (error) {
+      console.error("Gagal mengirim laporan:", error);
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan pada sistem jaringan.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const resetForm = () => {
-    setStatus('idle'); 
-    setVerified(false); 
-    setForm({name:'', phone:'', location:'', waterLevel: '', description:''}); 
-    setErrors({name:'', phone:'', location:'', description:''}); 
+    setStatus("idle");
+    setVerified(false);
+    setForm({
+      reporterName: "",
+      phone: "",
+      location: "",
+      waterLevel: "",
+      description: "",
+    });
+    setErrors({ reporterName: "", phone: "", location: "", description: "" });
+    setApiError(null);
     setSelectedFile(null);
   };
 
   return (
     <AnimatePresence mode="wait">
-      {status === 'success' ? (
-        <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} 
+      {status === "success" ? (
+        <motion.div
+          key="success"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           className="bg-slate-50 p-12 md:p-16 text-center border border-slate-100 relative overflow-hidden group rounded-sm"
         >
           <div className="w-24 h-24 bg-emerald-100/50 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-8">
             <Check size={40} strokeWidth={1.5} />
           </div>
           <h3 className="text-3xl md:text-4xl font-light text-slate-900 mb-4 tracking-tight leading-tight">
-            Laporan Darurat <br/>Berhasil Diterima.
+            Laporan Darurat <br />
+            Berhasil Diterima.
           </h3>
           <p className="text-slate-500 mb-12 max-w-lg mx-auto text-lg leading-relaxed font-light">
-            Informasi telah diteruskan ke Posko Bencana terdekat. Harap tetap berada di tempat yang aman dan siaga menunggu instruksi petugas.
+            Informasi telah diteruskan ke Posko Bencana terdekat. Harap tetap
+            berada di tempat yang aman dan siaga menunggu instruksi petugas.
           </p>
-          <button onClick={resetForm}
-            className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-900 transition-colors border-b border-transparent hover:border-blue-900 pb-1">
+          <button
+            onClick={resetForm}
+            className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-900 transition-colors border-b border-transparent hover:border-blue-900 pb-1"
+          >
             Buat Laporan Baru
           </button>
         </motion.div>
       ) : (
-        <motion.form key="form" variants={itemVar} initial="hidden" animate="show" exit="hidden" onSubmit={handleSubmit} className="space-y-12" autoComplete="off">
-          
-          <input type="text" name="confirm_field" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} className="hidden" tabIndex={-1} autoComplete="off" />
+        <motion.form
+          key="form"
+          variants={itemVar}
+          initial="hidden"
+          animate="show"
+          exit="hidden"
+          onSubmit={handleSubmit}
+          className="space-y-12"
+          autoComplete="off"
+        >
+          {/* Honeypot field (hidden) */}
+          <input
+            type="text"
+            name="confirm_field"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            className="hidden"
+            tabIndex={-1}
+            autoComplete="off"
+          />
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">1. Identitas Pelapor</h4>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">
+              1. Identitas Pelapor
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-12">
-              <FloatingInput label="Nama Lengkap" name="name" value={form.name} onChange={handleChange} error={errors.name} />
-              <FloatingInput label="Nomor Handphone Aktif" name="phone" type="tel" value={form.phone} onChange={handleChange} error={errors.phone} />
+              <FloatingInput
+                label="Nama Lengkap"
+                name="reporterName"
+                value={form.reporterName}
+                onChange={handleChange}
+                error={errors.reporterName}
+              />
+              <FloatingInput
+                label="Nomor Handphone Aktif"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                error={errors.phone}
+              />
             </div>
           </div>
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">2. Detail Kejadian</h4>
-            
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">
+              2. Detail Kejadian
+            </h4>
+
             <div className="mb-10">
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">Estimasi Dampak / Keparahan</label>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">
+                Estimasi Dampak / Keparahan
+              </label>
               <SeveritySelector selected={severity} onChange={setSeverity} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-x-12 mb-8">
-              <FloatingInput label="Ketinggian Air (Contoh: 50 cm)" name="waterLevel" value={form.waterLevel} onChange={handleChange} />
+              <FloatingInput
+                label="Ketinggian Air (Contoh: 50 cm)"
+                name="waterLevel"
+                value={form.waterLevel}
+                onChange={handleChange}
+              />
             </div>
 
-            <FloatingInput label="Lokasi Spesifik (RT/RW, Patokan)" name="location" isArea value={form.location} onChange={handleChange} error={errors.location} />
-            <FloatingInput label="Deskripsi Situasi & Kerusakan Fisik" name="description" isArea value={form.description} onChange={handleChange} error={errors.description} />
+            <FloatingInput
+              label="Lokasi Spesifik (RT/RW, Patokan)"
+              name="location"
+              isArea
+              value={form.location}
+              onChange={handleChange}
+              error={errors.location}
+            />
+            <FloatingInput
+              label="Deskripsi Situasi & Kerusakan Fisik"
+              name="description"
+              isArea
+              value={form.description}
+              onChange={handleChange}
+              error={errors.description}
+            />
           </div>
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">3. Bukti Visual</h4>
-            <ImageUploader fileName={selectedFile ? selectedFile.name : ''} onFileSelect={setSelectedFile} />
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-100 pb-2">
+              3. Bukti Visual
+            </h4>
+            <ImageUploader
+              fileName={selectedFile ? selectedFile.name : ""}
+              onFileSelect={setSelectedFile}
+            />
           </div>
 
           <div className="pt-6 border-t border-slate-100">
@@ -158,19 +292,37 @@ export const EmergencyReportForm = () => {
 
           <div className="flex flex-col items-end gap-6 pt-6">
             <AnimatePresence>
-              {(securityError || Object.values(errors).some(e => e)) && (
-                 <motion.div initial={{opacity:0, y: 10}} animate={{opacity:1, y:0}} exit={{opacity:0}} 
-                   className="text-xs font-medium text-rose-500 flex items-center gap-2 bg-rose-50 px-4 py-3 rounded-md border border-rose-100">
-                    <AlertCircle size={14} /> Mohon lengkapi formulir & verifikasi keamanan dengan benar.
-                 </motion.div>
+              {(securityError ||
+                Object.values(errors).some((e) => e) ||
+                apiError) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-xs font-medium text-rose-500 flex items-center gap-2 bg-rose-50 px-4 py-3 rounded-md border border-rose-100"
+                >
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>
+                    {apiError
+                      ? apiError
+                      : "Mohon lengkapi formulir & verifikasi keamanan dengan benar."}
+                  </span>
+                </motion.div>
               )}
             </AnimatePresence>
 
-            <button type="submit" disabled={submitting}
-              className="group relative px-12 py-6 bg-red-600 text-white w-full md:w-auto disabled:bg-slate-200 disabled:text-slate-400 transition-all overflow-hidden shadow-2xl hover:shadow-xl rounded-sm">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="group relative px-12 py-6 bg-red-600 text-white w-full md:w-auto disabled:bg-slate-200 disabled:text-slate-400 transition-all overflow-hidden shadow-2xl hover:shadow-xl rounded-sm"
+            >
               <span className="relative z-10 text-xs font-bold uppercase tracking-[0.25em] flex items-center justify-center gap-3">
-                {submitting ? <Loader2 className="animate-spin" size={14} /> : <AlertTriangle size={14} />} 
-                {submitting ? 'Mengirim Data...' : 'Kirim Laporan Darurat'}
+                {submitting ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <AlertTriangle size={14} />
+                )}
+                {submitting ? "MENGIRIM DATA..." : "KIRIM LAPORAN DARURAT"}
               </span>
               <div className="absolute inset-0 bg-red-800 transform translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]" />
             </button>
