@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  CloudSun,
-  CloudRain,
+  ActivitySquare,
+  Map,
   UserPlus,
   History,
   Settings,
@@ -25,6 +25,20 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+// FUNGSI UNTUK DECODE JWT TANPA LIBRARY EXTERNAL
+const parseJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function BMKGLayout({
   children,
 }: {
@@ -42,37 +56,58 @@ export default function BMKGLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const savedUserStr = Cookies.get("user_session");
-      const token = Cookies.get("auth_token");
-
-      if (!savedUserStr || !token) {
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
-        return;
-      }
-      
-      try {
-        setUserData(JSON.parse(savedUserStr));
-        setIsLoaded(true);
-      } catch (error) {
-        console.error("Gagal membaca session:", error);
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
-      }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleLogout = () => {
     Cookies.remove("user_session", { path: "/" });
     Cookies.remove("auth_token", { path: "/" }); 
     window.location.href = "/";
   };
+
+  useEffect(() => {
+    let logoutTimer: NodeJS.Timeout;
+
+    const checkSession = () => {
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
+
+      if (!savedUserStr || !token) {
+        handleLogout();
+        return;
+      }
+      
+      try {
+        setUserData(JSON.parse(savedUserStr));
+
+        // Decode Token JWT untuk mengecek waktu expired
+        const decodedToken = parseJwt(token);
+        
+        if (decodedToken && decodedToken.exp) {
+          const currentTime = Math.floor(Date.now() / 1000); // Waktu sekarang dalam detik
+          const timeLeft = decodedToken.exp - currentTime; // Sisa waktu dalam detik
+
+          if (timeLeft <= 0) {
+            handleLogout();
+            return;
+          } else {
+            logoutTimer = setTimeout(() => {
+              alert("Sesi Anda telah habis. Silakan login kembali.");
+              handleLogout();
+            }, timeLeft * 1000);
+          }
+        }
+
+        setIsLoaded(true);
+      } catch (error) {
+        console.error("Gagal membaca session:", error);
+        handleLogout();
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/dashboard/bmkg" && pathname === "/dashboard/bmkg")
@@ -88,9 +123,7 @@ export default function BMKGLayout({
   if (!isLoaded) return null;
 
   return (
-    <div
-      className={`flex h-dvh w-full overflow-hidden bg-slate-50 ${outfit.className}`}
-    >
+    <div className={`flex h-dvh w-full overflow-hidden bg-slate-50 ${outfit.className}`}>
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"
@@ -98,9 +131,7 @@ export default function BMKGLayout({
         />
       )}
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-      >
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
           <Link
             href="/dashboard/bmkg"
@@ -129,16 +160,8 @@ export default function BMKGLayout({
             Menu Utama
           </p>
 
-          <Link
-            href="/dashboard/bmkg"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bmkg") ? activeClass : inactiveClass
-              }
-            >
+          <Link href="/dashboard/bmkg" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bmkg") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard size={18} /> Dashboard
               </div>
@@ -146,47 +169,25 @@ export default function BMKGLayout({
             </button>
           </Link>
 
-          <Link
-            href="/dashboard/bmkg/update-curahhujan"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bmkg/update-curahhujan")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
+          {/* MENU BARU: DATA PEMANTAUAN */}
+          <Link href="/dashboard/bmkg/data-pantauan" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bmkg/data-pantauan") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
-                <CloudRain size={18} /> Update Curah Hujan
+                <ActivitySquare size={18} /> Data Pemantauan
               </div>
-              {isActive("/dashboard/bmkg/update-curahhujan") && (
-                <ChevronRight size={14} />
-              )}
+              {isActive("/dashboard/bmkg/data-pantauan") && <ChevronRight size={14} />}
             </button>
           </Link>
 
-          <Link
-            href="/dashboard/bmkg/update-cuaca"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bmkg/update-cuaca")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
+          {/* MENU BARU: WILAYAH PANTAUAN
+          <Link href="/dashboard/bmkg/wilayah" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bmkg/wilayah") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
-                <CloudSun size={18} /> Update Cuaca
+                <Map size={18} /> Wilayah Pantauan
               </div>
-              {isActive("/dashboard/bmkg/update-cuaca") && (
-                <ChevronRight size={14} />
-              )}
+              {isActive("/dashboard/bmkg/wilayah") && <ChevronRight size={14} />}
             </button>
-          </Link>
+          </Link> */}
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">
@@ -194,67 +195,31 @@ export default function BMKGLayout({
             </p>
             
             {userData?.role === "MASTER_ADMIN" && (
-              <Link
-                href="/dashboard/bmkg/manajemen-user"
-                className="block mb-1.5"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <button
-                  className={
-                    isActive("/dashboard/bmkg/manajemen-user")
-                      ? activeClass
-                      : inactiveClass
-                  }
-                >
+              <Link href="/dashboard/bmkg/manajemen-user" className="block mb-1.5" onClick={() => setIsSidebarOpen(false)}>
+                <button className={isActive("/dashboard/bmkg/manajemen-user") ? activeClass : inactiveClass}>
                   <div className="flex items-center gap-3">
                     <UserPlus size={18} /> Manajemen User
                   </div>
-                  {isActive("/dashboard/bmkg/manajemen-user") && (
-                    <ChevronRight size={14} />
-                  )}
+                  {isActive("/dashboard/bmkg/manajemen-user") && <ChevronRight size={14} />}
                 </button>
               </Link>
             )}
 
-            <Link
-              href="/dashboard/bmkg/log-aktivitas"
-              className="block mb-1.5"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/bmkg/log-aktivitas")
-                    ? activeClass
-                    : inactiveClass
-                }
-              >
+            <Link href="/dashboard/bmkg/log-aktivitas" className="block mb-1.5" onClick={() => setIsSidebarOpen(false)}>
+              <button className={isActive("/dashboard/bmkg/log-aktivitas") ? activeClass : inactiveClass}>
                 <div className="flex items-center gap-3">
                   <History size={18} /> Log Aktivitas
                 </div>
-                {isActive("/dashboard/bmkg/log-aktivitas") && (
-                  <ChevronRight size={14} />
-                )}
+                {isActive("/dashboard/bmkg/log-aktivitas") && <ChevronRight size={14} />}
               </button>
             </Link>
 
-            <Link
-              href="/dashboard/bmkg/pengaturan"
-              className="block"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/bmkg/pengaturan")
-                    ? activeClass
-                    : inactiveClass
-                }
-              >
+            <Link href="/dashboard/bmkg/pengaturan" className="block" onClick={() => setIsSidebarOpen(false)}>
+              <button className={isActive("/dashboard/bmkg/pengaturan") ? activeClass : inactiveClass}>
                 <div className="flex items-center gap-3">
                   <Settings size={18} /> Pengaturan
                 </div>
-                {isActive("/dashboard/bmkg/pengaturan") && (
-                  <ChevronRight size={14} />
-                )}
+                {isActive("/dashboard/bmkg/pengaturan") && <ChevronRight size={14} />}
               </button>
             </Link>
           </div>
@@ -272,10 +237,7 @@ export default function BMKGLayout({
 
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950 hover:text-blue-700"
-          >
+          <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-blue-950 hover:text-blue-700">
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
@@ -289,12 +251,7 @@ export default function BMKGLayout({
             </div>
 
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
-              <Image
-                src="/images/BMKG.png"
-                alt="Logo BMKG"
-                fill
-                className="object-contain p-1"
-              />
+              <Image src="/images/BMKG.png" alt="Logo BMKG" fill className="object-contain p-1" />
             </div>
           </div>
         </header>
@@ -304,11 +261,7 @@ export default function BMKGLayout({
         </main>
       </div>
 
-      <LogoutModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogout}
-      />
+      <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={handleLogout} />
     </div>
   );
 }

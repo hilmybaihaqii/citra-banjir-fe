@@ -21,7 +21,6 @@ const MapInformasiFull = dynamic(() => import("@/components/infografis/MapInform
 
 export default function PetaInformasiPage() {
   return (
-    // PERBAIKAN: Gunakan h-[100dvh] sebagai ganti h-screen agar aman di Safari Mobile
     <main className={`${outfit.variable} font-sans pt-28 w-full h-dvh bg-slate-100 overflow-hidden`}>
       <MapInformasiFull />
     </main>

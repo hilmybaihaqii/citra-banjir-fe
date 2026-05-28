@@ -13,21 +13,20 @@ interface MapButtonProps {
 const MapButton = ({ onClick, icon: Icon, label, sublabel }: MapButtonProps) => (
   <button 
     onClick={onClick}
-    className="group flex items-center gap-2.5 md:gap-3.5 bg-white border border-slate-50 p-2 pr-4 md:p-2.5 md:pr-6 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_35px_-10px_rgba(0,0,0,0.12)] hover:border-slate-100 transition-all duration-300 active:scale-95 pointer-events-auto"
+    className="group flex items-center gap-3 bg-white border border-slate-200 p-2 pr-4 md:p-2.5 md:pr-5 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 active:scale-[0.98] pointer-events-auto text-left"
   >
-    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white shrink-0">
-      <Icon className="w-4 h-4 md:w-4.5 md:h-4.5" strokeWidth={2} />
+    <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 flex items-center justify-center transition-colors duration-200 group-hover:bg-slate-800 group-hover:text-white group-hover:border-slate-800 shrink-0">
+      <Icon className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
     </div>
-    
-    <div className="flex flex-col items-start leading-none gap-1 md:gap-1.5">
-      <span className="text-[8px] md:text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase transition-colors group-hover:text-slate-500">
+    <div className="flex flex-col justify-center gap-1 md:gap-1.5">
+      <span className="text-[9px] font-bold text-slate-400 tracking-[0.15em] uppercase leading-none transition-colors duration-200 group-hover:text-slate-500">
         {sublabel}
       </span>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[11px] md:text-[13px] font-semibold text-slate-800 tracking-tight group-hover:text-slate-900 transition-colors">
+      <div className="flex items-center gap-1.5 md:gap-2">
+        <span className="text-xs md:text-sm font-semibold text-slate-800 tracking-tight leading-none transition-colors duration-200 group-hover:text-slate-900">
           {label}
         </span>
-        <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-slate-300 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all duration-300" />
+        <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-slate-300 transition-colors duration-200 group-hover:text-slate-800 shrink-0" />
       </div>
     </div>
   </button>
@@ -39,7 +38,7 @@ interface ActionButtonsProps {
 
 export const MapActionButtons = ({ setActiveModal }: ActionButtonsProps) => {
   return (
-    <div className="absolute z-40 flex flex-col gap-2 md:gap-3 top-4 md:top-5 left-4 md:left-6 pointer-events-none">
+    <div className="absolute z-40 flex flex-col gap-2.5 md:gap-3 top-4 md:top-5 left-4 md:left-6 pointer-events-none">
       <MapButton 
         onClick={() => setActiveModal("data")}
         icon={PieChart}
