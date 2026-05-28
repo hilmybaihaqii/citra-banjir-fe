@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 
 export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
-  const [email, setEmail] = useState(""); 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +35,7 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email, 
+          email: email,
           password: password,
         }),
       });
@@ -43,7 +43,10 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
       const responseData = await res.json();
 
       if (!res.ok || !responseData.success) {
-        throw new Error(responseData.message || "Email atau password yang Anda masukkan salah.");
+        throw new Error(
+          responseData.message ||
+            "Email atau password yang Anda masukkan salah.",
+        );
       }
 
       const userData = responseData.data;
@@ -51,7 +54,7 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
 
       let expiresAt: Date | number = 1;
       try {
-        const tokenParts = token.split('.');
+        const tokenParts = token.split(".");
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
           if (payload.exp) {
@@ -62,11 +65,14 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
         console.error("Gagal membaca waktu expired token:", decodeErr);
       }
 
-      Cookies.set("user_session", JSON.stringify(userData), { expires: expiresAt, path: "/" });
+      Cookies.set("user_session", JSON.stringify(userData), {
+        expires: expiresAt,
+        path: "/",
+      });
       Cookies.set("auth_token", token, { expires: expiresAt, path: "/" });
       const userAgency = userData.agency || "";
       let targetPath = "/dashboard/admin";
-      
+
       switch (userAgency) {
         case "BBWS":
           targetPath = "/dashboard/bbws";
@@ -90,11 +96,12 @@ export const useLoginForm = (isOpen: boolean, onClose: () => void) => {
       console.log("Login Success! Redirect to:", targetPath);
       onClose();
       window.location.href = targetPath;
-
     } catch (err: unknown) {
       console.error(err);
       const errorMessage =
-        err instanceof Error ? err.message : "Terjadi kesalahan sistem. Coba lagi nanti.";
+        err instanceof Error
+          ? err.message
+          : "Terjadi kesalahan sistem. Coba lagi nanti.";
       setError(errorMessage);
       setIsLoading(false);
     }

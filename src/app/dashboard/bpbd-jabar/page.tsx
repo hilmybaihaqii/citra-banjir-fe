@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  MapPinned, 
-  Users, 
-  Calendar, 
-  Home, 
-  Building2, 
-  UserMinus, 
-  ActivitySquare, 
+import {
+  MapPinned,
+  Users,
+  Calendar,
+  Home,
+  Building2,
+  UserMinus,
+  ActivitySquare,
   Waves,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -64,8 +64,12 @@ export default function BPBDDashboardHome() {
     ibadah: 0,
   });
 
-  const [trendData, setTrendData] = useState<{ tanggal: string; laporan: number }[]>([]);
-  const [severityData, setSeverityData] = useState<{ tingkat: string; jumlah: number; fill: string }[]>([]);
+  const [trendData, setTrendData] = useState<
+    { tanggal: string; laporan: number }[]
+  >([]);
+  const [severityData, setSeverityData] = useState<
+    { tingkat: string; jumlah: number; fill: string }[]
+  >([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -80,28 +84,44 @@ export default function BPBDDashboardHome() {
 
       // Fetch Regions & Reports secara paralel
       const [resRegions, resReports] = await Promise.all([
-        fetch(`${API_URL}/regions`, { method: "GET", headers, cache: "no-store" }),
-        fetch(`${API_URL}/reports?limit=1000`, { method: "GET", headers, cache: "no-store" })
+        fetch(`${API_URL}/regions`, {
+          method: "GET",
+          headers,
+          cache: "no-store",
+        }),
+        fetch(`${API_URL}/reports?limit=1000`, {
+          method: "GET",
+          headers,
+          cache: "no-store",
+        }),
       ]);
 
       // 1. OLAH DATA REGION (Kerusakan & Korban)
       if (resRegions.ok) {
         const regionsJson = await resRegions.json();
-        const regions: RegionData[] = regionsJson.data?.items || regionsJson.data || [];
+        const regions: RegionData[] =
+          regionsJson.data?.items || regionsJson.data || [];
 
-        let titik = 0, kk = 0, pengungsi = 0, meninggal = 0, luka = 0;
-        let terendam = 0, rusak = 0, fasum = 0, ibadah = 0;
+        let titik = 0,
+          kk = 0,
+          pengungsi = 0,
+          meninggal = 0,
+          luka = 0;
+        let terendam = 0,
+          rusak = 0,
+          fasum = 0,
+          ibadah = 0;
 
         regions.forEach((r) => {
           if (r.alertStatus === "RAWAN_BANJIR") titik++;
-          kk += (r.familyCount || 0);
-          pengungsi += (r.evacueeCount || 0);
-          meninggal += (r.deathCount || 0);
-          luka += (r.injuredCount || 0);
-          terendam += (r.submergedHouses || 0);
-          rusak += (r.heavilyDamagedHouses || 0);
-          fasum += (r.damagedPublicFacilities || 0);
-          ibadah += (r.damagedWorshipPlaces || 0);
+          kk += r.familyCount || 0;
+          pengungsi += r.evacueeCount || 0;
+          meninggal += r.deathCount || 0;
+          luka += r.injuredCount || 0;
+          terendam += r.submergedHouses || 0;
+          rusak += r.heavilyDamagedHouses || 0;
+          fasum += r.damagedPublicFacilities || 0;
+          ibadah += r.damagedWorshipPlaces || 0;
         });
 
         setRegionStats({
@@ -120,16 +140,19 @@ export default function BPBDDashboardHome() {
       // 2. OLAH DATA REPORTS (Grafik Tren & Keparahan)
       if (resReports.ok) {
         const reportsJson = await resReports.json();
-        const reports: ReportData[] = reportsJson.data?.items || reportsJson.data || [];
+        const reports: ReportData[] =
+          reportsJson.data?.items || reportsJson.data || [];
 
         // --- A. Hitung Tingkat Keparahan (Bar Chart) ---
-        let rendah = 0, sedang = 0, tinggi = 0;
+        let rendah = 0,
+          sedang = 0,
+          tinggi = 0;
         reports.forEach((r) => {
           // Cek field severity langsung atau parse dari impact
           let sev = r.severity?.toLowerCase() || "sedang";
           if (r.impact && !r.severity) {
-             const match = r.impact.match(/\[Prioritas:\s*(.*?)\]/i);
-             if (match) sev = match[1].toLowerCase();
+            const match = r.impact.match(/\[Prioritas:\s*(.*?)\]/i);
+            if (match) sev = match[1].toLowerCase();
           }
 
           if (sev === "parah") tinggi++;
@@ -146,12 +169,15 @@ export default function BPBDDashboardHome() {
         // --- B. Hitung Tren 7 Hari Terakhir (Area Chart) ---
         const last7Days: { [key: string]: number } = {};
         const today = new Date();
-        
+
         // Buat skeleton 7 hari ke belakang (agar tanggal yang kosong tetap muncul 0)
         for (let i = 6; i >= 0; i--) {
           const d = new Date(today);
           d.setDate(today.getDate() - i);
-          const dateStr = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+          const dateStr = d.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "short",
+          });
           last7Days[dateStr] = 0;
         }
 
@@ -160,15 +186,18 @@ export default function BPBDDashboardHome() {
           const rawDate = r.createdAt || r.date;
           if (!rawDate) return;
           const repDate = new Date(rawDate);
-          const dateStr = repDate.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+          const dateStr = repDate.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "short",
+          });
           if (last7Days[dateStr] !== undefined) {
             last7Days[dateStr]++;
           }
         });
 
-        const trendArray = Object.keys(last7Days).map(key => ({
+        const trendArray = Object.keys(last7Days).map((key) => ({
           tanggal: key,
-          laporan: last7Days[key]
+          laporan: last7Days[key],
         }));
         setTrendData(trendArray);
       }
@@ -187,18 +216,17 @@ export default function BPBDDashboardHome() {
         day: "numeric",
         month: "long",
         year: "numeric",
-      })
+      }),
     );
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const formatNum = (num: number) => num.toLocaleString('id-ID');
+  const formatNum = (num: number) => num.toLocaleString("id-ID");
 
   if (!isMounted) return null;
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto animate-in fade-in duration-500">
-      
       {/* HEADER */}
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -217,7 +245,6 @@ export default function BPBDDashboardHome() {
 
       {/* SECTION 1: OVERVIEW KORBAN & TITIK (3 Kolom) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-        
         {/* Titik Terdampak */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 border-l-4 border-l-amber-500 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
@@ -230,9 +257,17 @@ export default function BPBDDashboardHome() {
           </div>
           <div className="flex items-baseline gap-2">
             <h3 className="text-4xl font-black text-blue-950">
-              {isLoading ? <Loader2 size={24} className="animate-spin text-slate-300" /> : formatNum(regionStats.titikTerdampak)}
+              {isLoading ? (
+                <Loader2 size={24} className="animate-spin text-slate-300" />
+              ) : (
+                formatNum(regionStats.titikTerdampak)
+              )}
             </h3>
-            {!isLoading && <span className="text-xs font-bold text-slate-400 uppercase">Kawasan</span>}
+            {!isLoading && (
+              <span className="text-xs font-bold text-slate-400 uppercase">
+                Kawasan
+              </span>
+            )}
           </div>
         </div>
 
@@ -248,9 +283,17 @@ export default function BPBDDashboardHome() {
           </div>
           <div className="flex items-baseline gap-2">
             <h3 className="text-4xl font-black text-blue-950">
-              {isLoading ? <Loader2 size={24} className="animate-spin text-slate-300" /> : formatNum(regionStats.totalPengungsi)}
+              {isLoading ? (
+                <Loader2 size={24} className="animate-spin text-slate-300" />
+              ) : (
+                formatNum(regionStats.totalPengungsi)
+              )}
             </h3>
-            {!isLoading && <span className="text-xs font-bold text-slate-400 uppercase">Jiwa</span>}
+            {!isLoading && (
+              <span className="text-xs font-bold text-slate-400 uppercase">
+                Jiwa
+              </span>
+            )}
           </div>
         </div>
 
@@ -265,7 +308,9 @@ export default function BPBDDashboardHome() {
             <div>
               <div className="flex items-center gap-1.5 mb-1 text-rose-600">
                 <UserMinus size={14} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Meninggal</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Meninggal
+                </span>
               </div>
               <span className="text-2xl font-black text-blue-950">
                 {isLoading ? "-" : formatNum(regionStats.totalMeninggal)}
@@ -274,7 +319,9 @@ export default function BPBDDashboardHome() {
             <div>
               <div className="flex items-center gap-1.5 mb-1 text-amber-500">
                 <ActivitySquare size={14} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Luka-Luka</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Luka-Luka
+                </span>
               </div>
               <span className="text-2xl font-black text-blue-950">
                 {isLoading ? "-" : formatNum(regionStats.totalLuka)}
@@ -290,14 +337,20 @@ export default function BPBDDashboardHome() {
           Data Kerusakan Infrastruktur
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          
           <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex items-center gap-4">
             <div className="p-3 bg-cyan-50 text-cyan-600 rounded-full shrink-0">
               <Waves size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Rumah Terendam</p>
-              <p className="text-xl font-black text-blue-950">{isLoading ? "-" : formatNum(regionStats.rumahTerendam)} <span className="text-[10px] font-medium text-slate-400">Unit</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                Rumah Terendam
+              </p>
+              <p className="text-xl font-black text-blue-950">
+                {isLoading ? "-" : formatNum(regionStats.rumahTerendam)}{" "}
+                <span className="text-[10px] font-medium text-slate-400">
+                  Unit
+                </span>
+              </p>
             </div>
           </div>
 
@@ -306,8 +359,15 @@ export default function BPBDDashboardHome() {
               <Home size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Rusak Parah</p>
-              <p className="text-xl font-black text-blue-950">{isLoading ? "-" : formatNum(regionStats.rumahRusak)} <span className="text-[10px] font-medium text-slate-400">Unit</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                Rusak Parah
+              </p>
+              <p className="text-xl font-black text-blue-950">
+                {isLoading ? "-" : formatNum(regionStats.rumahRusak)}{" "}
+                <span className="text-[10px] font-medium text-slate-400">
+                  Unit
+                </span>
+              </p>
             </div>
           </div>
 
@@ -316,8 +376,15 @@ export default function BPBDDashboardHome() {
               <Building2 size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Fasilitas Umum</p>
-              <p className="text-xl font-black text-blue-950">{isLoading ? "-" : formatNum(regionStats.fasum)} <span className="text-[10px] font-medium text-slate-400">Bangunan</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                Fasilitas Umum
+              </p>
+              <p className="text-xl font-black text-blue-950">
+                {isLoading ? "-" : formatNum(regionStats.fasum)}{" "}
+                <span className="text-[10px] font-medium text-slate-400">
+                  Bangunan
+                </span>
+              </p>
             </div>
           </div>
 
@@ -326,11 +393,17 @@ export default function BPBDDashboardHome() {
               <Building2 size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Tempat Ibadah</p>
-              <p className="text-xl font-black text-blue-950">{isLoading ? "-" : formatNum(regionStats.ibadah)} <span className="text-[10px] font-medium text-slate-400">Bangunan</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                Tempat Ibadah
+              </p>
+              <p className="text-xl font-black text-blue-950">
+                {isLoading ? "-" : formatNum(regionStats.ibadah)}{" "}
+                <span className="text-[10px] font-medium text-slate-400">
+                  Bangunan
+                </span>
+              </p>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -355,29 +428,48 @@ export default function BPBDDashboardHome() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData}>
                   <defs>
-                    <linearGradient id="colorLaporanProv" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="colorLaporanProv"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="tanggal" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }} 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="tanggal"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
                     dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
                     allowDecimals={false}
                   />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ color: '#1e3a8a', fontWeight: 'bold' }}
-                    labelStyle={{ color: '#64748b', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                    itemStyle={{ color: "#1e3a8a", fontWeight: "bold" }}
+                    labelStyle={{
+                      color: "#64748b",
+                      fontWeight: "bold",
+                      fontSize: "12px",
+                      marginBottom: "4px",
+                    }}
                   />
                   <Area
                     type="monotone"
@@ -413,27 +505,43 @@ export default function BPBDDashboardHome() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={severityData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="tingkat" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }} 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="tingkat"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
                     dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
                     allowDecimals={false}
                   />
-                  <Tooltip 
+                  <Tooltip
                     cursor={{ fill: "#f8fafc" }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    labelStyle={{ color: '#64748b', fontWeight: 'bold', fontSize: '12px' }}
-                    itemStyle={{ fontWeight: 'bold', color: '#0f172a' }}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                    labelStyle={{
+                      color: "#64748b",
+                      fontWeight: "bold",
+                      fontSize: "12px",
+                    }}
+                    itemStyle={{ fontWeight: "bold", color: "#0f172a" }}
                   />
-                  <Bar dataKey="jumlah" name="Total Laporan" radius={[4, 4, 0, 0]} barSize={45}>
+                  <Bar
+                    dataKey="jumlah"
+                    name="Total Laporan"
+                    radius={[4, 4, 0, 0]}
+                    barSize={45}
+                  >
                     {severityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -444,7 +552,6 @@ export default function BPBDDashboardHome() {
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

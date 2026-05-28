@@ -7,7 +7,7 @@ import {
   FileSpreadsheet,
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
@@ -31,7 +31,11 @@ export default function BPBDLogsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
@@ -39,7 +43,10 @@ export default function BPBDLogsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
@@ -60,9 +67,12 @@ export default function BPBDLogsPage() {
       if (res.ok) {
         const data = await res.json();
         const logsData: LogData[] = data.data?.items || data.data || data || [];
-        
+
         // Urutkan dari log terbaru ke terlama
-        logsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        logsData.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         setLogs(logsData);
       } else {
         throw new Error("Gagal mengambil data dari server");
@@ -118,7 +128,7 @@ export default function BPBDLogsPage() {
   const filteredLogs = logs.filter((log) => {
     const userName = log.user?.name || "Sistem";
     const searchLower = searchQuery.toLowerCase();
-    
+
     return (
       userName.toLowerCase().includes(searchLower) ||
       log.action.toLowerCase().includes(searchLower) ||
@@ -151,16 +161,23 @@ export default function BPBDLogsPage() {
   const formatDate = (isoString: string) => {
     if (!isoString) return "-";
     const dateObj = new Date(isoString);
-    return dateObj.toLocaleDateString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
-    }).replace(".", ":") + " WIB";
+    return (
+      dateObj
+        .toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        .replace(".", ":") + " WIB"
+    );
   };
 
   if (!isMounted) return null;
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto relative animate-in fade-in duration-500">
-      
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast.show && (
@@ -194,20 +211,23 @@ export default function BPBDLogsPage() {
             Riwayat perubahan data dan jejak aksi personil instansi.
           </p>
         </div>
-        
+
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
           <div className="relative w-full shrink-0 sm:w-72">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Cari aksi atau personil..." 
+            <Search
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="Cari aksi atau personil..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
           </div>
-          
-          <button 
+
+          <button
             onClick={handleExportExcel}
             disabled={isExporting || isLoading || logs.length === 0}
             className="flex w-full min-w-40 shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98] sm:w-auto"
@@ -231,11 +251,21 @@ export default function BPBDLogsPage() {
           <table className="w-full min-w-200 border-collapse text-left">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="w-16 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">No</th>
-                <th className="w-48 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Waktu (WIB)</th>
-                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Aktivitas</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Detail Laporan</th>
-                <th className="w-56 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Personil</th>
+                <th className="w-16 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  No
+                </th>
+                <th className="w-48 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Waktu (WIB)
+                </th>
+                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Aktivitas
+                </th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Detail Laporan
+                </th>
+                <th className="w-56 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Personil
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -243,33 +273,51 @@ export default function BPBDLogsPage() {
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <Loader2 size={32} className="animate-spin text-blue-600" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Memuat Riwayat Aktivitas...</span>
+                      <Loader2
+                        size={32}
+                        className="animate-spin text-blue-600"
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Memuat Riwayat Aktivitas...
+                      </span>
                     </div>
                   </td>
                 </tr>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log, index) => (
-                  <tr key={log.id} className="transition-colors hover:bg-slate-50/80">
-                    <td className="p-4 text-center text-sm font-bold text-slate-400">{index + 1}</td>
-                    
+                  <tr
+                    key={log.id}
+                    className="transition-colors hover:bg-slate-50/80"
+                  >
+                    <td className="p-4 text-center text-sm font-bold text-slate-400">
+                      {index + 1}
+                    </td>
+
                     <td className="p-4 text-xs font-bold text-slate-600 tracking-wide">
                       {formatDate(log.createdAt)}
                     </td>
-                    
+
                     <td className="p-4 text-center">
-                      <span className={`inline-flex min-w-20 items-center justify-center rounded-md border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm ${getActionBadge(log.action)}`}>
+                      <span
+                        className={`inline-flex min-w-20 items-center justify-center rounded-md border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-sm ${getActionBadge(log.action)}`}
+                      >
                         {log.action}
                       </span>
                     </td>
-                    
+
                     <td className="p-4">
-                      <p className="text-sm font-bold text-blue-950 leading-relaxed">{log.description}</p>
+                      <p className="text-sm font-bold text-blue-950 leading-relaxed">
+                        {log.description}
+                      </p>
                     </td>
 
                     <td className="p-4">
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">{log.user?.name || "Sistem Administrator"}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">{log.user?.agency?.replace("_", " ") || "-"}</p>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">
+                        {log.user?.name || "Sistem Administrator"}
+                      </p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">
+                        {log.user?.agency?.replace("_", " ") || "-"}
+                      </p>
                     </td>
                   </tr>
                 ))
@@ -280,7 +328,9 @@ export default function BPBDLogsPage() {
                       <div className="p-4 bg-slate-100 rounded-full text-slate-300">
                         <History size={32} />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest">Tidak ada riwayat aktivitas ditemukan.</span>
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Tidak ada riwayat aktivitas ditemukan.
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -288,11 +338,13 @@ export default function BPBDLogsPage() {
             </tbody>
           </table>
         </div>
-        
+
         {/* FOOTER PAGING */}
         <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-            Menampilkan <span className="text-blue-950">{filteredLogs.length}</span> log aktivitas
+            Menampilkan{" "}
+            <span className="text-blue-950">{filteredLogs.length}</span> log
+            aktivitas
           </p>
           <div className="flex w-full gap-2 sm:w-auto">
             <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">
@@ -304,7 +356,6 @@ export default function BPBDLogsPage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

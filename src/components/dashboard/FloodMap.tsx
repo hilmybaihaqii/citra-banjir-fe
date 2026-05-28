@@ -7,6 +7,26 @@ import { renderToString } from 'react-dom/server';
 import { Layers, Plus, Minus, Check, CloudRain, Droplets, AlertTriangle, ShieldCheck, Map as MapIcon } from 'lucide-react';
 import "leaflet/dist/leaflet.css";
 
+// Interface tipe data koordinat terintegrasi AI dari halaman induk
+interface IntegratedPrediction {
+  id: string | number;
+  area: string;
+  status: "normal" | "waspada" | "siaga" | "awas";
+  date: string;
+  rainfall: string;
+  temp: string;
+  wind: string;
+  postName: string;
+  waterDischarge: string;
+  waterLevel: string;
+  coords: [number, number];
+  isFloodPredicted: boolean;
+}
+
+interface FloodMapProps {
+  predictionData: IntegratedPrediction[];
+}
+
 interface ZoomMethods {
   zoomIn: () => void;
   zoomOut: () => void;
@@ -34,15 +54,6 @@ interface MapControllerProps {
   showLabelKecamatan: boolean;
   setShowLabelKecamatan: (v: boolean) => void;
 }
-
-const PREDICTION_DATA = [
-  { id: 1, name: "Dayeuhkolot", coords: [-6.9881, 107.6284], isFloodPredicted: true, curahHujan: "85 mm/jam", ketinggianAir: "120 cm" },
-  { id: 2, name: "Baleendah", coords: [-6.9946, 107.6306], isFloodPredicted: true, curahHujan: "60 mm/jam", ketinggianAir: "90 cm" },
-  { id: 3, name: "Bojongsoang", coords: [-6.9806, 107.6432], isFloodPredicted: true, curahHujan: "45 mm/jam", ketinggianAir: "70 cm" },
-  { id: 4, name: "Margahayu", coords: [-6.9631, 107.5752], isFloodPredicted: true, curahHujan: "30 mm/jam", ketinggianAir: "50 cm" },
-  { id: 5, name: "Margaasih", coords: [-6.9467, 107.5564], isFloodPredicted: false, curahHujan: "15 mm/jam", ketinggianAir: "20 cm" },
-  { id: 6, name: "Majalaya", coords: [-7.0450, 107.7547], isFloodPredicted: true, curahHujan: "75 mm/jam", ketinggianAir: "100 cm" },
-];
 
 const LayerOption = ({ active, onClick, image, label, icon }: LayerOptionProps) => (
   <button 
@@ -89,7 +100,7 @@ const MapController: React.FC<MapControllerProps> = ({
   const toggleBoundaryMenu = () => { setShowBoundaryMenu(!showBoundaryMenu); setShowLayerMenu(false); };
 
   return (
-    <div className="absolute bottom-6 right-4 md:bottom-8 md:right-6 flex flex-col gap-2 items-end font-sans pointer-events-none" style={{ zIndex: 1000 }}>
+    <div className="absolute bottom-6 right-4 md:bottom-8 md:right-6 flex flex-col gap-2 items-end font-sans pointer-events-auto" style={{ zIndex: 1000 }}>
       <div className="relative pointer-events-auto flex justify-end group">
         {showLayerMenu && (
           <div className="absolute bottom-full right-0 mb-3 md:right-full md:bottom-0 md:mb-0 md:mr-3 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 w-52 animate-in fade-in zoom-in-95 duration-200 md:origin-bottom-right origin-bottom">
@@ -143,7 +154,7 @@ const ZoomHandler = ({ setZoomMethods }: { setZoomMethods: (methods: ZoomMethods
   return null;
 };
 
-const FloodMap = () => {
+const FloodMap = ({ predictionData }: FloodMapProps) => {
   const centerPosition: [number, number] = [-6.9800, 107.6200]; 
   const [activeLayer, setActiveLayer] = useState('osm');
   const [zoomHandlers, setZoomHandlers] = useState<ZoomMethods | null>(null);
@@ -186,8 +197,12 @@ const FloodMap = () => {
     }
   }, [showLabelKecamatan]);
 
-  const getCustomIcon = useCallback((isFloodPredicted: boolean) => {
-    const bgColor = isFloodPredicted ? "bg-red-600" : "bg-emerald-500";
+  // Pewarnaan pin berbasis response kelas multiclass dari model AI Flask
+  const getCustomIcon = useCallback((status: "normal" | "waspada" | "siaga" | "awas") => {
+    let bgColor = "bg-emerald-500"; // Default: Normal (Aman)
+    if (status === "waspada") bgColor = "bg-amber-500";
+    if (status === "siaga" || status === "awas") bgColor = "bg-red-600";
+
     const iconHtml = renderToString(<CloudRain size={18} className="text-white" strokeWidth={2} />);
     return L.divIcon({
       className: "custom-marker",
@@ -217,26 +232,32 @@ const FloodMap = () => {
           <GeoJSON key={`kec-${showKecamatan}-${showLabelKecamatan}`} data={kecData} style={styleKecamatan} onEachFeature={onEachKecamatan} />
         )}
 
-        {PREDICTION_DATA.map((loc) => (
-          <Marker key={loc.id} position={loc.coords as [number, number]} icon={getCustomIcon(loc.isFloodPredicted)}>
+        {/* Pemetaan Data Live Terintegrasi Server */}
+        {predictionData.map((loc) => (
+          <Marker key={loc.id} position={loc.coords} icon={getCustomIcon(loc.status)}>
             <Popup closeButton={false} autoPan={false} className="custom-leaflet-popup">
               <div className="flex flex-col w-52 bg-white rounded-xl p-4 gap-4">
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-bold text-slate-900 text-lg leading-tight">{loc.name}</h3>
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md self-start ${loc.isFloodPredicted ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                    {loc.isFloodPredicted ? <AlertTriangle size={14} strokeWidth={2.5}/> : <ShieldCheck size={14} strokeWidth={2.5}/>}
-                    <span className="text-[11px] font-bold uppercase tracking-wide">{loc.isFloodPredicted ? "Waspada Banjir" : "Terpantau Aman"}</span>
+                  <h3 className="font-bold text-slate-900 text-lg leading-tight">{loc.area}</h3>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md self-start ${
+                    loc.status === "normal" ? 'bg-emerald-50 text-emerald-700' :
+                    loc.status === "waspada" ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                  }`}>
+                    {loc.status === "normal" ? <ShieldCheck size={14} strokeWidth={2.5}/> : <AlertTriangle size={14} strokeWidth={2.5}/>}
+                    <span className="text-[11px] font-bold uppercase tracking-wide">
+                      {loc.status === "normal" ? "Terpantau Aman" : `${loc.status} banjir`}
+                    </span>
                   </div>
                 </div>
                 <div className="w-full h-px bg-slate-100"></div>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-slate-500"><CloudRain size={16} strokeWidth={2} /><span className="text-xs font-semibold">Curah Hujan</span></div>
-                    <span className="text-sm font-bold text-slate-900">{loc.curahHujan}</span>
+                    <span className="text-sm font-bold text-slate-900">{loc.rainfall}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-slate-500"><Droplets size={16} strokeWidth={2} /><span className="text-xs font-semibold">Tinggi Air</span></div>
-                    <span className="text-sm font-bold text-slate-900">{loc.ketinggianAir}</span>
+                    <span className="text-sm font-bold text-slate-900">{loc.waterLevel}</span>
                   </div>
                 </div>
               </div>
@@ -278,4 +299,4 @@ const FloodMap = () => {
   );
 };
 
-export default React.memo(FloodMap)
+export default React.memo(FloodMap);

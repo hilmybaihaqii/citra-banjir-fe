@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  Search, 
-  History, 
-  FileSpreadsheet, 
-  Loader2, 
-  CheckCircle2, 
-  XCircle 
+import {
+  Search,
+  History,
+  FileSpreadsheet,
+  Loader2,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Outfit } from "next/font/google";
@@ -38,7 +38,11 @@ export default function LogAktivitasBBWSPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Toast Notification State
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
@@ -46,7 +50,10 @@ export default function LogAktivitasBBWSPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
@@ -67,9 +74,12 @@ export default function LogAktivitasBBWSPage() {
       if (res.ok) {
         const data = await res.json();
         const logsData: LogData[] = data.data?.items || data.data || data || [];
-        
+
         // Urutkan dari log terbaru ke terlama
-        logsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        logsData.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         setLogs(logsData);
       } else {
         throw new Error("Gagal mengambil data dari server");
@@ -125,7 +135,7 @@ export default function LogAktivitasBBWSPage() {
   const filteredLogs = logs.filter((log) => {
     const userName = log.user?.name || "Sistem";
     const searchLower = searchQuery.toLowerCase();
-    
+
     return (
       userName.toLowerCase().includes(searchLower) ||
       log.action.toLowerCase().includes(searchLower) ||
@@ -162,16 +172,25 @@ export default function LogAktivitasBBWSPage() {
   const formatDate = (isoString: string) => {
     if (!isoString) return "-";
     const dateObj = new Date(isoString);
-    return dateObj.toLocaleDateString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
-    }).replace(".", ":") + " WIB";
+    return (
+      dateObj
+        .toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        .replace(".", ":") + " WIB"
+    );
   };
 
   if (!isMounted) return null;
 
   return (
-    <div className={`flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto relative animate-in fade-in duration-500 ${outfit.className}`}>
-      
+    <div
+      className={`flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto relative animate-in fade-in duration-500 ${outfit.className}`}
+    >
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast.show && (
@@ -202,7 +221,8 @@ export default function LogAktivitasBBWSPage() {
             Log Aktivitas BBWS
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
-            Riwayat pembaruan TMA, debit sungai, dan transaksi sistem BBWS Citarum.
+            Riwayat pembaruan TMA, debit sungai, dan transaksi sistem BBWS
+            Citarum.
           </p>
         </div>
 
@@ -267,8 +287,13 @@ export default function LogAktivitasBBWSPage() {
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <Loader2 size={32} className="animate-spin text-blue-600" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Memuat Riwayat Aktivitas...</span>
+                      <Loader2
+                        size={32}
+                        className="animate-spin text-blue-600"
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Memuat Riwayat Aktivitas...
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -301,8 +326,12 @@ export default function LogAktivitasBBWSPage() {
                     </td>
 
                     <td className="p-4">
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">{log.user?.name || "Sistem BBWS"}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">{log.user?.agency?.replace("_", " ") || "BBWS CITARUM"}</p>
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">
+                        {log.user?.name || "Sistem BBWS"}
+                      </p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">
+                        {log.user?.agency?.replace("_", " ") || "BBWS CITARUM"}
+                      </p>
                     </td>
                   </tr>
                 ))
@@ -327,7 +356,9 @@ export default function LogAktivitasBBWSPage() {
         {/* FOOTER / PAGINATION */}
         <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-            Menampilkan <span className="text-blue-950">{filteredLogs.length}</span> log aktivitas BBWS
+            Menampilkan{" "}
+            <span className="text-blue-950">{filteredLogs.length}</span> log
+            aktivitas BBWS
           </p>
           <div className="flex w-full gap-2 sm:w-auto">
             <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">

@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Loader2,
   Eye,
-  EyeOff
+  EyeOff,
 } from "lucide-react";
 import { Outfit } from "next/font/google";
 import Cookies from "js-cookie";
@@ -24,17 +24,17 @@ const outfit = Outfit({
 });
 
 const AGENCIES: Record<string, string> = {
-  "CITRA_BANJIR": "Citra Banjir Pusat",
-  "BBWS": "BBWS Citarum",
-  "BPBD_JABAR": "BPBD Provinsi Jawa Barat",
-  "BPBD_KAB": "BPBD Kab. Bandung",
-  "BMKG": "BMKG Jawa Barat",
+  CITRA_BANJIR: "Citra Banjir Pusat",
+  BBWS: "BBWS Citarum",
+  BPBD_JABAR: "BPBD Provinsi Jawa Barat",
+  BPBD_KAB: "BPBD Kab. Bandung",
+  BMKG: "BMKG Jawa Barat",
 };
 
 export default function BPBDKabSettings() {
   const [isMounted, setIsMounted] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  
+
   const [userData, setUserData] = useState<{
     id: number;
     email: string;
@@ -48,7 +48,7 @@ export default function BPBDKabSettings() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [nameForm, setNameForm] = useState("");
   const [passwordForm, setPasswordForm] = useState({
     new: "",
@@ -56,7 +56,11 @@ export default function BPBDKabSettings() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
@@ -64,14 +68,17 @@ export default function BPBDKabSettings() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
 
   useEffect(() => {
     setIsMounted(true);
-    
+
     const fetchProfile = async () => {
       // GANTI: Membaca session dari Cookies, bukan localStorage
       const savedUserStr = Cookies.get("user_session");
@@ -80,7 +87,7 @@ export default function BPBDKabSettings() {
       if (savedUserStr && token) {
         try {
           const parsedUser = JSON.parse(savedUserStr);
-          
+
           const res = await fetch(`${baseUrl}/users/${parsedUser.id}`, {
             method: "GET",
             headers: {
@@ -95,9 +102,11 @@ export default function BPBDKabSettings() {
             const freshUser = responseData.data;
             setUserData(freshUser);
             setNameForm(freshUser.name || "");
-            
+
             // GANTI: Menyimpan session terbaru ke Cookies
-            Cookies.set("user_session", JSON.stringify(freshUser), { path: "/" });
+            Cookies.set("user_session", JSON.stringify(freshUser), {
+              path: "/",
+            });
           } else {
             setUserData(parsedUser);
             setNameForm(parsedUser.name || "");
@@ -131,25 +140,27 @@ export default function BPBDKabSettings() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: nameForm }), 
+        body: JSON.stringify({ name: nameForm }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal memperbarui nama.");
+      if (!res.ok || !data.success)
+        throw new Error(data.message || "Gagal memperbarui nama.");
 
       const updatedUser = { ...userData, name: nameForm };
       setUserData(updatedUser);
-      
+
       // GANTI: Update cookie agar nama baru terbaca oleh Layout/Header
       Cookies.set("user_session", JSON.stringify(updatedUser), { path: "/" });
 
       setIsProfileModalOpen(false);
       showToast("Nama berhasil diperbarui.", "success");
-      
+
       // Opsional: Reload otomatis halaman jika ingin sidebar langsung terupdate 100%
-      // window.location.reload(); 
+      // window.location.reload();
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
+      const errMsg =
+        error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
       showToast(errMsg, "error");
     } finally {
       setIsSaving(false);
@@ -174,16 +185,18 @@ export default function BPBDKabSettings() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ password: passwordForm.new }), 
+        body: JSON.stringify({ password: passwordForm.new }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal memperbarui password.");
+      if (!res.ok || !data.success)
+        throw new Error(data.message || "Gagal memperbarui password.");
 
       closePasswordModal();
       showToast("Password berhasil diperbarui.", "success");
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
+      const errMsg =
+        error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
       showToast(errMsg, "error");
     } finally {
       setIsSaving(false);
@@ -205,15 +218,18 @@ export default function BPBDKabSettings() {
 
   if (isLoadingData || !userData) {
     return (
-      <div className={`flex h-full w-full items-center justify-center ${outfit.className}`}>
+      <div
+        className={`flex h-full w-full items-center justify-center ${outfit.className}`}
+      >
         <LoadingSpinner message="Memuat profil..." />
       </div>
     );
   }
 
   return (
-    <div className={`mx-auto flex w-full max-w-xl flex-col pb-12 lg:pb-8 relative ${outfit.className}`}>
-      
+    <div
+      className={`mx-auto flex w-full max-w-xl flex-col pb-12 lg:pb-8 relative ${outfit.className}`}
+    >
       <AnimatePresence>
         {toast.show && (
           <motion.div
@@ -291,7 +307,9 @@ export default function BPBDKabSettings() {
                 Instansi
               </p>
               <p className="text-sm font-medium text-slate-700">
-                {userData.agency ? (AGENCIES[userData.agency] || userData.agency) : "BPBD Kabupaten Bandung"}
+                {userData.agency
+                  ? AGENCIES[userData.agency] || userData.agency
+                  : "BPBD Kabupaten Bandung"}
               </p>
             </div>
           </div>
@@ -368,7 +386,11 @@ export default function BPBDKabSettings() {
                   disabled={isSaving}
                   className="flex min-w-22.5 items-center justify-center gap-2 rounded-sm bg-slate-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-70"
                 >
-                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : "Simpan"}
+                  {isSaving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    "Simpan"
+                  )}
                 </button>
               </div>
             </form>
@@ -394,7 +416,7 @@ export default function BPBDKabSettings() {
                 <X size={18} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSavePassword} className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs text-slate-500">
@@ -437,7 +459,11 @@ export default function BPBDKabSettings() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                   >
-                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -456,7 +482,11 @@ export default function BPBDKabSettings() {
                   disabled={isSaving}
                   className="flex min-w-22.5 items-center justify-center gap-2 rounded-sm bg-slate-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-70"
                 >
-                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : "Simpan"}
+                  {isSaving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    "Simpan"
+                  )}
                 </button>
               </div>
             </form>

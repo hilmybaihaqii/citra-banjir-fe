@@ -179,7 +179,7 @@ export default function BMKGLayout({
             </button>
           </Link>
 
-          {/* MENU BARU: WILAYAH PANTAUAN */}
+          {/* MENU BARU: WILAYAH PANTAUAN
           <Link href="/dashboard/bmkg/wilayah" className="block" onClick={() => setIsSidebarOpen(false)}>
             <button className={isActive("/dashboard/bmkg/wilayah") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ export default function BMKGLayout({
               </div>
               {isActive("/dashboard/bmkg/wilayah") && <ChevronRight size={14} />}
             </button>
-          </Link>
+          </Link> */}
 
           <div className="mt-6 border-t border-white/10 pt-4">
             <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-blue-400">

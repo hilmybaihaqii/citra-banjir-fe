@@ -289,7 +289,7 @@ export default function ManajemenUserBMKG() {
                       size={32}
                     />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                      Memuat data pengguna...
+                      Loading All Users...
                     </span>
                   </td>
                 </tr>

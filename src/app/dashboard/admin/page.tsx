@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Users,
-  MessageSquare,
-  Calendar,
-  Loader2,
-} from "lucide-react";
+import { Users, MessageSquare, Calendar, Loader2 } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -43,9 +38,11 @@ export default function AdminMainDashboard() {
     BPBD_KAB: 0,
     BPBD_JABAR: 0,
   });
-  
+
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [chartData, setChartData] = useState<{ tanggal: string; laporan: number }[]>([]);
+  const [chartData, setChartData] = useState<
+    { tanggal: string; laporan: number }[]
+  >([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -60,7 +57,7 @@ export default function AdminMainDashboard() {
         day: "numeric",
         month: "long",
         year: "numeric",
-      })
+      }),
     );
 
     const end = new Date();
@@ -91,20 +88,27 @@ export default function AdminMainDashboard() {
 
       const [resUsers, resFeedbacks] = await Promise.all([
         fetch(`${API_URL}/users`, { method: "GET", headers }),
-        fetch(`${API_URL}/feedback?limit=1000`, { method: "GET", headers }), 
+        fetch(`${API_URL}/feedback?limit=1000`, { method: "GET", headers }),
       ]);
 
       if (resUsers.ok) {
         const dataUsers = await resUsers.json();
-        const usersArray: User[] = dataUsers.data?.items || dataUsers.data || [];
+        const usersArray: User[] =
+          dataUsers.data?.items || dataUsers.data || [];
         setUsersCount(usersArray.length);
 
-        const stats = { CITRA_BANJIR: 0, BBWS: 0, BMKG: 0, BPBD_KAB: 0, BPBD_JABAR: 0 };
+        const stats = {
+          CITRA_BANJIR: 0,
+          BBWS: 0,
+          BMKG: 0,
+          BPBD_KAB: 0,
+          BPBD_JABAR: 0,
+        };
         usersArray.forEach((u) => {
           if (u.agency && stats[u.agency as keyof typeof stats] !== undefined) {
             stats[u.agency as keyof typeof stats]++;
           } else if (u.agency === "SYSTEM" || !u.agency) {
-             stats.CITRA_BANJIR++;
+            stats.CITRA_BANJIR++;
           }
         });
         setAgencyStats(stats);
@@ -112,7 +116,8 @@ export default function AdminMainDashboard() {
 
       if (resFeedbacks.ok) {
         const dataFeedbacks = await resFeedbacks.json();
-        const feedbacksArray = dataFeedbacks.data?.items || dataFeedbacks.data || [];
+        const feedbacksArray =
+          dataFeedbacks.data?.items || dataFeedbacks.data || [];
         setFeedbacks(feedbacksArray);
       }
     } catch (error) {
@@ -138,7 +143,10 @@ export default function AdminMainDashboard() {
     const dateRange: { tanggal: string; rawDate: Date; laporan: number }[] = [];
     for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
       dateRange.push({
-        tanggal: dt.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
+        tanggal: dt.toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+        }),
         rawDate: new Date(dt),
         laporan: 0,
       });
@@ -147,13 +155,18 @@ export default function AdminMainDashboard() {
     feedbacks.forEach((fb) => {
       const fbDate = new Date(fb.createdAt);
       if (fbDate >= start && fbDate <= end) {
-        const formattedDate = fbDate.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+        const formattedDate = fbDate.toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+        });
         const targetDay = dateRange.find((d) => d.tanggal === formattedDate);
         if (targetDay) targetDay.laporan += 1;
       }
     });
 
-    setChartData(dateRange.map(({ tanggal, laporan }) => ({ tanggal, laporan })));
+    setChartData(
+      dateRange.map(({ tanggal, laporan }) => ({ tanggal, laporan })),
+    );
   }, [startDate, endDate, feedbacks]);
 
   if (!isMounted) return null;
@@ -181,38 +194,51 @@ export default function AdminMainDashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-          
+
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               Pengguna Sistem
             </p>
             <Users size={20} className="text-emerald-500" />
           </div>
-          
+
           <div className="flex items-baseline gap-2 mb-6">
             <h3 className="text-4xl font-black text-blue-950">
-              {isLoading ? <Loader2 className="animate-spin inline text-slate-300" /> : usersCount}
+              {isLoading ? (
+                <Loader2 className="animate-spin inline text-slate-300" />
+              ) : (
+                usersCount
+              )}
             </h3>
-            <span className="text-xs font-bold uppercase text-slate-400">Akun Terdaftar</span>
+            <span className="text-xs font-bold uppercase text-slate-400">
+              Akun Terdaftar
+            </span>
           </div>
 
           <div className="mt-auto">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 border-t border-slate-100 pt-4">Rincian Instansi</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 border-t border-slate-100 pt-4">
+              Rincian Instansi
+            </p>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> BMKG ({agencyStats.BMKG})
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> BMKG (
+                {agencyStats.BMKG})
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> BBWS ({agencyStats.BBWS})
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> BBWS
+                ({agencyStats.BBWS})
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-bold text-orange-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> BPBD KAB ({agencyStats.BPBD_KAB})
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> BPBD
+                KAB ({agencyStats.BPBD_KAB})
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> BPBD JABAR ({agencyStats.BPBD_JABAR})
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> BPBD
+                JABAR ({agencyStats.BPBD_JABAR})
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-950" /> PUSAT ({agencyStats.CITRA_BANJIR})
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-950" />{" "}
+                PUSAT ({agencyStats.CITRA_BANJIR})
               </span>
             </div>
           </div>
@@ -220,57 +246,70 @@ export default function AdminMainDashboard() {
 
         <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-amber-400" />
-          
+
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               Total Saran Masuk
             </p>
             <MessageSquare size={20} className="text-amber-500" />
           </div>
-          
+
           <div className="flex items-baseline gap-2 mb-6">
             <h3 className="text-4xl font-black text-blue-950">
-              {isLoading ? <Loader2 className="animate-spin inline text-slate-300" /> : feedbacks.length}
+              {isLoading ? (
+                <Loader2 className="animate-spin inline text-slate-300" />
+              ) : (
+                feedbacks.length
+              )}
             </h3>
-            <span className="text-xs font-bold uppercase text-slate-400">Pesan Warga</span>
+            <span className="text-xs font-bold uppercase text-slate-400">
+              Pesan Warga
+            </span>
           </div>
 
           <div className="mt-auto border-t border-slate-100 pt-4 flex items-center gap-4">
-             <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Belum Dibaca</p>
-                <p className="text-lg font-black text-rose-600">{isLoading ? "-" : unreadFeedbacks}</p>
-             </div>
-             <div className="w-px h-8 bg-slate-200"></div>
-             <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sudah Dibaca</p>
-                <p className="text-lg font-black text-emerald-600">{isLoading ? "-" : feedbacks.length - unreadFeedbacks}</p>
-             </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Belum Dibaca
+              </p>
+              <p className="text-lg font-black text-rose-600">
+                {isLoading ? "-" : unreadFeedbacks}
+              </p>
+            </div>
+            <div className="w-px h-8 bg-slate-200"></div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Sudah Dibaca
+              </p>
+              <p className="text-lg font-black text-emerald-600">
+                {isLoading ? "-" : feedbacks.length - unreadFeedbacks}
+              </p>
+            </div>
           </div>
         </div>
-
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm lg:p-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-black uppercase tracking-widest text-blue-950 flex items-center gap-2">
-                Laporan Masuk
+              Laporan Masuk
             </h3>
             <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Statistik pengaduan berdasarkan rentang tanggal
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-950 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
             />
             <span className="text-slate-400 font-bold">-</span>
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={endDate}
               min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -278,12 +317,14 @@ export default function AdminMainDashboard() {
             />
           </div>
         </div>
-        
+
         <div className="h-72 w-full">
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-3">
               <Loader2 className="animate-spin" size={32} />
-              <span className="text-xs font-bold uppercase tracking-widest">Memproses Grafik...</span>
+              <span className="text-xs font-bold uppercase tracking-widest">
+                Memproses Grafik...
+              </span>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -313,10 +354,19 @@ export default function AdminMainDashboard() {
                   dx={-10}
                   allowDecimals={false}
                 />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#1e3a8a', fontWeight: 'bold' }}
-                  labelStyle={{ color: '#64748b', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  }}
+                  itemStyle={{ color: "#1e3a8a", fontWeight: "bold" }}
+                  labelStyle={{
+                    color: "#64748b",
+                    fontWeight: "bold",
+                    fontSize: "12px",
+                    marginBottom: "4px",
+                  }}
                 />
                 <Area
                   type="monotone"

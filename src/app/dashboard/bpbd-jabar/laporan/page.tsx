@@ -11,11 +11,13 @@ import {
   XCircle,
   Loader2,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
-import ReportDetailModal, { EmergencyReport } from "@/components/ui/ReportDetailModal";
+import ReportDetailModal, {
+  EmergencyReport,
+} from "@/components/ui/ReportDetailModal";
 
 type TabType = "SEMUA" | "BARU" | "DIPROSES" | "SELESAI";
 
@@ -27,7 +29,7 @@ interface RawReportData {
   createdAt?: string;
   date?: string;
   status?: string;
-  imageUrl?: string; 
+  imageUrl?: string;
 }
 
 export default function BPBDLaporanPage() {
@@ -37,12 +39,20 @@ export default function BPBDLaporanPage() {
   const [activeTab, setActiveTab] = useState<TabType>("BARU");
   const [isMounted, setIsMounted] = useState(false);
 
-  const [selectedReport, setSelectedReport] = useState<EmergencyReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<EmergencyReport | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<EmergencyReport | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EmergencyReport | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
@@ -50,7 +60,10 @@ export default function BPBDLaporanPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
@@ -68,15 +81,16 @@ export default function BPBDLaporanPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const data = await res.json();
-      
+
       if (res.ok) {
-        const rawData: RawReportData[] = data.data?.items || data.data || data || [];
-        
+        const rawData: RawReportData[] =
+          data.data?.items || data.data || data || [];
+
         const mappedReports: EmergencyReport[] = rawData.map((item) => {
           const impactStr = item.impact || "";
-          
+
           const severityMatch = impactStr.match(/\[Prioritas:\s*(.*?)\]/i);
           const waterMatch = impactStr.match(/\[Ketinggian Air:\s*(.*?)\]/i);
           const phoneMatch = impactStr.match(/\[Nomor HP:\s*(.*?)\]/i);
@@ -89,10 +103,16 @@ export default function BPBDLaporanPage() {
             return "Baru";
           };
 
-          const formattedDate = item.createdAt 
-            ? new Date(item.createdAt).toLocaleDateString("id-ID", { 
-                day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" 
-              }).replace(".", ":") + " WIB"
+          const formattedDate = item.createdAt
+            ? new Date(item.createdAt)
+                .toLocaleDateString("id-ID", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .replace(".", ":") + " WIB"
             : "-";
 
           return {
@@ -131,7 +151,9 @@ export default function BPBDLaporanPage() {
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isModalOpen, deleteTarget]);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -148,12 +170,19 @@ export default function BPBDLaporanPage() {
 
       if (!res.ok) throw new Error("Gagal mengubah status laporan");
 
-      setReports((prev) => 
-        prev.map((r) => (r.id === id ? { ...r, status: newStatus as EmergencyReport["status"] } : r))
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? { ...r, status: newStatus as EmergencyReport["status"] }
+            : r,
+        ),
       );
-      
+
       if (selectedReport && selectedReport.id === id) {
-        setSelectedReport({ ...selectedReport, status: newStatus as EmergencyReport["status"] });
+        setSelectedReport({
+          ...selectedReport,
+          status: newStatus as EmergencyReport["status"],
+        });
       }
 
       showToast("Status laporan berhasil diperbarui!", "success");
@@ -177,7 +206,7 @@ export default function BPBDLaporanPage() {
 
       setReports((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
-      
+
       if (selectedReport?.id === deleteTarget.id) {
         setIsModalOpen(false);
       }
@@ -192,7 +221,8 @@ export default function BPBDLaporanPage() {
 
   const filteredReports = reports.filter((r) => {
     const reportStatus = r.status?.toUpperCase() || "BARU";
-    const matchesTab = activeTab === "SEMUA" ? true : reportStatus === activeTab;
+    const matchesTab =
+      activeTab === "SEMUA" ? true : reportStatus === activeTab;
     const matchesSearch =
       r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -203,27 +233,37 @@ export default function BPBDLaporanPage() {
   const getSeverityColor = (severity: string) => {
     const sv = severity?.toLowerCase();
     switch (sv) {
-      case "tinggi": return "bg-rose-50 text-rose-700 border-rose-200";
-      case "sedang": return "bg-amber-50 text-amber-700 border-amber-200";
-      case "rendah": return "bg-emerald-50 text-emerald-700 border-emerald-200";
-      default: return "bg-slate-50 text-slate-700 border-slate-200";
+      case "tinggi":
+        return "bg-rose-50 text-rose-700 border-rose-200";
+      case "sedang":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "rendah":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
   const getStatusColor = (status: string) => {
     const st = status?.toUpperCase();
     switch (st) {
-      case "BARU": return "bg-rose-500 text-white";
-      case "DIPROSES": return "bg-amber-500 text-white";
-      case "SELESAI": return "bg-emerald-500 text-white";
-      default: return "bg-slate-500 text-white";
+      case "BARU":
+        return "bg-rose-500 text-white";
+      case "DIPROSES":
+        return "bg-amber-500 text-white";
+      case "SELESAI":
+        return "bg-emerald-500 text-white";
+      default:
+        return "bg-slate-500 text-white";
     }
   };
 
   const formatDate = (isoString: string) => {
     if (!isoString) return "-";
-    const parts = isoString.split(' ');
-    return parts.length > 0 ? parts[0] + " " + parts[1] + " " + parts[2] : isoString;
+    const parts = isoString.split(" ");
+    return parts.length > 0
+      ? parts[0] + " " + parts[1] + " " + parts[2]
+      : isoString;
   };
 
   const TABS: TabType[] = ["SEMUA", "BARU", "DIPROSES", "SELESAI"];
@@ -232,7 +272,6 @@ export default function BPBDLaporanPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto relative animate-in fade-in duration-500">
-      
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast.show && (
@@ -268,7 +307,10 @@ export default function BPBDLaporanPage() {
         </div>
 
         <div className="relative w-full shrink-0 sm:w-72">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+          />
           <input
             type="text"
             placeholder="Cari ID, Pelapor, Lokasi..."
@@ -282,11 +324,12 @@ export default function BPBDLaporanPage() {
       {/* TABS NAVIGATION */}
       <div className="flex border-b border-slate-200 gap-4 sm:gap-6 overflow-x-auto custom-scrollbar">
         {TABS.map((tab) => {
-          const count = tab === "SEMUA" 
-            ? reports.length 
-            : reports.filter((r) => r.status?.toUpperCase() === tab).length;
+          const count =
+            tab === "SEMUA"
+              ? reports.length
+              : reports.filter((r) => r.status?.toUpperCase() === tab).length;
           const isActive = activeTab === tab;
-          
+
           return (
             <button
               key={tab}
@@ -298,7 +341,9 @@ export default function BPBDLaporanPage() {
               }`}
             >
               {tab}
-              <span className={`px-2 py-0.5 rounded-full text-[9px] ${isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-500'}`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[9px] ${isActive ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}
+              >
                 {count}
               </span>
             </button>
@@ -312,21 +357,40 @@ export default function BPBDLaporanPage() {
           <table className="w-full min-w-225 border-collapse text-left">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
-                <th className="w-16 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">No</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">ID / Pelapor</th>
-                <th className="w-72 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Lokasi Terdampak</th>
-                <th className="w-24 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Bukti</th>
-                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Dampak</th>
-                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
-                <th className="w-28 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Aksi</th>
+                <th className="w-16 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  No
+                </th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  ID / Pelapor
+                </th>
+                <th className="w-72 p-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Lokasi Terdampak
+                </th>
+                <th className="w-24 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Bukti
+                </th>
+                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Dampak
+                </th>
+                <th className="w-32 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Status
+                </th>
+                <th className="w-28 p-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Aksi
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-20 text-center">
-                    <Loader2 className="mx-auto mb-3 animate-spin text-blue-600" size={32} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sinkronisasi Laporan...</span>
+                    <Loader2
+                      className="mx-auto mb-3 animate-spin text-blue-600"
+                      size={32}
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      Sinkronisasi Laporan...
+                    </span>
                   </td>
                 </tr>
               ) : filteredReports.length > 0 ? (
@@ -334,21 +398,31 @@ export default function BPBDLaporanPage() {
                   <tr
                     key={report.id}
                     className={`group transition-colors hover:bg-slate-50/80 ${
-                      report.status?.toUpperCase() === "BARU" ? "bg-rose-50/30" : ""
+                      report.status?.toUpperCase() === "BARU"
+                        ? "bg-rose-50/30"
+                        : ""
                     }`}
                   >
-                    <td className="p-4 text-center text-sm font-bold text-slate-400 whitespace-nowrap">{index + 1}</td>
+                    <td className="p-4 text-center text-sm font-bold text-slate-400 whitespace-nowrap">
+                      {index + 1}
+                    </td>
                     <td className="p-4">
                       <p className="text-[10px] font-bold text-slate-400 mb-1 tracking-wider">
                         #{report.id} • {formatDate(report.date)}
                       </p>
-                      <p className="text-sm font-black uppercase text-blue-950 line-clamp-1">{report.name}</p>
+                      <p className="text-sm font-black uppercase text-blue-950 line-clamp-1">
+                        {report.name}
+                      </p>
                       <p className="mt-1 text-[10px] font-bold tracking-widest text-slate-500 flex items-center gap-1.5">
-                        <Phone size={12} className="text-slate-400" /> {report.phone}
+                        <Phone size={12} className="text-slate-400" />{" "}
+                        {report.phone}
                       </p>
                     </td>
                     <td className="p-4">
-                      <p className="text-xs font-bold text-slate-600 line-clamp-2 leading-relaxed" title={report.location}>
+                      <p
+                        className="text-xs font-bold text-slate-600 line-clamp-2 leading-relaxed"
+                        title={report.location}
+                      >
                         {report.location}
                       </p>
                     </td>
@@ -356,19 +430,27 @@ export default function BPBDLaporanPage() {
                       {report.imageUrl ? (
                         <div className="flex flex-col items-center justify-center text-blue-600">
                           <ImageIcon size={18} />
-                          <span className="text-[9px] font-bold mt-1">Lampiran</span>
+                          <span className="text-[9px] font-bold mt-1">
+                            Lampiran
+                          </span>
                         </div>
                       ) : (
-                        <span className="text-[10px] font-bold text-slate-400">-</span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          -
+                        </span>
                       )}
                     </td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-widest ${getSeverityColor(report.severity)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-md border text-[9px] font-black uppercase tracking-widest ${getSeverityColor(report.severity)}`}
+                      >
                         {report.severity || "-"}
                       </span>
                     </td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex min-w-20 items-center justify-center rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm ${getStatusColor(report.status)}`}>
+                      <span
+                        className={`inline-flex min-w-20 items-center justify-center rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm ${getStatusColor(report.status)}`}
+                      >
                         {report.status || "BARU"}
                       </span>
                     </td>
@@ -402,7 +484,13 @@ export default function BPBDLaporanPage() {
                       <div className="p-4 bg-slate-100 rounded-full mb-3">
                         <MessageSquare size={32} className="text-slate-300" />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest">Tidak ada laporan untuk tab <strong className="text-blue-950 uppercase">{activeTab}</strong>.</span>
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Tidak ada laporan untuk tab{" "}
+                        <strong className="text-blue-950 uppercase">
+                          {activeTab}
+                        </strong>
+                        .
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -410,11 +498,15 @@ export default function BPBDLaporanPage() {
             </tbody>
           </table>
         </div>
-        
+
         {/* FOOTER */}
         <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:gap-0">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 text-center sm:text-left">
-            Menampilkan <span className="font-black text-blue-950">{filteredReports.length}</span> laporan
+            Menampilkan{" "}
+            <span className="font-black text-blue-950">
+              {filteredReports.length}
+            </span>{" "}
+            laporan
           </p>
           <div className="flex w-full gap-2 sm:w-auto justify-center">
             <button className="flex-1 cursor-not-allowed rounded-md border border-slate-200 bg-slate-100 px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all sm:flex-none">
@@ -436,7 +528,9 @@ export default function BPBDLaporanPage() {
         }}
         onUpdateStatus={handleUpdateStatus}
         onDelete={(id) => {
-          const report = reports.find(r => r.id === id || r.id === String(id));
+          const report = reports.find(
+            (r) => r.id === id || r.id === String(id),
+          );
           if (report) setDeleteTarget(report);
         }}
       />
@@ -452,7 +546,7 @@ export default function BPBDLaporanPage() {
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-rose-600">
                 <div className="p-1.5 bg-rose-100 rounded-md">
-                  <Trash2 size={16} /> 
+                  <Trash2 size={16} />
                 </div>
                 KONFIRMASI HAPUS
               </h3>
@@ -467,8 +561,17 @@ export default function BPBDLaporanPage() {
 
             <div className="p-6">
               <p className="text-sm font-medium text-slate-600 leading-relaxed">
-                Apakah Anda yakin ingin menghapus laporan <span className="font-black uppercase text-blue-950">#{deleteTarget.id}</span> dari pelapor <span className="font-bold text-blue-950">{deleteTarget.name}</span>? 
-                <br/><br/>
+                Apakah Anda yakin ingin menghapus laporan{" "}
+                <span className="font-black uppercase text-blue-950">
+                  #{deleteTarget.id}
+                </span>{" "}
+                dari pelapor{" "}
+                <span className="font-bold text-blue-950">
+                  {deleteTarget.name}
+                </span>
+                ?
+                <br />
+                <br />
                 Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
               </p>
             </div>

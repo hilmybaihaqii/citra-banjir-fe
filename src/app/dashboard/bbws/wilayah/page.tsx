@@ -2,22 +2,47 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { 
-  Save, 
-  RefreshCcw, 
-  CheckCircle2, 
-  XCircle, 
-  X, 
-  Loader2, 
-  List, 
-  Trash2, 
-  Edit2, 
-  MapPin 
+import Cookies from "js-cookie";
+import {
+  Save,
+  RefreshCcw,
+  CheckCircle2,
+  XCircle,
+  X,
+  Loader2,
+  List,
+  Trash2,
+  Edit2,
+  MapPin,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// PERBAIKAN: Import RegionMapPicker, bukan PosMapPicker
 import { RegionData } from "@/components/ui/map-picker/RegionMapPicker";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// Interface respons data dari Backend
+interface WilayahPantauanResponse {
+  id: string | number;
+  nama: string;
+  latitude: string | number;
+  longitude: string | number;
+}
+
+// Fungsi pembantu untuk menyisipkan Token Otorisasi dari Cookies
+const getAuthHeaders = (contentType = false) => {
+  const token = Cookies.get("auth_token");
+  const headers: Record<string, string> = {};
+
+  if (contentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return headers;
+};
 
 const RegionMapPicker = dynamic(
   () => import("@/components/ui/map-picker/RegionMapPicker"),
@@ -31,7 +56,7 @@ const RegionMapPicker = dynamic(
         </p>
       </div>
     ),
-  }
+  },
 );
 
 export default function BBWSWilayahPage() {
@@ -39,7 +64,6 @@ export default function BBWSWilayahPage() {
   const [rawRegions, setRawRegions] = useState<RegionData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [editingId, setEditingId] = useState<string | number | null>(null);
 
   const [toast, setToast] = useState<{
@@ -63,42 +87,53 @@ export default function BBWSWilayahPage() {
     [],
   );
 
-  const fetchRegions = useCallback(() => {
+  // MENGAMBIL DATA (GET)
+  const fetchRegions = useCallback(async () => {
     setIsLoading(true);
-    // --- MODE FE ONLY: Simulasi loading data dari server ---
-    setTimeout(() => {
-      setRawRegions([
-        {
-          id: 1,
-          regionName: "Baleendah",
-          latitude: -6.9943,
-          longitude: 107.63,
-        },
-        {
-          id: 2,
-          regionName: "Dayeuhkolot",
-          latitude: -6.985,
-          longitude: 107.628,
-        },
-      ]);
+    try {
+      const response = await fetch(`${API_BASE_URL}/wilayah-pantauan`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) throw new Error("Gagal mengambil data wilayah");
+
+      const data = await response.json();
+      const actualArray = Array.isArray(data)
+        ? data
+        : data.data || data.results || [];
+
+      const formattedRegions: RegionData[] = actualArray.map(
+        (item: WilayahPantauanResponse) => ({
+          id: item.id,
+          regionName: item.nama,
+          latitude:
+            typeof item.latitude === "string"
+              ? parseFloat(item.latitude)
+              : item.latitude,
+          longitude:
+            typeof item.longitude === "string"
+              ? parseFloat(item.longitude)
+              : item.longitude,
+        }),
+      );
+
+      setRawRegions(formattedRegions);
+    } catch (error) {
+      console.error("Fetch Error:", error);
+      showToast("Gagal memuat data wilayah pantauan.", "error");
+    } finally {
       setIsLoading(false);
-    }, 800);
-  }, []);
+    }
+  }, [showToast]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-    }, 0);
+    const timer = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (isMounted) {
-      const timer = setTimeout(() => {
-        fetchRegions();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
+    if (isMounted) fetchRegions();
   }, [isMounted, fetchRegions]);
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -128,61 +163,102 @@ export default function BBWSWilayahPage() {
     setFormData(initialFormState);
   };
 
+  // MENYIMPAN ATAU MENGUPDATE DATA (POST / PUT)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.regionName) {
       showToast("Nama Wilayah wajib diisi.", "error");
       return;
     }
+
     const latNum = parseFloat(formData.latitude);
     const lngNum = parseFloat(formData.longitude);
     if (isNaN(latNum) || isNaN(lngNum)) {
-      showToast("Pilih titik koordinat di peta.", "error");
+      showToast("Tentukan titik koordinat wilayah.", "error");
       return;
     }
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      if (editingId) {
-        setRawRegions((prev) =>
-          prev.map((r) =>
-            r.id === editingId
-              ? {
-                  ...r,
-                  regionName: formData.regionName,
-                  latitude: latNum,
-                  longitude: lngNum,
-                }
-              : r,
-          ),
-        );
-        showToast(`Wilayah ${formData.regionName} berhasil diperbarui.`, "success");
-      } else {
-        const newId = Math.floor(Math.random() * 10000);
-        setRawRegions((prev) => [
-          ...prev,
-          {
-            id: newId,
-            regionName: formData.regionName,
-            latitude: latNum,
-            longitude: lngNum,
-          },
-        ]);
-        showToast(`Wilayah ${formData.regionName} berhasil ditambahkan.`, "success");
+    // Payload dikemas dengan tipe data Number asli sesuai skema Prisma database
+    const payload = {
+      nama: formData.regionName,
+      latitude: latNum,
+      longitude: lngNum,
+    };
+
+    try {
+      const isEditing = Boolean(editingId);
+      const safeId = isEditing ? Number(editingId) : null;
+
+      const url = isEditing
+        ? `${API_BASE_URL}/wilayah-pantauan/${safeId}`
+        : `${API_BASE_URL}/wilayah-pantauan`;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
+        headers: getAuthHeaders(true),
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage =
+          errorData?.message ||
+          errorData?.error ||
+          "Gagal menyimpan data wilayah";
+        throw new Error(errorMessage);
       }
-      setIsSubmitting(false);
+
+      showToast(
+        `Wilayah ${formData.regionName} berhasil ${isEditing ? "diperbarui" : "ditambahkan"}.`,
+        "success",
+      );
+
+      await fetchRegions();
       setEditingId(null);
       setFormData(initialFormState);
-    }, 1000);
+    } catch (error: unknown) {
+      console.error("Submit Error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat menyimpan data.";
+      showToast(errorMessage, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteRegion = (id: string | number, name: string) => {
+  // MENGHAPUS DATA (DELETE)
+  const handleDeleteRegion = async (id: string | number, name: string) => {
     if (!window.confirm(`Hapus Wilayah Pantauan ${name}?`)) return;
 
-    if (editingId === id) handleCancelEdit();
-    setRawRegions((prev) => prev.filter((r) => r.id !== id));
-    showToast(`Wilayah ${name} berhasil dihapus.`, "success");
+    try {
+      const safeId = Number(id);
+      const response = await fetch(
+        `${API_BASE_URL}/wilayah-pantauan/${safeId}`,
+        {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        },
+      );
+
+      if (!response.ok)
+        throw new Error("Gagal menghapus data. Periksa hak akses Anda.");
+
+      if (editingId === id) handleCancelEdit();
+
+      setRawRegions((prev) => prev.filter((r) => r.id !== id));
+      showToast(`Wilayah ${name} berhasil dihapus.`, "success");
+    } catch (error: unknown) {
+      console.error("Delete Error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Gagal menghapus wilayah pantauan.";
+      showToast(errorMessage, "error");
+    }
   };
 
   const selectedCoords: [number, number] | null =
@@ -232,7 +308,7 @@ export default function BBWSWilayahPage() {
             <div className="flex h-full w-full flex-col items-center justify-center bg-slate-50 text-slate-400 gap-3">
               <Loader2 size={32} className="animate-spin" />
               <p className="text-[10px] font-bold uppercase tracking-widest">
-                Memuat Peta...
+                Loading Maps...
               </p>
             </div>
           ) : (
@@ -309,33 +385,33 @@ export default function BBWSWilayahPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Latitude
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Latitude <span className="text-red-500">*</span>
                   </label>
                   <input
                     required
-                    type="text"
+                    type="number"
+                    step="any"
                     name="latitude"
                     value={formData.latitude}
                     onChange={handleInputChange}
-                    placeholder="Pilih di peta"
-                    readOnly
-                    className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-500 outline-none transition-colors focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-not-allowed"
+                    placeholder="-6.994300"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm font-bold text-blue-950 outline-none transition-colors focus:border-blue-600 focus:ring-1 focus:ring-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Longitude
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Longitude <span className="text-red-500">*</span>
                   </label>
                   <input
                     required
-                    type="text"
+                    type="number"
+                    step="any"
                     name="longitude"
                     value={formData.longitude}
                     onChange={handleInputChange}
-                    placeholder="Pilih di peta"
-                    readOnly
-                    className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-500 outline-none transition-colors focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-not-allowed"
+                    placeholder="107.630000"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm font-bold text-blue-950 outline-none transition-colors focus:border-blue-600 focus:ring-1 focus:ring-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

@@ -29,12 +29,14 @@ export default function AdminSaran() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // State Modal Detail
-  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   // State Modal Hapus
   const [deleteTarget, setDeleteTarget] = useState<Feedback | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -434,8 +436,11 @@ export default function AdminSaran() {
 
             <div className="p-6">
               <p className="text-sm font-medium text-slate-600 leading-relaxed">
-                Apakah Anda yakin ingin menghapus masukan dari pengirim <span className="font-black uppercase text-blue-950">{deleteTarget.name}</span>? 
-                Tindakan ini tidak dapat dibatalkan.
+                Apakah Anda yakin ingin menghapus masukan dari pengirim{" "}
+                <span className="font-black uppercase text-blue-950">
+                  {deleteTarget.name}
+                </span>
+                ? Tindakan ini tidak dapat dibatalkan.
               </p>
             </div>
 
