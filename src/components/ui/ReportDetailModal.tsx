@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, X, Phone, Waves, MapPin, CheckCircle2, Trash2 } from "lucide-react";
+import { AlertTriangle, X, Phone, Waves, MapPin, CheckCircle2, Trash2, Image as ImageIcon } from "lucide-react";
 
-// Interface (Bisa dipisah ke file types.ts nantinya jika makin banyak)
 export interface EmergencyReport {
   id: string;
   name: string;
@@ -14,6 +13,7 @@ export interface EmergencyReport {
   description: string;
   date: string;
   status: "Baru" | "Diproses" | "Selesai";
+  imageUrl?: string;
 }
 
 interface ReportDetailModalProps {
@@ -43,7 +43,7 @@ export default function ReportDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-blue-950/70 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-200 flex items-center justify-center p-4 sm:p-6 bg-blue-950/70 backdrop-blur-sm transition-opacity">
       <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
         {/* Header Modal */}
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
@@ -69,7 +69,7 @@ export default function ReportDetailModal({
         </div>
 
         {/* Body Modal (Scrollable) */}
-        <div className="p-6 sm:p-8 overflow-y-auto">
+        <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar">
           {/* Status Banner */}
           <div className={`p-4 rounded-sm border mb-8 flex justify-between items-center ${
               report.status === "Baru" ? "bg-rose-50 border-rose-200" : 
@@ -131,7 +131,7 @@ export default function ReportDetailModal({
             </div>
           </div>
 
-          {/* Lokasi & Deskripsi */}
+          {/* Lokasi, Deskripsi & Bukti Visual */}
           <div className="space-y-6">
             <div>
               <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">
@@ -143,12 +143,35 @@ export default function ReportDetailModal({
               </p>
             </div>
 
-            <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">
-                Deskripsi Situasi
-              </h4>
-              <div className="bg-blue-50/50 p-4 rounded border border-blue-100 text-sm text-blue-950 font-medium leading-relaxed min-h-25">
-                {report.description}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">
+                  Deskripsi Situasi
+                </h4>
+                <div className="bg-blue-50/50 p-4 rounded border border-blue-100 text-sm text-blue-950 font-medium leading-relaxed h-[calc(100%-30px)] min-h-37.5">
+                  {report.description}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2">
+                  Bukti Visual
+                </h4>
+                {report.imageUrl ? (
+                  <div className="bg-slate-50 p-2 rounded border border-slate-100 flex justify-center items-center h-[calc(100%-30px)] min-h-37.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={report.imageUrl} 
+                      alt="Bukti Bencana" 
+                      className="max-h-48 w-full object-contain rounded bg-white shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 p-4 rounded border border-slate-100 flex flex-col justify-center items-center text-slate-400 h-[calc(100%-30px)] min-h-37.5">
+                    <ImageIcon size={32} className="opacity-40 mb-3" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Tidak Ada Lampiran</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -157,7 +180,7 @@ export default function ReportDetailModal({
         {/* Footer Modal (Actions) */}
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
           
-          {/* Tombol Hapus: Muncul untuk Spam (Baru) atau yg sudah Selesai */}
+          {/* Tombol Hapus */}
           {(report.status === "Baru" || report.status === "Selesai") ? (
             <button
               onClick={() => {
@@ -171,7 +194,7 @@ export default function ReportDetailModal({
               <Trash2 size={14} /> {report.status === "Baru" ? "Hapus" : "Hapus Laporan"}
             </button>
           ) : (
-            <div></div> /* Spacer agar tombol aksi penanganan tetap di kanan */
+            <div></div> 
           )}
 
           <div className="flex flex-wrap gap-2 justify-end">

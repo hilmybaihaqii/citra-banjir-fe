@@ -305,11 +305,12 @@ export const Navbar = () => {
               <Link href="/" className="flex items-center gap-3 group">
                 <div className="flex items-center gap-2">
                   <div className="w-40 h-40 md:w-50 md:h-40 relative flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                    <Image
-                      src="/images/logo-citra-banjir.png"
-                      alt="Logo Citra Banjir"
-                      fill
-                      className="object-contain"
+                    <Image 
+                      src="/images/logo-citra-banjir.png" 
+                      alt="Logo" 
+                      fill 
+                      loading="eager" // Tambahkan ini agar langsung dimuat di awal halaman
+                      sizes="(max-width: 768px) 100vw, 33vw" // Tambahkan ini agar performa layout mantap
                     />
                   </div>
                 </div>

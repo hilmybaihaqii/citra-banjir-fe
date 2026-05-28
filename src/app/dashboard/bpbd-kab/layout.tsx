@@ -25,6 +25,20 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+// FUNGSI UNTUK DECODE JWT TANPA LIBRARY EXTERNAL
+const parseJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function BPBDKabLayout({
   children,
 }: {
@@ -42,34 +56,60 @@ export default function BPBDKabLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const savedUserStr = Cookies.get("user_session");
-      const token = Cookies.get("auth_token");
-      if (!savedUserStr || !token) {
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
-        return;
-      }
-      
-      try {
-        setUserData(JSON.parse(savedUserStr));
-        setIsLoaded(true);
-      } catch {
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleLogout = () => {
     Cookies.remove("user_session", { path: "/" });
     Cookies.remove("auth_token", { path: "/" });
     window.location.href = "/";
   };
+
+  useEffect(() => {
+    let logoutTimer: NodeJS.Timeout;
+
+    const checkSession = () => {
+      const savedUserStr = Cookies.get("user_session");
+      const token = Cookies.get("auth_token");
+      
+      if (!savedUserStr || !token) {
+        handleLogout();
+        return;
+      }
+      
+      try {
+        setUserData(JSON.parse(savedUserStr));
+
+        // Decode Token JWT untuk mengecek waktu expired
+        const decodedToken = parseJwt(token);
+        
+        if (decodedToken && decodedToken.exp) {
+          const currentTime = Math.floor(Date.now() / 1000); // Waktu sekarang dalam detik
+          const timeLeft = decodedToken.exp - currentTime; // Sisa waktu dalam detik
+
+          if (timeLeft <= 0) {
+            // Jika token SUDAH kedaluwarsa saat load halaman
+            handleLogout();
+            return;
+          } else {
+            // Jika token MASIH BERLAKU, pasang timer auto-logout
+            logoutTimer = setTimeout(() => {
+              alert("Sesi Anda telah habis. Silakan login kembali.");
+              handleLogout();
+            }, timeLeft * 1000);
+          }
+        }
+
+        setIsLoaded(true);
+      } catch {
+        handleLogout();
+      }
+    };
+
+    checkSession();
+
+    // Membersihkan timer jika komponen di-unmount agar tidak ada memory leak
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/dashboard/bpbd-kab" && pathname === "/dashboard/bpbd-kab")

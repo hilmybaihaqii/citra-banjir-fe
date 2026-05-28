@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
-  CloudRain,
-  Waves,
-  Droplets,
+  Map,
+  MapPin,
+  ActivitySquare,
   UserPlus,
   History,
   Settings,
@@ -26,6 +26,20 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+// FUNGSI UNTUK DECODE JWT TANPA LIBRARY EXTERNAL
+const parseJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function BBWSLayout({
   children,
 }: {
@@ -44,38 +58,56 @@ export default function BBWSLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  const handleLogout = () => {
+    Cookies.remove("user_session", { path: "/" });
+    Cookies.remove("auth_token", { path: "/" }); 
+    window.location.href = "/";
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Membaca dari Cookies untuk menghindari bug cache lintas-dashboard
+    let logoutTimer: NodeJS.Timeout;
+
+    const checkSession = () => {
       const savedUserStr = Cookies.get("user_session");
       const token = Cookies.get("auth_token");
       
       if (!savedUserStr || !token) {
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
+        handleLogout();
         return;
       }
 
       try {
         setUserData(JSON.parse(savedUserStr));
+        const decodedToken = parseJwt(token);
+        
+        if (decodedToken && decodedToken.exp) {
+          const currentTime = Math.floor(Date.now() / 1000); 
+          const timeLeft = decodedToken.exp - currentTime; 
+
+          if (timeLeft <= 0) {
+            handleLogout();
+            return;
+          } else {
+            logoutTimer = setTimeout(() => {
+              alert("Sesi Anda telah habis. Silakan login kembali.");
+              handleLogout();
+            }, timeLeft * 1000);
+          }
+        }
+
         setIsLoaded(true);
       } catch (error) {
         console.error("Gagal membaca session:", error);
-        Cookies.remove("auth_token", { path: "/" });
-        Cookies.remove("user_session", { path: "/" });
-        window.location.href = "/";
+        handleLogout();
       }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    };
 
-  const handleLogout = () => {
-    // Hapus seluruh Cookie saat Logout
-    Cookies.remove("user_session", { path: "/" });
-    Cookies.remove("auth_token", { path: "/" }); 
-    window.location.href = "/";
-  };
+    checkSession();
+
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/dashboard/bbws" && pathname === "/dashboard/bbws")
@@ -91,9 +123,7 @@ export default function BBWSLayout({
   if (!isLoaded) return null;
 
   return (
-    <div
-      className={`flex h-dvh w-full overflow-hidden bg-slate-50 ${outfit.className}`}
-    >
+    <div className={`flex h-dvh w-full overflow-hidden bg-slate-50 ${outfit.className}`}>
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"
@@ -101,9 +131,7 @@ export default function BBWSLayout({
         />
       )}
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-      >
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-blue-950 text-white shadow-2xl transition-transform duration-300 lg:static lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
           <Link
             href="/dashboard/bbws"
@@ -132,16 +160,8 @@ export default function BBWSLayout({
             Panel Kendali Hidrologi
           </p>
 
-          <Link
-            href="/dashboard/bbws"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bbws") ? activeClass : inactiveClass
-              }
-            >
+          <Link href="/dashboard/bbws" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bbws") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard size={18} /> Dashboard
               </div>
@@ -149,66 +169,33 @@ export default function BBWSLayout({
             </button>
           </Link>
 
-          <Link
-            href="/dashboard/bbws/update-tinggiair"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bbws/update-tinggiair")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
+          {/* MENU BARU: DATA PEMANTAUAN */}
+          <Link href="/dashboard/bbws/data-pantauan" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bbws/data-pantauan") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
-                <Waves size={18} /> Update Tinggi Air
+                <ActivitySquare size={18} /> Data Pemantauan
               </div>
-              {isActive("/dashboard/bbws/update-tinggiair") && (
-                <ChevronRight size={14} />
-              )}
+              {isActive("/dashboard/bbws/data-pantauan") && <ChevronRight size={14} />}
             </button>
           </Link>
 
-          <Link
-            href="/dashboard/bbws/update-curahhujan"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bbws/update-curahhujan")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
+          {/* MENU BARU: WILAYAH PANTAUAN */}
+          <Link href="/dashboard/bbws/wilayah" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bbws/wilayah") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
-                <CloudRain size={18} /> Update Curah Hujan
+                <Map size={18} /> Wilayah Pantauan
               </div>
-              {isActive("/dashboard/bbws/update-curahhujan") && (
-                <ChevronRight size={14} />
-              )}
+              {isActive("/dashboard/bbws/wilayah") && <ChevronRight size={14} />}
             </button>
           </Link>
 
-          <Link
-            href="/dashboard/bbws/update-sungai"
-            className="block"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <button
-              className={
-                isActive("/dashboard/bbws/update-sungai")
-                  ? activeClass
-                  : inactiveClass
-              }
-            >
+          {/* MENU BARU: POS PANTAU */}
+          <Link href="/dashboard/bbws/pos-pantau" className="block" onClick={() => setIsSidebarOpen(false)}>
+            <button className={isActive("/dashboard/bbws/pos-pantau") ? activeClass : inactiveClass}>
               <div className="flex items-center gap-3">
-                <Droplets size={18} /> Update Debit Sungai
+                <MapPin size={18} /> Pos Pantau
               </div>
-              {isActive("/dashboard/bbws/update-sungai") && (
-                <ChevronRight size={14} />
-              )}
+              {isActive("/dashboard/bbws/pos-pantau") && <ChevronRight size={14} />}
             </button>
           </Link>
 
@@ -218,67 +205,31 @@ export default function BBWSLayout({
             </p>
 
             {userData?.role === "MASTER_ADMIN" && (
-              <Link
-                href="/dashboard/bbws/manajemen-user"
-                className="block mb-1.5"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <button
-                  className={
-                    isActive("/dashboard/bbws/manajemen-user")
-                      ? activeClass
-                      : inactiveClass
-                  }
-                >
+              <Link href="/dashboard/bbws/manajemen-user" className="block mb-1.5" onClick={() => setIsSidebarOpen(false)}>
+                <button className={isActive("/dashboard/bbws/manajemen-user") ? activeClass : inactiveClass}>
                   <div className="flex items-center gap-3">
                     <UserPlus size={18} /> Manajemen User
                   </div>
-                  {isActive("/dashboard/bbws/manajemen-user") && (
-                    <ChevronRight size={14} />
-                  )}
+                  {isActive("/dashboard/bbws/manajemen-user") && <ChevronRight size={14} />}
                 </button>
               </Link>
             )}
 
-            <Link
-              href="/dashboard/bbws/log-aktivitas"
-              className="block mb-1.5"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/bbws/log-aktivitas")
-                    ? activeClass
-                    : inactiveClass
-                }
-              >
+            <Link href="/dashboard/bbws/log-aktivitas" className="block mb-1.5" onClick={() => setIsSidebarOpen(false)}>
+              <button className={isActive("/dashboard/bbws/log-aktivitas") ? activeClass : inactiveClass}>
                 <div className="flex items-center gap-3">
                   <History size={18} /> Log Aktivitas
                 </div>
-                {isActive("/dashboard/bbws/log-aktivitas") && (
-                  <ChevronRight size={14} />
-                )}
+                {isActive("/dashboard/bbws/log-aktivitas") && <ChevronRight size={14} />}
               </button>
             </Link>
             
-            <Link
-              href="/dashboard/bbws/pengaturan"
-              className="block"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <button
-                className={
-                  isActive("/dashboard/bbws/pengaturan")
-                    ? activeClass
-                    : inactiveClass
-                }
-              >
+            <Link href="/dashboard/bbws/pengaturan" className="block" onClick={() => setIsSidebarOpen(false)}>
+              <button className={isActive("/dashboard/bbws/pengaturan") ? activeClass : inactiveClass}>
                 <div className="flex items-center gap-3">
                   <Settings size={18} /> Pengaturan
                 </div>
-                {isActive("/dashboard/bbws/pengaturan") && (
-                  <ChevronRight size={14} />
-                )}
+                {isActive("/dashboard/bbws/pengaturan") && <ChevronRight size={14} />}
               </button>
             </Link>
           </div>
@@ -296,15 +247,11 @@ export default function BBWSLayout({
 
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 lg:justify-end lg:px-8 z-10 shadow-sm">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-blue-950 hover:text-blue-700 transition-colors"
-          >
+          <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-blue-950 hover:text-blue-700 transition-colors">
             <Menu size={26} />
           </button>
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden sm:block text-right">
-              {/* Fallback Name Berjenjang */}
               <p className="text-sm font-black uppercase text-blue-950">
                 {userData?.name || userData?.email || userData?.username || "Admin BBWS"}
               </p>
@@ -313,12 +260,7 @@ export default function BBWSLayout({
               </p>
             </div>
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400 bg-white shadow-sm">
-              <Image
-                src="/images/bbws.png"
-                alt="Logo BBWS"
-                fill
-                className="object-contain p-1"
-              />
+              <Image src="/images/bbws.png" alt="Logo BBWS" fill className="object-contain p-1" />
             </div>
           </div>
         </header>
@@ -328,11 +270,7 @@ export default function BBWSLayout({
         </main>
       </div>
 
-      <LogoutModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogout}
-      />
+      <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={handleLogout} />
     </div>
   );
 }

@@ -1,12 +1,20 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Trash2, ShieldAlert, Users, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Trash2,
+  ShieldAlert,
+  Users,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
 
-import { AddUserModal } from "@/components/ui/AddUserModal";
-import { DeleteUserModal } from "@/components/ui/DeleteUserModal";
+import { AddUserModal } from "@/components/ui/modal/AddUserModal";
+import { DeleteUserModal } from "@/components/ui/modal/DeleteUserModal";
 
 interface User {
   id: number;
@@ -20,50 +28,64 @@ interface User {
 export interface NewUserPayload {
   name: string;
   email: string;
-  username: string; 
+  username: string;
   password?: string;
   role: string;
   agency: string;
 }
 
-// Fungsi untuk mengubah Enum Backend menjadi Label yang rapi di Tabel
 const formatAgencyLabel = (agencyCode: string | null | undefined) => {
   switch (agencyCode) {
-    case "CITRA_BANJIR": return "Citra Banjir Pusat";
-    case "BBWS": return "BBWS Citarum";
-    case "BMKG": return "BMKG Stasiun Jabar";
-    case "BPBD_JABAR": return "BPBD Provinsi Jabar";
-    case "BPBD_KAB": return "BPBD Kab. Bandung";
-    case "SYSTEM": return "Sistem Utama";
-    default: return agencyCode || "Citra Banjir Pusat"; // Fallback
+    case "CITRA_BANJIR":
+      return "Citra Banjir Pusat";
+    case "BBWS":
+      return "BBWS Citarum";
+    case "BMKG":
+      return "BMKG Stasiun Jabar";
+    case "BPBD_JABAR":
+      return "BPBD Provinsi Jabar";
+    case "BPBD_KAB":
+      return "BPBD Kab. Bandung";
+    case "SYSTEM":
+      return "Sistem Utama";
+    default:
+      return agencyCode || "Citra Banjir Pusat";
   }
 };
 
 export default function AdminUsersManagement() {
   const [isMounted, setIsMounted] = useState(false);
-
-  // MENGGUNAKAN COOKIES, BUKAN LOCAL STORAGE
-  const [userData, setUserData] = useState<{ email?: string; role?: string; agency?: string } | null>(null);
-
+  const [userData, setUserData] = useState<{
+    email?: string;
+    role?: string;
+    agency?: string;
+  } | null>(null);
   const [usersList, setUsersList] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
     message: "",
     type: "success",
   });
 
-  // Variabel untuk menentukan apakah user ini Super Admin
   const isSuperAdmin = userData?.role === "SUPER_ADMIN";
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3500);
   };
@@ -72,15 +94,19 @@ export default function AdminUsersManagement() {
     setIsLoading(true);
     try {
       const token = Cookies.get("auth_token");
-      if(!token) return;
+      if (!token) return;
 
       const res = await fetch(`${baseUrl}/users`, {
         method: "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
+
       if (res.ok && data.success) {
-        setUsersList(data.data);
+        setUsersList(data.data?.items || data.data || []);
       }
     } catch (error) {
       console.error("Gagal menarik data user:", error);
@@ -91,46 +117,56 @@ export default function AdminUsersManagement() {
 
   useEffect(() => {
     setIsMounted(true);
-    
-    // Ambil Data Sesi dari Cookie saat komponen dimuat
     const sessionCookie = Cookies.get("user_session");
     if (sessionCookie) {
       try {
-        const parsedSession = JSON.parse(sessionCookie);
-        setUserData(parsedSession);
+        setUserData(JSON.parse(sessionCookie));
       } catch (error) {
         console.error("Gagal mem-parse cookie session", error);
       }
     }
-    
     fetchUsers();
   }, [fetchUsers]);
 
-  // FUNGSI POST
+  useEffect(() => {
+    if (isAddModalOpen || isDeleteModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isAddModalOpen, isDeleteModalOpen]);
+
   const handleAddUser = async (newUser: NewUserPayload) => {
     try {
       const token = Cookies.get("auth_token");
       const res = await fetch(`${baseUrl}/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(newUser),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal menambahkan user");
+      if (!res.ok || !data.success)
+        throw new Error(data.message || "Gagal menambahkan user");
 
       fetchUsers();
       setIsAddModalOpen(false);
       showToast("Pengguna baru berhasil didaftarkan!", "success");
     } catch (error) {
       console.error(error);
-      const errMsg = error instanceof Error ? error.message : "Terjadi kesalahan sistem";
+      const errMsg =
+        error instanceof Error ? error.message : "Terjadi kesalahan sistem";
       showToast(errMsg, "error");
       throw error;
     }
   };
 
-  // FUNGSI DELETE
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     try {
@@ -141,7 +177,10 @@ export default function AdminUsersManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Gagal menghapus pengguna. Akses ditolak.");
+      if (!res.ok || !data.success)
+        throw new Error(
+          data.message || "Gagal menghapus pengguna. Akses ditolak.",
+        );
 
       setUsersList((prev) => prev.filter((u) => u.id !== selectedUser.id));
       setSelectedUser(null);
@@ -149,6 +188,9 @@ export default function AdminUsersManagement() {
       showToast("Akun berhasil dihapus permanen.", "success");
     } catch (error) {
       console.error(error);
+      const errMsg =
+        error instanceof Error ? error.message : "Gagal menghapus pengguna";
+      showToast(errMsg, "error");
       throw error;
     }
   };
@@ -159,11 +201,12 @@ export default function AdminUsersManagement() {
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.agency && user.agency.toLowerCase().includes(searchQuery.toLowerCase())),
+      (user.agency &&
+        user.agency.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-12 lg:pb-8 relative">
+    <div className="flex flex-col gap-6 p-4 pb-12 sm:p-6 lg:pb-8 w-full max-w-350 mx-auto relative">
       <AnimatePresence>
         {toast.show && (
           <motion.div
@@ -186,15 +229,20 @@ export default function AdminUsersManagement() {
         )}
       </AnimatePresence>
 
-      {/* Peringatan hanya muncul jika BUKAN Super Admin */}
       {!isSuperAdmin && (
         <div className="flex shrink-0 items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm animate-in fade-in zoom-in-95 duration-500">
           <ShieldAlert className="mt-0.5 shrink-0 text-blue-600" size={18} />
           <div>
-            <h4 className="text-sm font-bold text-blue-900">Mode Akses Terbatas</h4>
+            <h4 className="text-sm font-bold text-blue-900">
+              Mode Akses Terbatas
+            </h4>
             <p className="mt-1 text-xs font-medium text-blue-800">
-              Anda login sebagai {userData?.role?.replace("_", " ")}. Penambahan dan penghapusan akun
-              dibatasi khusus untuk Super Admin Pusat.
+              Anda login sebagai{" "}
+              <span className="font-bold">
+                {userData?.role?.replace("_", " ")}
+              </span>
+              . Penambahan dan penghapusan akun dibatasi khusus untuk Super
+              Admin Pusat.
             </p>
           </div>
         </div>
@@ -202,7 +250,7 @@ export default function AdminUsersManagement() {
 
       <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-blue-950">
+          <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-blue-950">
             Manajemen User Global
           </h1>
           <p className="mt-1 text-sm font-medium tracking-wide text-slate-500">
@@ -211,8 +259,11 @@ export default function AdminUsersManagement() {
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-          <div className="relative w-full shrink-0 sm:w-64">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative w-full shrink-0 sm:w-72">
+            <Search
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="text"
               placeholder="Cari nama, email, atau instansi..."
@@ -222,13 +273,12 @@ export default function AdminUsersManagement() {
             />
           </div>
 
-          {/* Tombol Tambah User HANYA MUNCUL JIKA SUPER ADMIN */}
           {isSuperAdmin && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex w-full shrink-0 items-center justify-center gap-2 rounded-md bg-blue-950 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-blue-900 sm:w-auto"
+              className="flex w-full shrink-0 items-center justify-center gap-2 rounded-md bg-blue-950 px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-blue-900 focus:ring-2 focus:ring-blue-950 focus:ring-offset-1 sm:w-auto"
             >
-              <Plus size={16} /> Tambah User
+              <Plus size={16} /> TAMBAH USER
             </button>
           )}
         </div>
@@ -236,55 +286,92 @@ export default function AdminUsersManagement() {
 
       <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="custom-scrollbar overflow-x-auto">
-          <table className="w-full min-w-175 border-collapse text-left">
+          <table className="w-full min-w-225 border-collapse text-left">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
-                <th className="w-16 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">No</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Nama / Email</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">Instansi</th>
-                <th className="w-32 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Level Akses</th>
-                {isSuperAdmin && <th className="w-24 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Aksi</th>}
+                <th className="w-16 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  No
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Nama / Email
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Instansi
+                </th>
+                <th className="w-40 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Level Akses
+                </th>
+                {isSuperAdmin && (
+                  <th className="w-28 p-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Aksi
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 5 : 4} className="py-16 text-center">
-                    <span className="text-sm font-medium text-slate-500">Memuat data pengguna global...</span>
+                  <td
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="py-20 text-center"
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      Sinkronisasi Server...
+                    </span>
                   </td>
                 </tr>
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user, index) => {
                   const isTopTier = user.role === "SUPER_ADMIN";
-                  
+
                   return (
-                    <tr key={user.id} className="transition-colors hover:bg-slate-50">
-                      <td className="p-4 text-center text-sm font-medium text-slate-500">{index + 1}</td>
-                      <td className="p-4">
-                        <p className="text-sm font-bold uppercase text-blue-950">{user.name}</p>
-                        <p className="mt-0.5 text-[11px] font-medium tracking-wide text-slate-400">{user.email}</p>
+                    <tr
+                      key={user.id}
+                      className="group transition-colors hover:bg-slate-50"
+                    >
+                      <td className="p-4 text-center text-sm font-medium text-slate-500">
+                        {index + 1}
                       </td>
                       <td className="p-4">
-                        <span className="inline-flex items-center rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                        <p className="text-sm font-bold uppercase text-blue-950 line-clamp-1">
+                          {user.name}
+                        </p>
+                        <p className="mt-0.5 text-xs font-bold text-slate-400">
+                          {user.email}
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 whitespace-nowrap">
                           {formatAgencyLabel(user.agency)}
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        <span className={`inline-flex items-center rounded border px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${
-                            isTopTier ? "border-amber-200 bg-amber-50 text-amber-700" : "border-blue-200 bg-blue-50 text-blue-700"
-                        }`}>
-                          {user.role}
+                        <span
+                          className={`inline-flex min-w-25 items-center justify-center rounded border px-2 py-1.5 text-[10px] font-black uppercase tracking-widest ${
+                            isTopTier
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : "border-blue-200 bg-blue-50 text-blue-700"
+                          }`}
+                        >
+                          {user.role.replace("_", " ")}
                         </span>
                       </td>
                       {isSuperAdmin && (
-                        <td className="p-4 text-center">
+                        <td className="p-4">
                           <button
-                            onClick={() => { setSelectedUser(user); setIsDeleteModalOpen(true); }}
-                            className="mx-auto flex items-center justify-center rounded-md p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-rose-50 text-[10px] font-bold uppercase tracking-widest text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-rose-50 disabled:hover:text-rose-600"
                             disabled={user.email === userData?.email}
-                            title={user.email === userData?.email ? "Tidak dapat menghapus akun sendiri" : "Hapus User"}
+                            title={
+                              user.email === userData?.email
+                                ? "Tidak dapat menghapus akun sendiri"
+                                : "Hapus User"
+                            }
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={14} />
                           </button>
                         </td>
                       )}
@@ -293,10 +380,15 @@ export default function AdminUsersManagement() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 5 : 4} className="py-16 text-center align-middle">
+                  <td
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="py-16 text-center align-middle"
+                  >
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <Users size={32} className="mb-3 text-slate-300" />
-                      <span className="text-sm font-medium">Tidak ada data pengguna yang ditemukan.</span>
+                      <span className="text-sm font-medium">
+                        Data pengguna tidak ditemukan.
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -306,13 +398,20 @@ export default function AdminUsersManagement() {
         </div>
       </div>
 
-      <AddUserModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={handleAddUser} />
-      
-      <DeleteUserModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => { setIsDeleteModalOpen(false); setSelectedUser(null); }} 
-        onConfirm={handleDeleteUser} 
-        userToDelete={selectedUser ? { name: selectedUser.name, email: selectedUser.email } : null} 
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddUser}
+      />
+
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setTimeout(() => setSelectedUser(null), 300);
+        }}
+        onConfirm={handleDeleteUser}
+        userToDelete={selectedUser}
       />
     </div>
   );
